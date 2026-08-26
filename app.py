@@ -813,6 +813,14 @@ def natural_keys(t): return [int(c) if c.isdigit() else c for c in re.split(r'(\
 def home(): 
     return render_template('landing.html')
 
+@app.route('/knowledge')
+def knowledge(): 
+    return render_template('knowledge.html')
+
+@app.route('/community')
+def community(): 
+    return render_template('community.html')
+
 @app.route('/dashboard')
 def dashboard(): 
     return render_template('index.html')

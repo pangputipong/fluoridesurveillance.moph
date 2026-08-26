@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFCSS | ระบบเฝ้าระวังสภาวะฟันตกกระและระดับฟลูออไรด์ในน้ำ</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS for grid/utility -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f1f4f9;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --primary: #3b71ca;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-radius: 20px;
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.02);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        body {
+            font-family: 'Inter', 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Top Nav */
+        .top-nav {
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand-icon {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 20px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+        .nav-links a.active, .nav-links a:hover {
+            background-color: var(--text-dark);
+            color: white;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .btn-dashboard {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 15px rgba(59, 113, 202, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-dashboard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(59, 113, 202, 0.3);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-container {
+            padding: 1rem 3rem 3rem 3rem;
+        }
+
+        /* Hero Left Column */
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+        .hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 550px;
+            border-radius: 30px;
+            overflow: hidden;
+            background: white;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .image-container:hover img {
+            transform: scale(1.02);
+        }
+        
+        /* Floating Glass Card on Image */
+        .floating-glass {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Right Column Cards */
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: transform 0.2s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title-sm {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Analysis Metrics */
+        .metric-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .bar-chart-mini {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 30px;
+        }
+        .bar-segment {
+            width: 6px;
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+        .bar-segment.active { background-color: var(--primary); }
+        .bar-segment.warning { background-color: #f59e0b; }
+
+        /* List Items */
+        .action-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+        .action-item:hover {
+            background: #f8fafc;
+        }
+        .action-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+        .action-item.active .action-icon {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .action-text {
+            flex-grow: 1;
+        }
+        .action-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0 0 2px 0;
+        }
+        .action-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .action-item.active .action-desc {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Dark Card */
+        .dark-card {
+            background: #1e293b;
+            color: white;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(30, 41, 59, 0.3);
+        }
+        .dark-card::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 150px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1));
+            border-top-right-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="brand">
+            <i class="fas fa-tooth brand-icon"></i>
+            FFCSS
+        </div>
+        
+        <div class="nav-links d-none d-md-flex">
+            <a href="/"><i class="fas fa-home me-2"></i>หน้าหลัก (Home)</a>
+            <a href="/knowledge"><i class="fas fa-book-medical me-2"></i>ข้อมูลความรู้</a>
+            <a href="/community" class="active"><i class="fas fa-globe-asia me-2"></i>เครือข่ายชุมชน</a>
+        </div>
+        
+        <div class="nav-actions">
+            <div class="d-flex align-items-center gap-3">
+
+                <a href="/dashboard" class="btn-dashboard">
+                    เข้าสู่ระบบ Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    
+    <!-- Main Content -->
+    <div class="container main-container pt-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h1 class="hero-title" style="font-size: 2.5rem;"><i class="fas fa-users text-primary"></i> เครือข่ายชุมชน</h1>
+                <p class="hero-subtitle mt-3">เชื่อมโยงข้อมูล สร้างความร่วมมือ และแลกเปลี่ยนเรียนรู้ระหว่างพื้นที่</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="dark-card text-center py-5">
+                    <i class="fas fa-globe-asia" style="font-size: 4rem; opacity: 0.8; margin-bottom: 20px;"></i>
+                    <h3 class="fw-bold">กำลังพัฒนาระบบเครือข่าย</h3>
+                    <p class="text-light opacity-75 mx-auto" style="max-width: 600px;">
+                        ระบบเว็บบอร์ดและพื้นที่แลกเปลี่ยนความคิดเห็นสำหรับเครือข่ายนักวิชาการสาธารณสุข กำลังอยู่ในระหว่างการพัฒนา เพื่อให้การสื่อสารระหว่างจังหวัดและเขตสุขภาพมีประสิทธิภาพสูงสุด
+                    </p>
+                    <button class="btn btn-light mt-3 rounded-pill fw-bold px-4">ติดตามข่าวสารเร็วๆ นี้</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
