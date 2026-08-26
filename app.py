@@ -49,9 +49,11 @@ def require_admin(f):
         try:
             username, p_hash = token.split(':', 1)
             with engine.connect() as conn:
-                user = conn.execute(text("SELECT password_hash FROM `admin_users` WHERE username = :u"), {"u": username}).fetchone()
+                user = conn.execute(text("SELECT password_hash, status FROM `admin_users` WHERE username = :u"), {"u": username}).fetchone()
                 if not user or user[0] != p_hash:
                     return jsonify({'success': False, 'message': 'Access Denied: บัญชีหรือรหัสผ่านแอดมินไม่ถูกต้อง'}), 401
+                if user[1] in ('pending', 'rejected'):
+                    return jsonify({'success': False, 'message': 'Access Denied: บัญชีของคุณยังไม่ได้รับอนุมัติหรือถูกระงับการใช้งาน'}), 403
         except Exception as e:
             return jsonify({'success': False, 'message': f'Access Denied: เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์ ({str(e)})'}), 401
         return f(*args, **kwargs)
@@ -82,7 +84,7 @@ def log_visit(page_name, action_type):
 API_TO_DB_REF_MAP = {
     'hospcode': 'รหัสหน่วยบริการ', 'check_date': 'วันที่ตรวจ', 'region': 'ภาค', 'health_zone': 'เขตสุขภาพ',
     'province': 'จังหวัด', 'district': 'อำเภอ', 'subdistrict': 'ตำบล', 'location_name': 'สถานที่',
-    'water_type': 'ประเภทแหล่งน้ำ', 'fluoride_level': 'ปริมาณฟลูออไรด์ (mg/L)', 'status': 'สถานการณ์',
+    'water_type': 'ประเภทแหล่งน้ำ', 'water_category': 'กลุ่มแหล่งน้ำ', 'fluoride_level': 'ปริมาณฟลูออไรด์ (mg/L)', 'status': 'สถานการณ์',
     'latitude': 'ละติจูด', 'longitude': 'ลองจิจูด', 'total_kids': 'จำนวนเด็กทั้งหมด',
     'screened_kids': 'จำนวนตรวจ', 'fluorosis_cases': 'พบฟันตกกระ', 'pct_fluorosis': 'ร้อยละเด็กฟันตกกระ',
     'severe_cases': 'severe_cases', 'hosp_name': 'ชื่อหน่วยบริการ', 'dean_index_status': 'สถานการณ์',
@@ -154,6 +156,38 @@ def init_database_tables():
                   `username` VARCHAR(50) NOT NULL UNIQUE,
                   `password_hash` VARCHAR(255) NOT NULL,
                   `role` VARCHAR(50) DEFAULT 'admin',
+                  `fullname` VARCHAR(150),
+                  `status` VARCHAR(20) DEFAULT 'approved',
+                  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            """))
+            try:
+                conn.execute(text("ALTER TABLE `admin_users` ADD COLUMN `fullname` VARCHAR(150);"))
+                conn.execute(text("ALTER TABLE `admin_users` ADD COLUMN `status` VARCHAR(20) DEFAULT 'approved';"))
+            except:
+                pass
+            
+            # Create child_fluorosis_cases table
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS `child_fluorosis_cases` (
+                  `id` INT AUTO_INCREMENT PRIMARY KEY,
+                  `fullname` VARCHAR(150) NOT NULL,
+                  `gender` VARCHAR(10),
+                  `age` INT,
+                  `grade` VARCHAR(50),
+                  `school` VARCHAR(150),
+                  `province` VARCHAR(100),
+                  `district` VARCHAR(100),
+                  `subdistrict` VARCHAR(100),
+                  `address` TEXT,
+                  `years_in_area` INT,
+                  `survey_date` DATE,
+                  `water_source` VARCHAR(100),
+                  `water_source_other` VARCHAR(100),
+                  `tooth_u1` VARCHAR(5), `tooth_u2` VARCHAR(5), `tooth_u3` VARCHAR(5), `tooth_u4` VARCHAR(5), `tooth_u5` VARCHAR(5), `tooth_u6` VARCHAR(5), `tooth_u7` VARCHAR(5),
+                  `tooth_l1` VARCHAR(5), `tooth_l2` VARCHAR(5), `tooth_l3` VARCHAR(5), `tooth_l4` VARCHAR(5), `tooth_l5` VARCHAR(5), `tooth_l6` VARCHAR(5), `tooth_l7` VARCHAR(5),
+                  `deans_index` VARCHAR(10),
+                  `created_by` VARCHAR(50),
                   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             """))
@@ -222,6 +256,7 @@ def init_database_tables():
                 CREATE TABLE IF NOT EXISTS `water_records` (
                   `id` INT AUTO_INCREMENT PRIMARY KEY,
                   `water_type` VARCHAR(100) DEFAULT NULL,
+                  `water_category` VARCHAR(100) DEFAULT NULL,
                   `location_name` VARCHAR(255) NOT NULL,
                   `fluoride_level` DOUBLE DEFAULT 0.0,
                   `check_date` VARCHAR(50) DEFAULT NULL,
@@ -342,19 +377,7 @@ def init_database_tables():
             # Auto-seed fluorosis_investigations if empty
             inv_count = conn.execute(text("SELECT COUNT(*) FROM `fluorosis_investigations`")).fetchone()[0]
             if inv_count == 0:
-                print("Seeding fluorosis_investigations mock data...")
-                mock_invs = [
-                    {"hospcode": "10665", "hosp_name": "รพ.สต.ไทรม้า", "investigation_date": "2026-05-12", "patient_gender": "ชาย", "patient_age": 8, "severity_level": "ระดับปานกลาง (Moderate)", "drinking_water_source": "น้ำประปาบาดาลหมู่บ้าน", "exposure_years": 8, "investigator_name": "ทพญ.สมศรี รักดี", "investigator_phone": "081-234-5678", "details": "พบสีฟันตกกระเป็นปื้นสีขาวขุ่นปนน้ำตาลจางๆ ในผิวฟันแท้หน้าบน เด็กดื่มน้ำประปาบาดาลต้มในครัวเรือนมาตั้งแต่เกิด", "status": "Pending"},
-                    {"hospcode": "10683", "hosp_name": "รพ.สันป่าตอง", "investigation_date": "2026-06-02", "patient_gender": "หญิง", "patient_age": 10, "severity_level": "ระดับรุนแรง (Severe)", "drinking_water_source": "น้ำประปาผิวดิน (โรงเรียน)", "exposure_years": 5, "investigator_name": "ทพ.สมชาย ยิ้มสวย", "investigator_phone": "089-876-5432", "details": "ฟันมีสีน้ำตาลเข้มเกือบทั้งซี่และพบบริเวณผิวฟันกร่อนชำรุด เด็กดื่มน้ำตู้น้ำโรงเรียนซึ่งประปาป้อนมาจากบาดาลดิบของวัดใกล้เคียง", "status": "Investigating"},
-                    {"hospcode": "10970", "hosp_name": "รพ.พระนั่งเกล้า", "investigation_date": "2026-06-15", "patient_gender": "ชาย", "patient_age": 7, "severity_level": "ระดับอ่อน (Mild)", "drinking_water_source": "น้ำประปาผิวดิน", "exposure_years": 7, "investigator_name": "ทพญ.วันดี มีสุข", "investigator_phone": "086-111-2222", "details": "ฟันคู่หน้ามีขีดขาวขุ่นจางๆ น้อยกว่า 50% ของพื้นที่ผิวฟัน ดื่มน้ำประปาสลับน้ำดื่มบรรจุขวด", "status": "Resolved"}
-                ]
-                for inv in mock_invs:
-                    conn.execute(text("""
-                        INSERT INTO `fluorosis_investigations` 
-                        (hospcode, hosp_name, investigation_date, patient_gender, patient_age, severity_level, drinking_water_source, exposure_years, investigator_name, investigator_phone, details, status)
-                        VALUES (:hospcode, :hosp_name, :investigation_date, :patient_gender, :patient_age, :severity_level, :drinking_water_source, :exposure_years, :investigator_name, :investigator_phone, :details, :status)
-                    """), inv)
-                print("Seeded fluorosis_investigations successfully.")
+                pass # Removed mock data for production
 
             # 💡 [อัปเกรด] Schema JSON ของหน้าหลัก เพื่อให้แก้ไขได้ผ่านหน้าตั้งค่า
             conn.execute(text("""
@@ -367,12 +390,12 @@ def init_database_tables():
                 INSERT INTO `report_schemas` (`report_name`, `category`, `schema_data`) VALUES
                 ('สภาวะฟันตกกระ (เด็ก)', 'health', '{"fields": [{"name": "รหัสหน่วยบริการ", "type": "DB_Column", "db_ref": "hospcode", "formula": ""}, {"name": "ชื่อหน่วยบริการ", "type": "DB_Column", "db_ref": "hosp_name", "formula": ""}, {"name": "ปีงบประมาณ", "type": "DB_Column", "db_ref": "fiscal_year", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "จำนวนตรวจ", "type": "DB_Column", "db_ref": "screened_kids", "formula": ""}, {"name": "พบฟันตกกระ", "type": "DB_Column", "db_ref": "fluorosis_cases", "formula": ""}, {"name": "ร้อยละตกกระ (%)", "type": "Formula", "db_ref": "", "formula": "([พบฟันตกกระ]/[จำนวนตรวจ])*100"}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ร้อยละตกกระ (%)", "map": "ร้อยละตกกระ (%)", "kpis": [{"label":"จำนวนเด็กทั้งหมด", "type":"sum", "col":"จำนวนเด็กทั้งหมด", "color":"main"}, {"label":"ได้รับการตรวจ", "type":"sum", "col":"จำนวนตรวจ", "color":"theme"}, {"label":"พบฟันตกกระ", "type":"sum", "col":"พบฟันตกกระ", "color":"danger"}, {"label":"ค่าเฉลี่ยตกกระ", "type":"avg", "col":"ร้อยละตกกระ (%)", "color":"warning"}]}}'),
                 
-                ('คุณภาพน้ำประปา', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}'),
+                ('แหล่งน้ำดิบ', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}'),
                 
-                ('คุณภาพน้ำบาดาล', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}'),
+                ('แหล่งน้ำบริโภค', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}'),
                 
-                ('โรงงานผลิตน้ำ', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}')
-                ON DUPLICATE KEY UPDATE schema_data=VALUES(schema_data)
+                ('แหล่งน้ำประปา', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}')
+                ON DUPLICATE KEY UPDATE report_name=report_name
             """))
 
             # Create database indexes for optimized search performance
@@ -675,8 +698,13 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
             with engine.connect() as conn:
                 w_raw = pd.read_sql(text(sql), conn, params=params)
                 
+            
             if not w_raw.empty:
+                w_raw['check_date_parsed'] = pd.to_datetime(w_raw['check_date'], errors='coerce')
+                w_raw = w_raw.sort_values('check_date_parsed', ascending=False).drop_duplicates(subset=['location_name', 'latitude', 'longitude'])
+                
                 df_w = pd.DataFrame(index=w_raw.index)
+
                 dates = pd.to_datetime(w_raw['check_date'], errors='coerce')
                 df_w['วันที่ตรวจ'] = dates.dt.strftime('%Y-%m-%d').fillna('')
                 df_w['ว/ด/ป ที่เก็บ'] = df_w['วันที่ตรวจ']
@@ -689,6 +717,7 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                 df_w['ตำบล'] = safe_extract(w_raw, 'subdistrict', 'ไม่ระบุ')
                 df_w['สถานที่เก็บ'] = safe_extract(w_raw, 'location_name', 'ไม่ระบุ')
                 df_w['ชนิดน้ำ'] = safe_extract(w_raw, 'water_type', 'ไม่ระบุ')
+                df_w['กลุ่มแหล่งน้ำ'] = safe_extract(w_raw, 'water_category', 'ไม่ระบุ')
                 df_w['ปริมาณฟลูออไรด์'] = pd.to_numeric(safe_extract(w_raw, 'fluoride_level', 0.0), errors='coerce').fillna(0.0)
                 df_w['สถานการณ์'] = safe_extract(w_raw, 'status', 'ไม่ระบุ')
                 df_w['บ้านเลขที่'] = safe_extract(w_raw, 'house_no', '-')
@@ -783,6 +812,62 @@ def natural_keys(t): return [int(c) if c.isdigit() else c for c in re.split(r'(\
 @app.route('/')
 def home(): return render_template('index.html')
 
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.json
+    try:
+        username = data['username'].strip()
+        password = data['password']
+        fullname = data.get('fullname', '')
+        role = data.get('role', 'local')
+        p_hash = hashlib.sha256(password.encode()).hexdigest()
+        with engine.begin() as conn:
+            conn.execute(text("INSERT INTO `admin_users` (username, password_hash, role, fullname, status) VALUES (:u, :p, :r, :f, 'pending')"), {"u": username, "p": p_hash, "r": role, "f": fullname})
+        return jsonify({'success': True, 'message': 'ลงทะเบียนสำเร็จ กรุณารอผู้ดูแลระบบอนุมัติ'})
+    except Exception as e:
+        if 'Duplicate entry' in str(e):
+            return jsonify({'success': False, 'message': 'ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว'})
+        return jsonify({'success': False, 'message': f'เกิดข้อผิดพลาด: {str(e)}'})
+
+@app.route('/api/admin/users', methods=['GET'])
+def admin_get_users():
+    try:
+        with engine.connect() as conn:
+            res = conn.execute(text("SELECT id, username, fullname, role, status, created_at FROM `admin_users`")).fetchall()
+            users = [dict(r._mapping) for r in res]
+            return jsonify({'success': True, 'users': users})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/users/approve', methods=['POST'])
+def admin_approve_user():
+    data = request.json
+    try:
+        user_id = data['id']
+        action = data['action'] # 'approve' or 'reject'
+        status = 'approved' if action == 'approve' else 'rejected'
+        with engine.begin() as conn:
+            conn.execute(text("UPDATE `admin_users` SET status = :s WHERE id = :id"), {"s": status, "id": user_id})
+        return jsonify({'success': True, 'message': 'อัปเดตสถานะสำเร็จ'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route('/api/location_history', methods=['POST'])
+def location_history():
+    data = request.json
+    location_name = data.get('location_name')
+    lat = data.get('latitude')
+    lng = data.get('longitude')
+    try:
+        with engine.connect() as conn:
+            sql = "SELECT check_date, fluoride_level FROM water_records WHERE location_name = :loc AND latitude = :lat AND longitude = :lng ORDER BY check_date ASC"
+            res = conn.execute(text(sql), {"loc": location_name, "lat": lat, "lng": lng}).fetchall()
+            history = [{"date": r[0], "ppm": r[1]} for r in res]
+            return jsonify({'success': True, 'history': history})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -791,10 +876,15 @@ def login():
     p_hash = hashlib.sha256(password.encode()).hexdigest()
     try:
         with engine.connect() as conn:
-            res = conn.execute(text("SELECT password_hash FROM `admin_users` WHERE username = :u"), {"u": username}).fetchone()
+            res = conn.execute(text("SELECT password_hash, role, status FROM `admin_users` WHERE username = :u"), {"u": username}).fetchone()
             if res and res[0] == p_hash:
+                if res[2] == 'pending':
+                    return jsonify({'success': False, 'message': 'บัญชีของคุณอยู่ระหว่างรออนุมัติจากผู้ดูแลระบบ'})
+                if res[2] == 'rejected':
+                    return jsonify({'success': False, 'message': 'บัญชีของคุณถูกระงับการใช้งาน'})
+                
                 log_audit(username, 'LOGIN', 'SYSTEM', 'เข้าสู่ระบบสำเร็จ')
-                return jsonify({'success': True, 'token': f"{username}:{p_hash}"})
+                return jsonify({'success': True, 'token': f"{username}:{p_hash}", 'role': res[1]})
             else:
                 return jsonify({'success': False, 'message': 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง'})
     except Exception as e:
@@ -858,36 +948,41 @@ def get_data():
             fmt_val = f"{c_val}%" if 'pct' in k.get('col', '') else c_val
             home_kpis_dynamic.append({'label': k.get('label', ''), 'value': fmt_val, 'color': k.get('color', 'main'), 'col': k.get('col', '')})
  
-        critical_points = []
+        water_points = []
         if not df_water.empty:
-            water_crit = df_water[(df_water['ปริมาณฟลูออไรด์'] > 0.7) & (df_water['ละติจูด'] != 0.0) & (df_water['ลองจิจูด'] != 0.0)]
-            for _, r in water_crit.iterrows():
-                critical_points.append({
+            water_valid = df_water[(df_water['ละติจูด'] != 0.0) & (df_water['ลองจิจูด'] != 0.0)]
+            for _, r in water_valid.iterrows():
+                water_points.append({
                     'name': str(r['สถานที่เก็บ']),
                     'lat': float(r['ละติจูด']),
                     'lng': float(r['ลองจิจูด']),
                     'val': float(r['ปริมาณฟลูออไรด์']),
                     'type': 'water',
+                    'water_type': str(r.get('ชนิดน้ำ', 'ไม่ระบุ')),
+                    'check_date': str(r.get('วันที่ตรวจ', '-')),
+                    'category': str(r.get('กลุ่มแหล่งน้ำ', 'ไม่ระบุ')),
                     'prov': str(r['จังหวัด']),
                     'dist': str(r['อำเภอ']),
                     'subdist': str(r['ตำบล']),
                     'status': str(r['สถานการณ์']),
                     'detail': f"ปริมาณฟลูออไรด์ {r['ปริมาณฟลูออไรด์']} mg/L"
                 })
+        dental_points = []
         if not df_dental.empty:
-            dental_crit = df_dental[(df_dental['ร้อยละเด็กฟันตกกระ'] > 10.0) & (df_dental['ละติจูด'] != 0.0) & (df_dental['ลองจิจูด'] != 0.0)]
-            for _, r in dental_crit.iterrows():
-                critical_points.append({
+            dental_valid = df_dental[(df_dental['ร้อยละเด็กฟันตกกระ'].notnull()) & (df_dental['ละติจูด'] != 0.0) & (df_dental['ลองจิจูด'] != 0.0)]
+            for _, r in dental_valid.iterrows():
+                dental_points.append({
                     'name': str(r['ชื่อหน่วยบริการ']),
                     'lat': float(r['ละติจูด']),
                     'lng': float(r['ลองจิจูด']),
                     'val': float(r['ร้อยละเด็กฟันตกกระ']),
                     'type': 'dental',
+                    'category': 'dental',
                     'prov': str(r['จังหวัด']),
                     'dist': str(r['อำเภอ']),
                     'subdist': str(r['ตำบล']),
                     'status': str(r['สถานการณ์']),
-                    'detail': f"พบฟันตกกระ {int(r['พบฟันตกกระ'])} จาก {int(r['จำนวนตรวจ'])} ราย ({r['ร้อยละเด็กฟันตกกระ']}%)"
+                    'detail': f"ฟันตกกระ {r['ร้อยละเด็กฟันตกกระ']}%"
                 })
  
         # Cascading dropdown logic for home summary
@@ -953,7 +1048,8 @@ def get_data():
                 }
             },
             'top_alerts': top_alerts,
-            'critical_points': critical_points,
+            'water_points': water_points,
+            'dental_points': dental_points,
             'dropdowns': dropdowns
         })
  
@@ -1107,7 +1203,7 @@ def upload_data():
 
         import_results = []
         
-        with engine.begin() as conn:
+        with engine.connect() as conn:
             for idx, row in df.iterrows():
                 row_dict = {k: v for k, v in row.dropna().to_dict().items() if k in VALID_DB_COLUMNS}
                 
@@ -1118,12 +1214,17 @@ def upload_data():
                     hc = hc.zfill(5)
                     row_dict['hospcode'] = hc
                     
-                    # Look up facility details from master table
-                    facility = conn.execute(text("""
-                        SELECT hosp_name, health_zone, province, district, subdistrict 
-                        FROM health_facilities_master 
-                        WHERE hospcode = :hc
-                    """), {"hc": hc}).fetchone()
+                    try:
+                        # Look up facility details from master table
+                        facility = conn.execute(text("""
+                            SELECT hosp_name, health_zone, province, district, subdistrict 
+                            FROM health_facilities_master 
+                            WHERE hospcode = :hc
+                        """), {"hc": hc}).fetchone()
+                        conn.commit()
+                    except Exception as e:
+                        conn.rollback()
+                        facility = None
                     
                     if facility:
                         if not row_dict.get('hosp_name') or str(row_dict['hosp_name']).strip() == '':
@@ -1149,6 +1250,17 @@ def upload_data():
                 
                 ref_name = row_dict.get('hosp_name' if cat == 'health' else 'location_name', f"แถวที่ {idx+1}")
                 
+                if cat != 'health' and 'water_type' in row_dict:
+                    wt = str(row_dict['water_type']).strip()
+                    if any(k in wt for k in ['ภูเขา', 'บาดาล', 'บ่อ', 'แม่น้ำ', 'น้ำฝน', 'ดิบ']):
+                        row_dict['water_category'] = 'แหล่งน้ำดิบ'
+                    elif any(k in wt for k in ['ถัง', 'ขวด', 'หยอดเหรียญ', 'โรงเรียน', 'บริโภค']):
+                        row_dict['water_category'] = 'แหล่งน้ำบริโภค'
+                    elif any(k in wt for k in ['ประปาตำบล', 'ส่วนภูมิภาค', 'นครหลวง', 'ประปา']):
+                        row_dict['water_category'] = 'แหล่งน้ำประปา'
+                    else:
+                        row_dict['water_category'] = 'ไม่ระบุ'
+                
                 if len(row_dict) > 0:
                     # Validate
                     row_errors = validate_row_data(row_dict, cat)
@@ -1169,6 +1281,7 @@ def upload_data():
                         sql = text(f"INSERT INTO {table} ({cols}) VALUES ({placeholders}) ON DUPLICATE KEY UPDATE {updates}")
                         
                         result = conn.execute(sql, row_dict)
+                        conn.commit()
                         
                         if result.rowcount == 1:
                             status, remark = 'new', 'เพิ่มข้อมูลใหม่'
@@ -1179,6 +1292,7 @@ def upload_data():
                             
                         import_results.append({'index': idx + 1, 'reference': ref_name, 'status': status, 'remark': remark})
                     except Exception as e:
+                        conn.rollback()
                         import_results.append({'index': idx + 1, 'reference': ref_name, 'status': 'error', 'remark': str(e)})
         
         summary = { 'total': len(df), 'new': sum(1 for x in import_results if x['status'] == 'new'), 'updated': sum(1 for x in import_results if x['status'] == 'updated'), 'error': sum(1 for x in import_results if x['status'] == 'error') }
@@ -1652,8 +1766,8 @@ def predict_risk():
             merged['severe_cases'] = merged['severe_cases'].fillna(0.0)
             merged['water_avg_ppm'] = merged['water_avg_ppm'].fillna(0.3)
             
-        merged['fluorosis_rate'] = (merged['พบฟันตกกระ'] / merged['จำนวนตรวจ'] * 100).fillna(0.0)
-        merged['severe_ratio'] = (merged['severe_cases'] / merged['จำนวนตรวจ']).fillna(0.0)
+        merged['fluorosis_rate'] = (merged['พบฟันตกกระ'] / merged['จำนวนตรวจ'].replace(0, np.nan) * 100).fillna(0.0)
+        merged['severe_ratio'] = (merged['severe_cases'] / merged['จำนวนตรวจ'].replace(0, np.nan)).fillna(0.0)
         
         N = len(merged)
         X = np.ones((N, 3))

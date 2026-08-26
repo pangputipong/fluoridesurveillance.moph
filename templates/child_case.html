@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>บันทึกข้อมูลเด็ก | FFCSS</title>
+    <link rel="icon" type="image/png" href="/static/ICON_FLUORIDE.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #3b71ca;
+            --bg-color: #f1f4f9;
+        }
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg-color);
+        }
+        .top-navbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-custom {
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .text-theme {
+            color: var(--primary);
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(59, 113, 202, 0.25);
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navbar mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-child text-theme" style="font-size: 1.5rem;"></i>
+            <h4 class="m-0 fw-bold">ระบบบันทึกข้อมูลเฝ้าระวังสภาวะฟันตกกระ (เด็ก)</h4>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/" class="btn btn-outline-secondary"><i class="fas fa-home me-1"></i> หน้าหลัก</a>
+            <a href="/dashboard" class="btn btn-primary"><i class="fas fa-chart-line me-1"></i> Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="card card-custom border-0">
+            <div class="card-body p-4 p-md-5">
+                <form id="childCaseForm">
+                    <h5 class="text-theme fw-bold border-bottom pb-2 mb-3">ข้อมูลพื้นฐานเด็ก</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">ชื่อ-สกุล เด็ก</label>
+                            <input type="text" class="form-control" id="cFName" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">เพศ</label>
+                            <select class="form-select" id="cFGender"><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">อายุ (ปี)</label>
+                            <input type="number" class="form-control" id="cFAge" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">ระดับชั้น</label>
+                            <input type="text" class="form-control" id="cFGrade">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">โรงเรียน</label>
+                            <input type="text" class="form-control" id="cFSchool">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">ระยะเวลาอาศัยในพื้นที่ (ปี)</label>
+                            <input type="number" class="form-control" id="cFYears">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">วันที่สำรวจ</label>
+                            <input type="date" class="form-control" id="cFDate" required>
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-theme fw-bold border-bottom pb-2 mb-3">ประเภทแหล่งน้ำดื่มหลัก</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <select class="form-select" id="cFWater" required>
+                                <option value="">เลือกแหล่งน้ำดื่มหลักที่บ้าน...</option>
+                                <option value="น้ำประปาหมู่บ้าน/ประปาภูเขา">น้ำประปาหมู่บ้าน/ประปาภูเขา</option>
+                                <option value="น้ำประปาส่วนภูมิภาค/นครหลวง">น้ำประปาส่วนภูมิภาค/นครหลวง</option>
+                                <option value="น้ำบาดาล/น้ำบ่อตื้น">น้ำบาดาล/น้ำบ่อตื้น (ไม่ผ่านระบบประปา)</option>
+                                <option value="น้ำขวด/ถังปิดสนิท">น้ำขวด/น้ำถังปิดสนิท (ซื้อ)</option>
+                                <option value="น้ำตู้หยอดเหรียญ">น้ำจากตู้หยอดเหรียญ</option>
+                                <option value="น้ำฝน">น้ำฝน</option>
+                                <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="cFWaterOther" placeholder="ระบุแหล่งน้ำดื่มอื่นๆ (ถ้ามี)">
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-theme fw-bold border-bottom pb-2 mb-3">บันทึกระดับความรุนแรงฟันตกกระ (0-5, 9) แยกรายซี่</h5>
+                    <div class="alert alert-info py-2" style="font-size:0.85rem;">
+                        <b>เกณฑ์ให้คะแนน (Dean's Index):</b> 0=ปกติ, 1=สงสัย, 2=น้อยมาก, 3=น้อย, 4=ปานกลาง, 5=รุนแรง, 9=ไม่สามารถตรวจได้/ถอนไปแล้ว
+                    </div>
+                    
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered text-center align-middle" style="min-width: 600px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ตำแหน่งฟัน</th>
+                                    <th>ซี่ที่ 7</th><th>ซี่ที่ 6</th><th>ซี่ที่ 5</th><th>ซี่ที่ 4</th><th>ซี่ที่ 3</th><th>ซี่ที่ 2</th><th>ซี่ที่ 1</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold bg-light">ฟันบน (Upper)</td>
+                                    <td><input type="number" class="form-control text-center" id="cFU7" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFU6" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFU5" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFU4" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFU3" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFU2" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFU1" min="0" max="9"></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold bg-light">ฟันล่าง (Lower)</td>
+                                    <td><input type="number" class="form-control text-center" id="cFL7" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFL6" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFL5" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFL4" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFL3" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFL2" min="0" max="9"></td>
+                                    <td><input type="number" class="form-control text-center" id="cFL1" min="0" max="9"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-danger">สรุปผลดัชนีฟันตกกระของเด็ก (Dean's Index)</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-select border-danger text-danger fw-bold" id="cFDeanIndex" required>
+                                <option value="">-- เลือกสรุปคะแนน (พิจารณาจาก 2 ซี่ที่รุนแรงสุด) --</option>
+                                <option value="0">0 - ปกติ (Normal)</option>
+                                <option value="1">1 - สงสัย (Questionable)</option>
+                                <option value="2">2 - น้อยมาก (Very Mild)</option>
+                                <option value="3">3 - น้อย (Mild)</option>
+                                <option value="4">4 - ปานกลาง (Moderate)</option>
+                                <option value="5">5 - รุนแรง (Severe)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success px-5 py-2 fw-bold"><i class="fas fa-save me-2"></i>บันทึกข้อมูลเข้าระบบ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Set default date to today
+            document.getElementById('cFDate').valueAsDate = new Date();
+            
+            // Child Case Submission
+            $('#childCaseForm').submit(function(e) {
+                e.preventDefault();
+                let payload = {
+                    fullname: $('#cFName').val(), gender: $('#cFGender').val(), age: $('#cFAge').val(),
+                    grade: $('#cFGrade').val(), school: $('#cFSchool').val(), 
+                    // Set default mock locations since this standalone form doesn't have the province dropdowns yet
+                    province: 'เชียงใหม่', district: 'สารภี', subdistrict: 'หนองแฝก', 
+                    address: '', years_in_area: $('#cFYears').val(), survey_date: $('#cFDate').val(), water_source: $('#cFWater').val(),
+                    water_source_other: $('#cFWaterOther').val(), deans_index: $('#cFDeanIndex').val(),
+                    created_by: sessionStorage.getItem('userName') || 'staff',
+                    u1:$('#cFU1').val(), u2:$('#cFU2').val(), u3:$('#cFU3').val(), u4:$('#cFU4').val(), u5:$('#cFU5').val(), u6:$('#cFU6').val(), u7:$('#cFU7').val(),
+                    l1:$('#cFL1').val(), l2:$('#cFL2').val(), l3:$('#cFL3').val(), l4:$('#cFL4').val(), l5:$('#cFL5').val(), l6:$('#cFL6').val(), l7:$('#cFL7').val()
+                };
+                
+                let btn = $(this).find('button[type="submit"]');
+                let oldText = btn.html();
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>กำลังบันทึก...');
+
+                fetch('/api/cases/submit', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                }).then(r=>r.json()).then(data=>{
+                    if(data.success) {
+                        alert("บันทึกข้อมูลเสร็จสมบูรณ์เรียบร้อยแล้ว");
+                        $('#childCaseForm')[0].reset();
+                        document.getElementById('cFDate').valueAsDate = new Date();
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                }).catch(err => {
+                    alert("Error connecting to server");
+                }).finally(() => {
+                    btn.prop('disabled', false).html(oldText);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

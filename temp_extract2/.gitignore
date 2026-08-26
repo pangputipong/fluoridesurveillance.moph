@@ -1,0 +1,23 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables (Credentials & Secrets)
+.env
+
+# Database directories / volume data
+mySQL/
+db_data/
+
+# Deliverables and Reports (Do not upload large docx files to server)
+Deliverables_and_Reports/
+
+# Editor / IDE configurations
+.vscode/
+.idea/
+
+# AI Assistant files / Temp directories
+.gemini/
+scratch/

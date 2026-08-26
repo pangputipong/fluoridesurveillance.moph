@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFCSS | ระบบเฝ้าระวังสภาวะฟันตกกระและระดับฟลูออไรด์ในน้ำ</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS for grid/utility -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #f1f4f9;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --primary: #3b71ca;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-radius: 20px;
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.02);
+            --shadow-md: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        body {
+            font-family: 'Inter', 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Top Nav */
+        .top-nav {
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand-icon {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 20px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+        .nav-links a.active, .nav-links a:hover {
+            background-color: var(--text-dark);
+            color: white;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .btn-dashboard {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 15px rgba(59, 113, 202, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-dashboard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(59, 113, 202, 0.3);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-container {
+            padding: 1rem 3rem 3rem 3rem;
+        }
+
+        /* Hero Left Column */
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+        .hero-subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 550px;
+            border-radius: 30px;
+            overflow: hidden;
+            background: white;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .image-container:hover img {
+            transform: scale(1.02);
+        }
+        
+        /* Floating Glass Card on Image */
+        .floating-glass {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Right Column Cards */
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: transform 0.2s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title-sm {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Analysis Metrics */
+        .metric-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .bar-chart-mini {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 30px;
+        }
+        .bar-segment {
+            width: 6px;
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+        .bar-segment.active { background-color: var(--primary); }
+        .bar-segment.warning { background-color: #f59e0b; }
+
+        /* List Items */
+        .action-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+        .action-item:hover {
+            background: #f8fafc;
+        }
+        .action-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+        .action-item.active .action-icon {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .action-text {
+            flex-grow: 1;
+        }
+        .action-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0 0 2px 0;
+        }
+        .action-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .action-item.active .action-desc {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Dark Card */
+        .dark-card {
+            background: #1e293b;
+            color: white;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(30, 41, 59, 0.3);
+        }
+        .dark-card::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 150px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1));
+            border-top-right-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="brand">
+            <i class="fas fa-tooth brand-icon"></i>
+            FFCSS
+        </div>
+        
+        <div class="nav-links d-none d-md-flex">
+            <a href="#" class="active"><i class="fas fa-home me-2"></i>หน้าหลัก (Home)</a>
+            <a href="#"><i class="fas fa-book-medical me-2"></i>ข้อมูลความรู้</a>
+            <a href="#"><i class="fas fa-globe-asia me-2"></i>เครือข่ายชุมชน</a>
+        </div>
+        
+        <div class="nav-actions">
+            <div class="d-flex align-items-center gap-3">
+
+                <a href="/dashboard" class="btn-dashboard">
+                    เข้าสู่ระบบ Dashboard <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid main-container">
+        <div class="row">
+            
+            <!-- Left Column: Hero & 3D Model -->
+            <div class="col-lg-6 mb-4">
+                <h1 class="hero-title">ยินดีต้อนรับสู่ FFCSS</h1>
+                <p class="hero-subtitle">ระบบเฝ้าระวังสภาวะฟันตกกระและระดับฟลูออไรด์ในน้ำ<br><span style="font-size: 0.95rem; opacity: 0.8;">Fluorosis and Fluoride Community Surveillance System</span></p>
+                
+                <style>
+                    /* Interactive Tooth Animation */
+                    .interactive-tooth-container {
+                        position: relative;
+                        width: 100%;
+                        border-radius: 20px;
+                        overflow: hidden;
+                        cursor: pointer;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .interactive-tooth-container:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 22px 45px rgba(56, 189, 248, 0.15);
+                    }
+                    .tooth-base-image {
+                        width: 100%;
+                        height: auto;
+                        display: block;
+                        transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+                        filter: brightness(0.98) contrast(0.98);
+                    }
+                    
+                    /* The Glowing effect - toned down for smoothness */
+                    .interactive-tooth-container:hover .tooth-base-image {
+                        animation: toothGlow 2.5s forwards cubic-bezier(0.4, 0, 0.2, 1);
+                        animation-delay: 0.8s; /* wait for drop */
+                    }
+
+                    @keyframes toothGlow {
+                        0% { filter: brightness(0.98) contrast(0.98); }
+                        40% { filter: brightness(1.1) contrast(1.05) drop-shadow(0 0 10px rgba(56, 189, 248, 0.4)); }
+                        100% { filter: brightness(1.05) contrast(1.02) drop-shadow(0 0 5px rgba(56, 189, 248, 0.2)); }
+                    }
+
+                    /* Toothpaste Tube SVG Container */
+                    .toothpaste-svg-container {
+                        position: absolute;
+                        top: -10px;
+                        right: 15%;
+                        width: 70px;
+                        height: 140px;
+                        transform: rotate(-15deg);
+                        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        z-index: 10;
+                        filter: drop-shadow(-3px 5px 8px rgba(0,0,0,0.2));
+                    }
+
+                    .interactive-tooth-container:hover .toothpaste-svg-container {
+                        transform: rotate(-35deg) translateY(10px) scale(1.05);
+                    }
+
+                    /* Particle System */
+                    .fluoride-particle {
+                        position: absolute;
+                        width: 6px;
+                        height: 6px;
+                        background: #38bdf8;
+                        border-radius: 50%;
+                        box-shadow: 0 0 10px #38bdf8, 0 0 20px #e0f2fe;
+                        pointer-events: none;
+                        z-index: 12;
+                        animation: particleFloat 1.2s forwards cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+
+                    @keyframes particleFloat {
+                        0% { opacity: 0; transform: scale(0) translate(0, 0); }
+                        20% { opacity: 1; transform: scale(1.5) translate(var(--tx-start), var(--ty-start)); }
+                        80% { opacity: 0.8; transform: scale(0.8) translate(var(--tx-end), var(--ty-end)); }
+                        100% { opacity: 0; transform: scale(0) translate(var(--tx-end), var(--ty-end)); }
+                    }
+                    
+                    /* Protective Aura - toned down */
+                    .protection-aura {
+                        position: absolute;
+                        top: 55%;
+                        right: 48%;
+                        width: 100px;
+                        height: 100px;
+                        background: radial-gradient(circle, rgba(56,189,248,0.3) 0%, rgba(56,189,248,0) 70%);
+                        border-radius: 50%;
+                        transform: translate(50%, -50%) scale(0);
+                        opacity: 0;
+                        z-index: 8;
+                        pointer-events: none;
+                    }
+
+                    .interactive-tooth-container:hover .protection-aura {
+                        animation: auraExpand 2.5s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+                        animation-delay: 0.5s;
+                    }
+
+                    @keyframes auraExpand {
+                        0% { transform: translate(50%, -50%) scale(0.5); opacity: 1; }
+                        100% { transform: translate(50%, -50%) scale(3.5); opacity: 0; }
+                    }
+                </style>
+
+                <div class="interactive-tooth-container">
+                    <!-- The generated 3D Medical Tooth Image -->
+                    <img src="/static/img/medical_tooth.jpg" alt="3D Medical Tooth Render" class="tooth-base-image">
+                    
+                    <!-- The Toothpaste Tube SVG -->
+                    <div class="toothpaste-svg-container">
+                        <svg viewBox="0 0 100 200" width="100%" height="100%">
+                            <defs>
+                                <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#f8fafc"/>
+                                    <stop offset="50%" stop-color="#ffffff"/>
+                                    <stop offset="100%" stop-color="#cbd5e1"/>
+                                </linearGradient>
+                                <linearGradient id="capGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#0284c7"/>
+                                    <stop offset="100%" stop-color="#38bdf8"/>
+                                </linearGradient>
+                            </defs>
+                            
+                            <!-- Tube crimp (TOP) -->
+                            <rect x="25" y="10" width="50" height="15" fill="#94a3b8" rx="2"/>
+                            <rect x="25" y="12" width="50" height="11" fill="#cbd5e1"/>
+                            <line x1="30" y1="10" x2="30" y2="25" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="40" y1="10" x2="40" y2="25" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="50" y1="10" x2="50" y2="25" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="60" y1="10" x2="60" y2="25" stroke="#94a3b8" stroke-width="1"/>
+                            <line x1="70" y1="10" x2="70" y2="25" stroke="#94a3b8" stroke-width="1"/>
+                            
+                            <!-- Tube body -->
+                            <path d="M 25 25 L 75 25 L 85 110 Q 85 145 60 145 L 40 145 Q 15 145 15 110 Z" fill="url(#tubeGrad)"/>
+                            
+                            <!-- Design Element on body -->
+                            <path d="M 17 90 L 83 90 L 85 110 Q 85 145 60 145 L 40 145 Q 15 145 15 110 Z" fill="rgba(56, 189, 248, 0.15)"/>
+                            <path d="M 16 110 L 84 110 L 82 125 Q 75 145 60 145 L 40 145 Q 25 145 18 125 Z" fill="rgba(2, 132, 199, 0.2)"/>
+
+                            <!-- Tube neck (BOTTOM) -->
+                            <rect x="40" y="145" width="20" height="10" fill="#e2e8f0"/>
+                            
+                            <!-- Tube cap (BOTTOM) -->
+                            <rect x="35" y="155" width="30" height="15" fill="url(#capGrad)" rx="3"/>
+                            
+                            <!-- Label (Reading downwards) -->
+                            <text x="50" y="70" transform="rotate(90, 50, 70)" font-family="Arial, sans-serif" font-weight="900" font-size="12" fill="#0284c7" text-anchor="middle" letter-spacing="1">5000 ppm</text>
+                            <text x="50" y="85" transform="rotate(90, 50, 85)" font-family="Arial, sans-serif" font-weight="bold" font-size="7" fill="#64748b" text-anchor="middle">FLUORIDE</text>
+                        </svg>
+                    </div>
+                    
+                    
+                    
+                    <!-- The Aura -->
+                    <div class="protection-aura"></div>
+
+                    <!-- Floating Glass Widget -->
+                    <div class="floating-glass" style="bottom: 20px; left: 20px; z-index: 11;">
+                        <div style="background: #3b71ca; width: 45px; height: 45px; border-radius: 12px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.5rem; transition: transform 0.5s;">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <h6 class="m-0 fw-bold" style="color:#1e293b;">Fluorosis Defense</h6>
+                            <small class="text-muted">Hover to apply 5000 ppm</small>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const container = document.querySelector('.interactive-tooth-container');
+                        let particleInterval;
+
+                        container.addEventListener('mouseenter', function() {
+                            particleInterval = setInterval(createParticle, 40);
+                        });
+
+                        container.addEventListener('mouseleave', function() {
+                            clearInterval(particleInterval);
+                        });
+
+                        function createParticle() {
+                            const particle = document.createElement('div');
+                            particle.classList.add('fluoride-particle');
+                            
+                            const rect = container.getBoundingClientRect();
+                            // Start near the tube cap (top right area)
+                            const startX = rect.width * 0.73 + (Math.random() * 20 - 10);
+                            const startY = rect.height * 0.22 + (Math.random() * 20 - 10);
+                            
+                            particle.style.left = startX + 'px';
+                            particle.style.top = startY + 'px';
+                            
+                            // End near the center of the tooth
+                            const txStart = Math.random() * 30 - 15;
+                            const tyStart = Math.random() * 30 - 15;
+                            const txEnd = (rect.width * 0.5 - startX) + (Math.random() * 120 - 60);
+                            const tyEnd = (rect.height * 0.6 - startY) + (Math.random() * 120 - 60);
+                            
+                            particle.style.setProperty('--tx-start', txStart + 'px');
+                            particle.style.setProperty('--ty-start', tyStart + 'px');
+                            particle.style.setProperty('--tx-end', txEnd + 'px');
+                            particle.style.setProperty('--ty-end', tyEnd + 'px');
+                            
+                            container.appendChild(particle);
+                            
+                            setTimeout(() => {
+                                if (particle.parentNode) {
+                                    particle.remove();
+                                }
+                            }, 1200);
+                        }
+                    });
+                </script>
+
+            </div>
+
+            <!-- Right Column: Data Cards -->
+            <div class="col-lg-6">
+                
+                <!-- Card 1: Water Quality Analysis -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header-flex">
+                        <h4 class="card-title-sm"><i class="fas fa-chart-simple text-primary"></i> การวิเคราะห์คุณภาพน้ำ (Water Quality)</h4>
+                        <span class="badge bg-light text-dark border">อัปเดตล่าสุด: วันนี้</span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="metric-group">
+                                <div>
+                                    <div class="metric-label">ระดับฟลูออไรด์เฉลี่ย</div>
+                                    <div class="metric-value">0.8<span style="font-size:1rem; color:#64748b;"> mg/L</span></div>
+                                </div>
+                                <div class="bar-chart-mini">
+                                    <div class="bar-segment" style="height:40%"></div>
+                                    <div class="bar-segment active" style="height:60%"></div>
+                                    <div class="bar-segment warning" style="height:80%"></div>
+                                    <div class="bar-segment" style="height:30%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="metric-group">
+                                <div>
+                                    <div class="metric-label">เกณฑ์มาตรฐาน (WHO)</div>
+                                    <div class="metric-value" style="color:#0f172a;">< 0.7<span style="font-size:1rem; color:#64748b;"> mg/L</span></div>
+                                </div>
+                                <div class="bar-chart-mini">
+                                    <div class="bar-segment active" style="height:50%"></div>
+                                    <div class="bar-segment active" style="height:50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Card 2: Community Guidelines -->
+                    <div class="col-md-7">
+                        <div class="dashboard-card h-100">
+                            <div class="card-header-flex">
+                                <h4 class="card-title-sm"><i class="fas fa-list-check text-primary"></i> แนวทางการจัดการ (Action List)</h4>
+                                <i class="fas fa-ellipsis-v text-muted"></i>
+                            </div>
+                            
+                            <ul class="action-list">
+                                <li class="action-item">
+                                    <div class="action-icon"><i class="fas fa-tint"></i></div>
+                                    <div class="action-text">
+                                        <h5 class="action-title">จัดหาน้ำดื่มทดแทน</h5>
+                                        <p class="action-desc">ลดการบริโภคน้ำที่มีฟลูออไรด์เกินเกณฑ์</p>
+                                    </div>
+                                </li>
+                                <li class="action-item active">
+                                    <div class="action-icon"><i class="fas fa-tooth"></i></div>
+                                    <div class="action-text">
+                                        <h5 class="action-title">เฝ้าระวังสุขภาพช่องปาก</h5>
+                                        <p class="action-desc">ตรวจคัดกรองเด็กปฐมวัยเป็นประจำ</p>
+                                    </div>
+                                </li>
+                                <li class="action-item">
+                                    <div class="action-icon"><i class="fas fa-users"></i></div>
+                                    <div class="action-text">
+                                        <h5 class="action-title">สื่อสารชุมชน</h5>
+                                        <p class="action-desc">ให้ความรู้เรื่องโรคฟันตกกระ</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 & 4 Stack -->
+                    <div class="col-md-5 d-flex flex-column gap-4">
+                        
+                        <!-- Dark Issue Card -->
+                        <div class="dark-card flex-grow-1 d-flex flex-column justify-content-center">
+                            <div class="d-flex align-items-center gap-2 mb-3 text-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span style="font-size: 0.9rem; font-weight:600;">Issue Found</span>
+                            </div>
+                            <h4 class="fw-bold mb-2">High Risk Zones</h4>
+                            <p class="text-white-50" style="font-size: 0.85rem; line-height:1.5;">ระบบตรวจพบพื้นที่เสี่ยงสูงที่ต้องเฝ้าระวังฟันตกกระรุนแรง</p>
+                            <div class="mt-auto d-flex gap-2">
+                                <span class="badge" style="background: rgba(255,255,255,0.15);">อ.สารภี</span>
+                                <span class="badge" style="background: rgba(255,255,255,0.15);">อ.ดอยสะเก็ด</span>
+                            </div>
+                            <!-- Arrow Button -->
+                            <a href="/dashboard" style="position: absolute; bottom: 20px; right: 20px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.2); color:white; display:flex; align-items:center; justify-content:center; text-decoration:none; transition: background 0.3s;">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

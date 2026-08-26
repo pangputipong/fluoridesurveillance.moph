@@ -21,3 +21,6 @@ Deliverables_and_Reports/
 # AI Assistant files / Temp directories
 .gemini/
 scratch/
+
+# Archives
+*.zip

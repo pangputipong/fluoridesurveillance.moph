@@ -36,6 +36,7 @@ $(document).ready(function() {
         $('#adminMenuSection').show();
         $('#btnLogoutMenu').show();
         $('#userProfileTop').css('display', 'flex');
+        setTimeout(updateMenuVisibility, 500);
     }
 
     $('#btnSubmitLogin').click(function() {
@@ -49,12 +50,15 @@ $(document).ready(function() {
         .then(res => res.json()).then(data => { 
             if(data.success) {
                 sessionStorage.setItem('adminToken', data.token);
+                sessionStorage.setItem('userRole', data.role);
+                sessionStorage.setItem('userName', username);
                 $('#loginModal').modal('hide');
                 $('#loginPassword').val('');
                 $('#btnLoginMenu').hide();
                 $('#adminMenuSection').slideDown();
                 $('#btnLogoutMenu').show();
                 $('#userProfileTop').css('display', 'flex');
+                updateMenuVisibility();
             } else {
                 alert(data.message);
             } 
@@ -376,6 +380,13 @@ $(document).ready(function() {
             $('#enableGrouping').prop('checked', true); $('#groupingBuilder').show();
             conf.proportion_rules.forEach(r => createGroupRuleRow(r.op, r.val1, r.val2, r.label));
         } else { $('#enableGrouping').prop('checked', false); $('#groupingBuilder').hide(); }
+
+        $('#colorRangesContainer').empty();
+        if(conf.map_colors && conf.map_colors.length > 0) {
+            conf.map_colors.forEach(c => addColorRangeRow(c.min !== null ? c.min : '', c.max !== null ? c.max : '', c.color));
+        } else {
+            addColorRangeRow('', '', '#ef4444');
+        }
     });
 
     $('#btnCreateNewReport').click(function() {
@@ -387,10 +398,26 @@ $(document).ready(function() {
         $('#enableGrouping').prop('checked', false); $('#groupingBuilder').hide(); $('#groupRulesContainer').empty();
         $('#mapAlertThreshold').val('');
         for(let i=1; i<=4; i++) { $(`#kpi${i}_label`).val(''); $(`#kpi${i}_type`).val('count'); $(`#kpi${i}_col`).html('<option value="">-- ไม่ใช้ --</option>'); $(`#kpi${i}_color`).val('main'); }
+        $('#colorRangesContainer').empty(); addColorRangeRow('', '', '#ef4444');
     });
 
     $('#btnAddColumnMock').click(function() { createBuilderRow(); updateChartDropdowns(); });
     $(document).on('click', '.btn-delete-row', function() { $(this).closest('.table-builder-row').remove(); updateChartDropdowns(); });
+
+    $('#btnAddColorRange').click(function(e) { e.preventDefault(); addColorRangeRow(); });
+    $(document).on('click', '.btn-delete-color-row', function(e) { e.preventDefault(); $(this).closest('.color-range-row').remove(); });
+
+    function addColorRangeRow(min = '', max = '', color = '#ef4444') {
+        let html = `
+        <div class="d-flex gap-1 align-items-center color-range-row mb-1">
+            <input type="number" step="any" class="form-control form-control-sm range-min" placeholder="Min" value="${min}" style="width: 30%;">
+            <span>-</span>
+            <input type="number" step="any" class="form-control form-control-sm range-max" placeholder="Max" value="${max}" style="width: 30%;">
+            <input type="color" class="form-control form-control-sm form-control-color range-color p-0 border-0" value="${color}" style="width: 35px; height: 28px;">
+            <button class="btn btn-sm btn-outline-danger btn-delete-color-row py-0 px-2" style="font-size:0.7rem;"><i class="fas fa-trash"></i></button>
+        </div>`;
+        $('#colorRangesContainer').append(html);
+    }
 
     $('#btnSaveSchema').click(function() {
         let reportName = ""; let reportCategory = "";
@@ -414,12 +441,32 @@ $(document).ready(function() {
         }
         
         let alertVal = $('#mapAlertThreshold').val();
+        
+        let mapColors = [];
+        $('#colorRangesContainer .color-range-row').each(function() {
+            let min = $(this).find('.range-min').val();
+            let max = $(this).find('.range-max').val();
+            let color = $(this).find('.range-color').val();
+            if(min !== '' || max !== '') {
+                mapColors.push({min: min !== '' ? parseFloat(min) : null, max: max !== '' ? parseFloat(max) : null, color: color});
+            }
+        });
+        
+        let homeThresholds = {
+            raw: parseFloat($('#critRaw').val()) || 1.5,
+            cons: parseFloat($('#critCons').val()) || 0.7,
+            tap: parseFloat($('#critTap').val()) || 0.7,
+            dental: parseFloat(alertVal) || 10.0
+        };
+
         let configData = { 
             proportion: $('#chartPropCol').val(), 
             proportion_rules: groupingRules, 
             drilldown: $('#chartDrillCol').val(), 
             map: $('#chartMapCol').val(), 
             alert_threshold: (alertVal !== "" && alertVal !== undefined && alertVal !== null) ? parseFloat(alertVal) : null,
+            map_colors: mapColors,
+            home_thresholds: homeThresholds,
             kpis: kpiData 
         };
         let payload = { report_name: reportName, category: reportCategory, schema_data: { fields: schemaData, config: configData } };
@@ -484,6 +531,8 @@ $(document).ready(function() {
 
     function buildDynamicTable(reportName, dataArray) {
         let schema = existingSchemas[reportName] ? existingSchemas[reportName].fields : [];
+        let cat = existingSchemas[reportName] ? existingSchemas[reportName].category : 'env';
+        let isDental = (cat === 'health');
         
         if ($.fn.DataTable.isDataTable('#dynamicDataTable')) { 
             $('#dynamicDataTable').DataTable().clear().destroy(); 
@@ -492,11 +541,18 @@ $(document).ready(function() {
         
         if (schema.length === 0) { $('#dynamicDataTable').html('<thead><tr><th>ไม่มีโครงสร้างตาราง</th></tr></thead><tbody></tbody>'); return; }
 
-        let zone = $('#filter-zone').val(), prov = $('#filter-province').val(), dist = $('#filter-district').val();
-        let aggKey = 'เขตสุขภาพ', aggTitle = 'เขตสุขภาพ';
-        if(dist !== 'ทั้งหมด') { aggKey = 'raw'; }
-        else if(prov !== 'ทั้งหมด') { aggKey = 'อำเภอ'; aggTitle = 'อำเภอ'; }
-        else if(zone !== 'ทั้งหมด') { aggKey = 'จังหวัด'; aggTitle = 'จังหวัด'; }
+        let zone = $('#filter-zone').val(), prov = $('#filter-province').val(), dist = $('#filter-district').val(), subdist = $('#filter-subdistrict').val();
+        let aggKey = 'raw', aggTitle = '';
+        
+        if (isDental) {
+            if (subdist !== 'ทั้งหมด') { aggKey = 'raw'; }
+            else if (dist !== 'ทั้งหมด') { aggKey = 'ตำบล'; aggTitle = 'ตำบล'; }
+            else if (prov !== 'ทั้งหมด') { aggKey = 'อำเภอ'; aggTitle = 'อำเภอ'; }
+            else if (zone !== 'ทั้งหมด') { aggKey = 'จังหวัด'; aggTitle = 'จังหวัด'; }
+            else { aggKey = 'เขตสุขภาพ'; aggTitle = 'เขตสุขภาพ'; }
+        } else {
+            aggKey = 'raw';
+        }
 
         let tableData = []; let columnsDef = []; let theadHtml = '<thead><tr>';
 
@@ -682,7 +738,7 @@ $(document).ready(function() {
     // 6. Map & Charts Render Core
     // ----------------------------------------------------
     let currentType = 'ทั้งหมด'; let isDental = false; let globalData = []; let activeChartConfig = {};
-    let map = L.map('leafletMap').setView([15.0, 100.0], 6); 
+    let map = L.map('leafletMap', { maxBounds: [[5.0, 97.0], [21.0, 106.0]], maxBoundsViscosity: 1.0, minZoom: 5 }).setView([15.0, 100.0], 6); 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { crossOrigin: true }).addTo(map); 
     let markersGroup = L.markerClusterGroup({ disableClusteringAtZoom: 12 }); 
     map.addLayer(markersGroup);
@@ -690,22 +746,26 @@ $(document).ready(function() {
     let homeMap = null;
     let homeMarkersGroup = null;
 
-    let proportionBarChart = new Chart(document.getElementById('proportionBarChart').getContext('2d'), { 
-        type: 'bar', 
-        data: { labels: [], datasets: [{ data: [] }] }, 
-        options: { 
-            indexAxis: 'y', 
-            plugins: { 
-                legend: { display: false }, 
-                datalabels: { display: true, anchor: 'end', align: 'right', formatter: v => v.toFixed(1) + (isDental ? '%' : '') } 
-            }, 
-            scales: { 
-                x: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' } }, 
-                y: { grid: { display: false } } 
-            }, 
-            maintainAspectRatio: false 
-        } 
-    });
+    let proportionBarChart = null;
+    let propCanvas = document.getElementById('proportionBarChart');
+    if (propCanvas) {
+        proportionBarChart = new Chart(propCanvas.getContext('2d'), { 
+            type: 'bar', 
+            data: { labels: [], datasets: [{ data: [] }] }, 
+            options: { 
+                indexAxis: 'y', 
+                plugins: { 
+                    legend: { display: false }, 
+                    datalabels: { display: true, anchor: 'end', align: 'right', formatter: v => v.toFixed(1) + (isDental ? '%' : '') } 
+                }, 
+                scales: { 
+                    x: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' } }, 
+                    y: { grid: { display: false } } 
+                }, 
+                maintainAspectRatio: false 
+            } 
+        });
+    }
 
     let drilldownChart = new Chart(document.getElementById('drilldownChart').getContext('2d'), { 
         type: 'bar', 
@@ -746,18 +806,7 @@ $(document).ready(function() {
         } 
     });
 
-    let homeDonutCtx = document.getElementById('homeDonutChart').getContext('2d'); 
-    let homeDonutChart = new Chart(homeDonutCtx, { 
-        type: 'doughnut', 
-        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#0ea5e9', '#f59e0b', '#8b5cf6'], borderWidth: 0 }] }, 
-        options: { 
-            plugins: { 
-                legend: { position: 'bottom', labels: { font: { family: 'Prompt' } } } 
-            }, 
-            cutout: '65%', 
-            maintainAspectRatio: false 
-        } 
-    });
+
 
     let legendControl = L.control({position: 'bottomright'});
     legendControl.onAdd = function (map) { 
@@ -817,12 +866,42 @@ $(document).ready(function() {
         if (!isFeatureInSelectedFilters(feature)) return; 
         let checkedStatuses = $('.map-layer-toggle:checked:visible').map(function(){ return $(this).val(); }).get(); let areaData = getFilteredAreaData(feature, checkedStatuses); let areaName = actualGeoLevel === 'subdistrict' ? getTamName(feature.properties) : (actualGeoLevel === 'district' ? getAmpName(feature.properties) : getProvName(feature.properties)); areaName = areaName || "ไม่ระบุ";
         let mapCol = activeChartConfig.map || 'ร้อยละเด็กฟันตกกระ'; let sum = 0; let count = 0;
-        areaData.forEach(d => { let v = parseFloat(d[mapCol]); if(!isNaN(v)){ sum+=v; count++; } });
+        let units = areaData.length;
+        let fluorosisCases = 0;
+        let totalKids = 0;
+        areaData.forEach(d => { 
+            let v = parseFloat(d[mapCol]); if(!isNaN(v)){ sum+=v; count++; }
+            if(d['พบฟันตกกระ']) fluorosisCases += parseFloat(d['พบฟันตกกระ']) || 0;
+            if(d['จำนวนตรวจ']) totalKids += parseFloat(d['จำนวนตรวจ']) || 0;
+        });
         let avg = count > 0 ? (sum/count) : 0; let avgText = count > 0 ? avg.toFixed(2) : "ไม่มีข้อมูลตามที่กรอง";
         let lvlPrefix = actualGeoLevel === 'province' ? 'จังหวัด' : (actualGeoLevel === 'district' ? 'อำเภอ' : 'ตำบล');
-        let popupContent = `<div style="text-align:center; min-width: 160px; font-family:'Prompt', sans-serif;"><b style="font-size: 16px; color:var(--primary-color);">${lvlPrefix}${areaName}</b><hr style="margin:8px 0; border-color:#e2e8f0;"><div style="padding:6px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">ค่าเฉลี่ย ${mapCol}: <br><span style="font-size:16px; font-weight:700; color: ${getPolygonColor(avg)};">${avgText}</span></div></div>`;
+        
+        let popupContent = `<div style="min-width: 180px; font-family:'Prompt', sans-serif; font-size:13px;">
+            <div style="text-align:center;"><b style="font-size: 15px; color:var(--primary-color);">${lvlPrefix}${areaName}</b></div>
+            <hr style="margin:6px 0; border-color:#e2e8f0;">
+            <div style="margin-bottom:6px;"><b>จำนวนที่เก็บข้อมูล:</b> ${units} แห่ง</div>
+            ${totalKids > 0 ? `<div style="margin-bottom:6px;"><b>ได้รับการตรวจ:</b> ${totalKids} คน</div>` : ''}
+            ${fluorosisCases > 0 ? `<div style="margin-bottom:6px; color:#ef4444;"><b>พบฟันตกกระ:</b> ${fluorosisCases} คน</div>` : ''}
+            <div style="padding:6px; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0; text-align:center;">
+                ค่าเฉลี่ย ${mapCol}: <br><span style="font-size:15px; font-weight:700; color: ${getPolygonColor(avg)};">${avgText}</span>
+            </div>
+            ${actualGeoLevel !== 'subdistrict' ? `<div style="text-align:center; margin-top:6px; font-size:11px; color:#64748b;">(ดับเบิลคลิกเพื่อเจาะลึกพื้นที่)</div>` : ''}
+        </div>`;
         layer.bindPopup(popupContent);
-        layer.on({ mouseover: function(e){ let tgt = e.target; tgt.setStyle({ weight: 3, color: '#334155', fillOpacity: 0.95 }); tgt.bringToFront(); }, mouseout: function(e){ choroplethLayer.resetStyle(e.target); } });
+        layer.on({ 
+            mouseover: function(e){ let tgt = e.target; tgt.setStyle({ weight: 3, color: '#334155', fillOpacity: 0.95 }); tgt.bringToFront(); }, 
+            mouseout: function(e){ choroplethLayer.resetStyle(e.target); },
+            dblclick: function(e) {
+                if (actualGeoLevel === 'province') {
+                    let opt = $('#filter-province option').filter(function() { return $(this).text().replace(/\\s+/g, '') === areaName.replace(/\\s+/g, ''); });
+                    if(opt.length) { $('#filter-province').val(opt.val()).trigger('change'); } else { $('#filter-province').val(areaName).trigger('change'); }
+                } else if (actualGeoLevel === 'district') {
+                    let opt = $('#filter-district option').filter(function() { return $(this).text().replace(/\\s+/g, '') === areaName.replace(/\\s+/g, '') || $(this).text().replace(/\\s+/g, '').replace('เมือง', '') === areaName.replace(/\\s+/g, '').replace('เมือง', ''); });
+                    if(opt.length) { $('#filter-district').val(opt.val()).trigger('change'); } else { $('#filter-district').val(areaName).trigger('change'); }
+                }
+            }
+        });
     }
 
     function showLoading() { $('#loading-overlay').css('display', 'flex'); }
@@ -859,20 +938,42 @@ $(document).ready(function() {
     function createMarker(p, isWaterCategory, statusVal, lat, lon) {
         let isBlinking = shouldBlink(p, isWaterCategory);
         let iconHtml = '';
-        if (isBlinking) {
+        
+        // Use custom map colors if configured for Spatial Map
+        let customColor = null;
+        if(globalConfig && globalConfig.map_colors && globalConfig.map_colors.length > 0) {
+            let mapCol = globalConfig.map;
+            let val = parseFloat(p[mapCol]);
+            if(!isNaN(val)) {
+                for(let r of globalConfig.map_colors) {
+                    let minOK = (r.min === null) || (val >= r.min);
+                    let maxOK = (r.max === null) || (val <= r.max);
+                    if(minOK && maxOK) {
+                        customColor = r.color;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (isBlinking && !customColor) {
             iconHtml = isWaterCategory
                 ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
                 : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
         } else {
-            let statusClass = statusVal.includes('เกิน') || statusVal.includes('ไม่ผ่าน') ? 'marker-red' : (statusVal.includes('ปกติ') || statusVal.includes('ผ่าน') ? 'marker-green' : 'marker-blue');
-            iconHtml = `<div class="custom-marker ${statusClass}"><div class="marker-dot"></div></div>`;
+            if(customColor) {
+                iconHtml = `<div class="custom-marker no-default-ripple" style="background-color: ${customColor}; border-color: white;"><div class="marker-dot"></div></div>`;
+            } else {
+                let statusClass = statusVal.includes('เกิน') || statusVal.includes('ไม่ผ่าน') ? 'marker-red' : (statusVal.includes('ปกติ') || statusVal.includes('ผ่าน') ? 'marker-green' : 'marker-blue');
+                iconHtml = `<div class="custom-marker ${statusClass}"><div class="marker-dot"></div></div>`;
+            }
         }
         
         let customIcon = L.divIcon({
             className: '',
             html: iconHtml,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            iconSize: (isBlinking && !customColor) ? [20, 20] : [14, 14],
+            iconAnchor: (isBlinking && !customColor) ? [10, 10] : [7, 7]
         });
         
         let name = p.สถานที่ || p.สถานที่เก็บ || p.ชื่อหน่วยบริการ || 'จุดตรวจ';
@@ -928,7 +1029,7 @@ $(document).ready(function() {
             return palette[i % palette.length];
         });
 
-        proportionBarChart.data.labels = labels; proportionBarChart.data.datasets[0].data = dataChart; proportionBarChart.data.datasets[0].backgroundColor = bgColors; proportionBarChart.update();
+        if (proportionBarChart) { proportionBarChart.data.labels = labels; proportionBarChart.data.datasets[0].data = dataChart; proportionBarChart.data.datasets[0].backgroundColor = bgColors; proportionBarChart.update(); }
 
         let legendHtml = ''; labels.forEach((l, i) => { legendHtml += `<label class="d-flex align-items-center"><input class="form-check-input map-layer-toggle me-2" type="checkbox" value="${l}" checked> <span style="color:${bgColors[i]}; font-weight:600;">${l}</span></label>`; });
         $('#legend-dynamic').html('<div class="d-flex flex-wrap gap-3">' + legendHtml + '</div>');
@@ -985,7 +1086,7 @@ $(document).ready(function() {
         showLoading(); 
         let filters = { 'type': currentType, 'ปี': $('#filter-year').val(), 'ภาค': $('#filter-region').val(), 'เขตสุขภาพ': $('#filter-zone').val(), 'จังหวัด': $('#filter-province').val(), 'อำเภอ': $('#filter-district').val(), 'ตำบล': $('#filter-subdistrict').val() };
 
-        if (currentType === 'AI ทำนายความเสี่ยง') {
+        if (currentType === 'ประเมินความเสี่ยง') {
             $('#homeDashboardView').hide();
             $('#spatialDashboardView').hide();
             $('#investigationReportView').hide();
@@ -1048,15 +1149,15 @@ $(document).ready(function() {
                     $('#homeKPIsContainer').html('<div class="col-12"><div class="alert alert-warning">ยังไม่ได้ตั้งค่าโครงสร้าง KPI สำหรับหน้าหลัก กรุณาตั้งค่าผ่านเมนูแอดมิน</div></div>');
                 }
 
-                homeDonutChart.data.labels = data.home_charts.donut.labels; homeDonutChart.data.datasets[0].data = data.home_charts.donut.data; homeDonutChart.update(); homeCorrelationChart.data.labels = data.home_charts.corr.labels; homeCorrelationChart.data.datasets[0].data = data.home_charts.corr.line; homeCorrelationChart.data.datasets[1].data = data.home_charts.corr.bar; homeCorrelationChart.update();
+                homeCorrelationChart.data.labels = data.home_charts.corr.labels; homeCorrelationChart.data.datasets[0].data = data.home_charts.corr.line; homeCorrelationChart.data.datasets[1].data = data.home_charts.corr.bar; homeCorrelationChart.update();
                 let alertsHtml = '';
                 data.top_alerts.forEach((alert, i) => {
                     let rankStyle = i < 3 
                         ? 'background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5;' 
                         : 'background: #ffedd5; color: #f97316; border: 1px solid #fed7aa;';
                         
-                    // Look up province centroid coordinate from critical_points
-                    let provPoint = data.critical_points.find(cp => cp.prov === alert.prov);
+                    // Look up province centroid coordinate from critical_points if provided
+                    let provPoint = data.critical_points ? data.critical_points.find(cp => cp.prov === alert.prov) : null;
                     let lat = provPoint ? provPoint.lat : 13.0;
                     let lng = provPoint ? provPoint.lng : 101.5;
 
@@ -1087,7 +1188,7 @@ $(document).ready(function() {
                     `;
                 });
                 if(alertsHtml === '') alertsHtml = '<div class="p-3 text-center text-muted">ไม่มีข้อมูลเฝ้าระวัง</div>'; $('#topAlertsContainer').html(alertsHtml);
-                updateHomeMap(data.critical_points);
+                window.currentWaterPoints = data.water_points || []; window.currentDentalPoints = data.dental_points || []; renderHomeMap();
                 
                 if (data.dropdowns) {
                     function updateSelect(id, options, currentValue) { 
@@ -1161,7 +1262,9 @@ $(document).ready(function() {
     }
 
     $(document).on('click', '.menu-trigger', function(e) {
-        e.preventDefault(); $('.menu-trigger').removeClass('active text-danger'); 
+        e.preventDefault(); 
+        $('.sidebar-link, .nav-link, .menu-trigger').removeClass('active text-danger');
+        $('#adminUsersView').hide();
         $(`.menu-trigger[data-type="${$(this).data('type')}"]`).addClass('active');
         if(existingSchemas[$(this).data('type')] && existingSchemas[$(this).data('type')].category === 'health') { $(`.custom-tabs .nav-link[data-type="${$(this).data('type')}"]`).addClass('text-danger'); }
         currentType = $(this).data('type'); 
@@ -1209,7 +1312,7 @@ $(document).ready(function() {
     $(document).on('click', '.fly-to-btn', function() { 
         if (currentType === 'ทั้งหมด') {
             homeMap.flyTo([$(this).data('lat'), $(this).data('lon')], 15);
-        } else if (currentType === 'AI ทำนายความเสี่ยง') {
+        } else if (currentType === 'ประเมินความเสี่ยง') {
             if (aiMap) aiMap.flyTo([$(this).data('lat'), $(this).data('lon')], 15);
         } else {
             map.flyTo([$(this).data('lat'), $(this).data('lon')], 15);
@@ -1270,12 +1373,19 @@ $(document).ready(function() {
     });
 
     // Homepage Surveillance Map Renderer
-    function updateHomeMap(criticalPoints) {
+    // Add event listeners for the map filters
+    $(document).on('change', '.water-filter-cb, #critRaw, #critCons, #critTap, #mapAlertThreshold', function() {
+        if(window.currentWaterPoints) {
+            renderHomeMap();
+        }
+    });
+
+    function renderHomeMap() {
         let homeMapContainer = document.getElementById('homeMap');
         if (!homeMapContainer) return;
         
         if (!homeMap) {
-            homeMap = L.map('homeMap').setView([13.0, 101.5], 6);
+            homeMap = L.map('homeMap', { maxBounds: [[5.0, 97.0], [21.0, 106.0]], maxBoundsViscosity: 1.0, minZoom: 5 }).setView([15.0, 100.0], 6);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
                 crossOrigin: true,
                 attribution: '&copy; OpenStreetMap contributors'
@@ -1287,47 +1397,87 @@ $(document).ready(function() {
         homeMarkersGroup.clearLayers();
         let bounds = [];
         
-        if (criticalPoints && criticalPoints.length > 0) {
-            criticalPoints.forEach(p => {
+        let chkRaw = $('#chkRaw').is(':checked');
+        let chkCons = $('#chkCons').is(':checked');
+        let chkTap = $('#chkTap').is(':checked');
+        let chkUnk = $('#chkUnk').is(':checked');
+        
+        let critRaw = parseFloat($('#critRaw').val()) || 1.5;
+        let critCons = parseFloat($('#critCons').val()) || 0.7;
+        let critTap = parseFloat($('#critTap').val()) || 0.7;
+        let critDental = parseFloat($('#mapAlertThreshold').val()) || 10.0;
+
+        let allPoints = [];
+        if (window.currentWaterPoints) {
+            window.currentWaterPoints.forEach(p => {
+                let cat = p.category;
+                if(cat === 'แหล่งน้ำดิบ' && !chkRaw) return;
+                if(cat === 'แหล่งน้ำบริโภค' && !chkCons) return;
+                if(cat === 'แหล่งน้ำประปา' && !chkTap) return;
+                if((cat === 'ไม่ระบุ' || !cat) && !chkUnk) return;
+                allPoints.push(p);
+            });
+        }
+        if (window.currentDentalPoints) {
+            window.currentDentalPoints.forEach(p => allPoints.push(p));
+        }
+        
+        if (allPoints.length > 0) {
+            allPoints.forEach(p => {
                 let lat = parseFloat(p.lat);
                 let lng = parseFloat(p.lng);
                 if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
                     let isWater = p.type === 'water';
-                    let iconHtml = isWater
-                        ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
-                        : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
+                    
+                    // Determine if it is critical based on category
+                    let isCritical = false;
+                    if(isWater) {
+                        if(p.category === 'แหล่งน้ำดิบ') isCritical = p.val > critRaw;
+                        else if(p.category === 'แหล่งน้ำบริโภค') isCritical = p.val > critCons;
+                        else if(p.category === 'แหล่งน้ำประปา') isCritical = p.val > critTap;
+                        else isCritical = p.val > 0.7;
+                    } else {
+                        isCritical = p.val > critDental;
+                    }
+                    
+                    let iconHtml = '';
+                    if(isCritical) {
+                        iconHtml = isWater
+                            ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
+                            : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
+                    } else {
+                        let colorClass = isWater ? 'marker-blue' : 'marker-green';
+                        iconHtml = `<div class="custom-marker ${colorClass}"><div class="marker-dot"></div></div>`;
+                    }
                         
                     let customIcon = L.divIcon({
                         className: '',
                         html: iconHtml,
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10]
+                        iconSize: isCritical ? [20, 20] : [14, 14],
+                        iconAnchor: isCritical ? [10, 10] : [7, 7]
                     });
                     
                     let popupContent = `
-                        <div class="p-1" style="font-family: 'Prompt', sans-serif; min-width: 200px;">
-                            <h6 class="fw-bold m-0 text-slate-800" style="font-size: 0.95rem;">${p.name}</h6>
-                            <span class="badge ${isWater ? 'bg-danger' : 'bg-primary'} mb-2 mt-1" style="font-size: 0.75rem;">${isWater ? 'แหล่งน้ำเกินมาตรฐาน' : 'เด็กฟันตกกระวิกฤต'}</span>
-                            <div class="small text-muted mb-1"><b>ที่ตั้ง:</b> ต.${p.subdist} อ.${p.dist} จ.${p.prov}</div>
-                            <div class="small text-theme"><b>ค่าที่พบ:</b> ${p.detail}</div>
-                            <button class="btn btn-sm btn-primary-modern w-100 mt-2 px-2 py-1 open-drawer-btn" 
-                                data-name="${p.name}" 
-                                data-lat="${p.lat}" 
-                                data-lng="${p.lng}" 
-                                data-type="${p.type}" 
-                                data-prov="${p.prov}" 
-                                data-dist="${p.dist}" 
-                                data-subdist="${p.subdist}" 
-                                data-val="${p.val}" 
-                                data-status="${p.status}"
-                                data-detail="${p.detail}"
-                                style="font-size: 0.75rem; border-radius: 8px;">
-                                ดูข้อมูลเชิงลึก <i class="fas fa-arrow-right ms-1"></i>
-                            </button>
+                        <div class="p-1 map-popup-content" style="font-family: 'Prompt', sans-serif; min-width: 250px;" id="popup-content-${lat.toString().replace('.','_')}-${lng.toString().replace('.','_')}">
+                            <h6 class="fw-bold m-0 text-slate-800" style="font-size: 1rem;">${p.name}</h6>
+                            <span class="badge ${isCritical ? 'bg-danger' : 'bg-secondary'} mb-2 mt-1" style="font-size: 0.75rem;">
+                                ${isWater ? (isCritical ? 'แหล่งน้ำเกินเกณฑ์วิกฤต' : p.category) : (isCritical ? 'เด็กฟันตกกระวิกฤต' : 'เฝ้าระวังฟันตกกระ')}
+                            </span>
+                            <div class="small text-muted mb-1" style="line-height: 1.4;">
+                                ${isWater ? `<div><b>ชนิดน้ำ:</b> ${p.water_type || '-'}</div>` : ''}
+                                ${isWater ? `<div><b>วันที่เก็บล่าสุด:</b> ${p.check_date || '-'}</div>` : ''}
+                                <div><b>ที่ตั้ง:</b> ต.${p.subdist} อ.${p.dist} จ.${p.prov}</div>
+                                <div><b>พิกัด:</b> ${p.lat}, ${p.lng}</div>
+                            </div>
+                            <div class="small text-theme mb-2 fw-bold"><b>ค่าล่าสุด:</b> ${p.detail}</div>
+                            ${isWater ? `
+                            <button class="btn btn-sm btn-outline-primary w-100 btn-timeline" data-lat="${p.lat}" data-lng="${p.lng}" data-name="${p.name}" style="font-size:0.75rem; border-radius: 6px;">
+                                <i class="fas fa-history"></i> ดูไทม์ไลน์ย้อนหลัง
+                            </button>` : ''}
                         </div>
                     `;
                     
-                    let marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+                    let marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent, { maxWidth: 300 });
                     homeMarkersGroup.addLayer(marker);
                     bounds.push([lat, lng]);
                 }
@@ -1338,10 +1488,49 @@ $(document).ready(function() {
             }
         }
         
-        setTimeout(() => {
-            homeMap.invalidateSize();
-        }, 300);
+        setTimeout(() => { homeMap.invalidateSize(); }, 300);
     }
+    
+    // Timeline fetch logic
+    $(document).on('click', '.btn-timeline', function(e) {
+        e.preventDefault();
+        let btn = $(this);
+        let lat = btn.data('lat');
+        let lng = btn.data('lng');
+        let name = btn.data('name');
+        
+        btn.html('<i class="fas fa-spinner fa-spin"></i> กำลังโหลด...');
+        btn.prop('disabled', true);
+        
+        fetch('/api/location_history', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({location_name: name, latitude: lat, longitude: lng})
+        }).then(res=>res.json()).then(data=>{
+            let containerId = `#popup-content-${lat.toString().replace('.','_')}-${lng.toString().replace('.','_')}`;
+            if(data.success && data.history.length > 0) {
+                let rows = data.history.map(h => {
+                    let d = new Date(h.date);
+                    let formatted = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+                    return `<tr><td>${formatted}</td><td class="text-end fw-bold">${h.ppm}</td></tr>`;
+                }).join('');
+                let tableHtml = `
+                    <div class="mt-2" style="max-height:120px; overflow-y:auto;">
+                        <table class="table table-sm table-bordered" style="font-size:0.75rem;">
+                            <thead class="table-light"><tr><th>วันที่เก็บ</th><th class="text-end">ppm</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+                $(containerId).append(tableHtml);
+                btn.hide();
+            } else {
+                btn.html('ไม่พบประวัติ');
+            }
+        }).catch(err => {
+            btn.html('โหลดผิดพลาด');
+        });
+    });
 
     // Slide-over details drawer opener
     function openDetailDrawer(data) {
@@ -2833,7 +3022,7 @@ $(document).ready(function() {
         if (!aiMapContainer) return;
 
         if (!aiMap) {
-            aiMap = L.map('aiMap').setView([13.0, 101.5], 6);
+            aiMap = L.map('aiMap', { maxBounds: [[5.0, 97.0], [21.0, 106.0]], maxBoundsViscosity: 1.0, minZoom: 5 }).setView([15.0, 100.0], 6);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 crossOrigin: true,
                 attribution: '&copy; OpenStreetMap contributors'
@@ -2875,3 +3064,200 @@ $(document).ready(function() {
         loadData();
     });
 });
+
+
+// ==========================================
+// NEW FEATURE LOGIC (Registration, Child Cases, RBAC)
+// ==========================================
+
+function updateMenuVisibility() {
+    let role = sessionStorage.getItem('userRole');
+    if(role) {
+        $('#menuChildCases').show();
+        if(role === 'admin') {
+            $('#menuAdminUsers').show();
+        } else {
+            $('#menuAdminUsers').hide();
+        }
+    } else {
+        $('#menuChildCases').hide();
+        $('#menuAdminUsers').hide();
+    }
+}
+
+$(document).ready(function() {
+    // Menu Clicks
+    $('#menuChildCases').click(function(e) {
+        e.preventDefault();
+        $('.view-section').hide();
+        $('.nav-link').removeClass('active');
+        $(this).addClass('active');
+        $('#childCasesView').fadeIn();
+    });
+    
+    $('#menuAdminUsers').click(function(e) {
+        e.preventDefault();
+        $('.view-section').hide();
+        $('.sidebar-link, .nav-link').removeClass('active');
+        $(this).addClass('active');
+        $('#adminUsersView').fadeIn();
+        loadAdminUsers();
+    });
+    
+    // Register UI
+    $('#linkToRegister').click(function(e) {
+        e.preventDefault();
+        $('#loginModal').modal('hide');
+        $('#registerModal').modal('show');
+    });
+    
+    // --- Smart Cascading Dropdown Logic for Registration ---
+    function fetchRegProvinces() {
+        fetch('/api/locations/provinces')
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    let html = '<option value="" disabled selected>--กรุณาเลือกจังหวัด--</option>';
+                    res.data.forEach(p => html += `<option value="${p}">${p}</option>`);
+                    $('#regProvince').html(html);
+                }
+            });
+    }
+
+    // Trigger fetch on modal open
+    $('#registerModal').on('show.bs.modal', function() {
+        if($('#regProvince option').length <= 1) {
+            fetchRegProvinces();
+        }
+    });
+
+    $('#regProvince').change(function() {
+        let prov = $(this).val();
+        $('#regDistrict').html('<option value="" disabled selected>--กำลังโหลด...--</option>').prop('disabled', true);
+        $('#regSubdistrict').html('<option value="" disabled selected>--กรุณาเลือกตำบล--</option>').prop('disabled', true);
+        $('#regParentHosp').html('<option value="" disabled selected>--กรุณาเลือกโรงพยาบาลแม่ข่าย--</option>').prop('disabled', true);
+        $('#regOffice').html('<option value="" disabled selected>--กรุณาเลือกหน่วยงาน--</option>').prop('disabled', true);
+        
+        fetch('/api/locations/districts?province=' + encodeURIComponent(prov))
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    let html = '<option value="" disabled selected>--กรุณาเลือกอำเภอ--</option>';
+                    res.data.forEach(d => html += `<option value="${d}">${d}</option>`);
+                    $('#regDistrict').html(html).prop('disabled', false).css('background-color', '#fff');
+                }
+            });
+    });
+
+    $('#regDistrict').change(function() {
+        let prov = $('#regProvince').val();
+        let dist = $(this).val();
+        $('#regSubdistrict').html('<option value="" disabled selected>--กำลังโหลด...--</option>').prop('disabled', true);
+        $('#regOffice').html('<option value="" disabled selected>--กรุณาเลือกหน่วยงาน--</option>').prop('disabled', true);
+        
+        fetch(`/api/locations/subdistricts?province=${encodeURIComponent(prov)}&district=${encodeURIComponent(dist)}`)
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    let html = '<option value="" disabled selected>--กรุณาเลือกตำบล--</option>';
+                    res.data.forEach(sd => html += `<option value="${sd}">${sd}</option>`);
+                    $('#regSubdistrict').html(html).prop('disabled', false).css('background-color', '#fff');
+                }
+            });
+            
+        // Also fetch health offices for this district to populate both Parent Hosp and Office
+        fetch(`/api/locations/offices?province=${encodeURIComponent(prov)}&district=${encodeURIComponent(dist)}`)
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    let html = '<option value="" disabled selected>--กรุณาเลือกโรงพยาบาลแม่ข่าย--</option>';
+                    let html2 = '<option value="" disabled selected>--กรุณาเลือกหน่วยงาน--</option>';
+                    res.data.forEach(h => {
+                        html += `<option value="${h.hospcode}">${h.hosp_name}</option>`;
+                        html2 += `<option value="${h.hospcode}">${h.hospcode} - ${h.hosp_name}</option>`;
+                    });
+                    $('#regParentHosp').html(html).prop('disabled', false).css('background-color', '#fff');
+                    $('#regOffice').html(html2).prop('disabled', false).css('background-color', '#fff');
+                }
+            });
+    });
+
+    $('#registerForm').submit(function(e) {
+        e.preventDefault();
+        let payload = {
+            fullname: $('#regFirstname').val() + ' ' + $('#regLastname').val(),
+            username: $('#regEmail').val(), 
+            email: $('#regEmail').val(),
+            password: $('#regPassword').val(),
+            phone: $('#regPhone').val(),
+            role: $('#regRole').val(),
+            province: $('#regProvince').val(),
+            district: $('#regDistrict').val(),
+            subdistrict: $('#regSubdistrict').val(),
+            parent_hospcode: $('#regParentHosp').val(),
+            hospcode: $('#regOffice').val(),
+            permissions: $('#regPermissionAll').is(':checked') ? 'all_report' : ''
+        };
+        
+        let submitBtn = $('#btnSubmitRegister');
+        let oldText = submitBtn.text();
+        submitBtn.prop('disabled', true).text('กำลังประมวลผล...');
+        
+        fetch('/api/register', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(r=>r.json()).then(data=>{
+            if(data.success) {
+                alert(data.message);
+                $('#registerModal').modal('hide');
+                $('#registerForm')[0].reset();
+            } else {
+                alert(data.message);
+            }
+        }).catch(err => alert("Error connecting to server"))
+        .finally(() => {
+            submitBtn.prop('disabled', false).text(oldText);
+        });
+    });
+    
+
+    
+    // Admin User Approval
+    $('#btnRefreshUsers').click(loadAdminUsers);
+});
+
+function loadAdminUsers() {
+    fetch('/api/admin/users').then(r=>r.json()).then(data => {
+        if(data.success) {
+            let html = '';
+            data.users.forEach(u => {
+                let badge = u.status === 'approved' ? '<span class="badge bg-success">อนุมัติแล้ว</span>' : (u.status === 'pending' ? '<span class="badge bg-warning">รออนุมัติ</span>' : '<span class="badge bg-danger">ปฏิเสธ</span>');
+                html += `<tr>
+                    <td>${u.id}</td>
+                    <td>${u.fullname}</td>
+                    <td>${u.username}</td>
+                    <td><span class="badge bg-primary">${u.role}</span></td>
+                    <td>${badge}</td>
+                    <td>${new Date(u.created_at).toLocaleDateString('th-TH')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success me-1" onclick="changeUserStatus(${u.id}, 'approve')" ${u.status === 'approved' ? 'disabled' : ''}>อนุมัติ</button>
+                        <button class="btn btn-sm btn-danger" onclick="changeUserStatus(${u.id}, 'reject')" ${u.status === 'rejected' ? 'disabled' : ''}>ระงับ</button>
+                    </td>
+                </tr>`;
+            });
+            $('#adminUsersTable tbody').html(html);
+        }
+    });
+}
+
+window.changeUserStatus = function(id, action) {
+    if(confirm(`ต้องการ ${action === 'approve' ? 'อนุมัติ' : 'ระงับ'} ผู้ใช้งานนี้ใช่หรือไม่?`)) {
+        fetch('/api/admin/users/approve', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: id, action: action})
+        }).then(r=>r.json()).then(data=>{
+            if(data.success) loadAdminUsers();
+            else alert(data.message);
+        });
+    }
+}

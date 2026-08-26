@@ -1,0 +1,732 @@
+﻿diff --git a/templates/index.html b/templates/index.html
+index 12194a9..71e6982 100644
+--- a/templates/index.html
++++ b/templates/index.html
+@@ -16,7 +16,7 @@
+     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+     
+-    <link rel="stylesheet" href="/static/css/styles.css?v=2.4">
++    <link rel="stylesheet" href="/static/css/styles.css?v=2.7">
+ </head>
+ <body class="theme-home">
+     
+@@ -41,13 +41,11 @@
+                 <div class="sidebar-heading">α╕¬α╕▓α╕ÿα╕▓α╕úα╕ôα╕¬α╕╕α╕é</div>
+                 <a data-bs-toggle="collapse" href="#healthSubmenu" class="sidebar-link has-submenu"><div><i class="fas fa-heartbeat"></i><span class="sidebar-text">α╕¬α╕áα╕▓α╕ºα╕░α╕¬α╕╕α╕éα╕áα╕▓α╕₧</span></div><i class="fas fa-chevron-down sidebar-toggle-icon" style="font-size: 0.8rem; margin:0;"></i></a>
+                 <div class="collapse show" id="healthSubmenu"><div class="submenu"></div></div>
+-                <a class="sidebar-link menu-trigger mt-1" data-type="α╕úα╕▓α╕óα╕çα╕▓α╕Öα╕¬α╕¡α╕Üα╕¬α╕ºα╕Öα╣éα╕úα╕äα╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░">
+-                <a class="sidebar-link" href="#" id="menuChildCases" style="display:none;"><i class="fas fa-child"></i><span class="sidebar-text">α╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╣Çα╕äα╕¬α╣Çα╕öα╣çα╕ü</span></a>
+-                <a class="sidebar-link" href="#" id="menuAdminUsers" style="display:none;"><i class="fas fa-users-cog"></i><span class="sidebar-text">α╕êα╕▒α╕öα╕üα╕▓α╕úα╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö</span></a>
+-<i class="fas fa-file-medical"></i><span class="sidebar-text">α╕úα╕▓α╕óα╕çα╕▓α╕Öα╕¬α╕¡α╕Üα╕¬α╕ºα╕Öα╣éα╕úα╕äα╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░</span></a>
++                <a class="sidebar-link menu-trigger mt-1" data-type="α╕úα╕▓α╕óα╕çα╕▓α╕Öα╕¬α╕¡α╕Üα╕¬α╕ºα╕Öα╣éα╕úα╕äα╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░"><i class="fas fa-file-medical"></i><span class="sidebar-text">α╕úα╕▓α╕óα╕çα╕▓α╕Öα╕¬α╕¡α╕Üα╕¬α╕ºα╕Öα╣éα╕úα╕äα╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░</span></a>
+ 
+                 <div id="adminMenuSection" style="display: none;">
+                     <div class="sidebar-heading mt-3">α╕£α╕╣α╣ëα╕öα╕╣α╣üα╕Ñα╕úα╕░α╕Üα╕Ü</div>
++                    <a class="sidebar-link" href="#" id="menuAdminUsers"><i class="fas fa-users-cog"></i><span class="sidebar-text">α╕êα╕▒α╕öα╕üα╕▓α╕úα╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö</span></a>
+                     <a class="sidebar-link" data-bs-toggle="modal" data-bs-target="#importDataModal"><i class="fas fa-database"></i><span class="sidebar-text">α╕êα╕▒α╕öα╕üα╕▓α╕úα╕Öα╕│α╣Çα╕éα╣ëα╕▓α╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</span></a>
+                     <a class="sidebar-link mt-1" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="fas fa-cog"></i><span class="sidebar-text">α╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓α╕úα╕░α╕Üα╕Ü</span></a>
+                 </div>
+@@ -63,9 +61,10 @@
+             <header class="top-navbar" data-html2canvas-ignore="true">
+                 <div class="d-flex align-items-center gap-3">
+                     <button class="btn-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+-                    <div><h4 class="m-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main); line-height: 1;">α╣üα╕öα╕èα╕Üα╕¡α╕úα╣îα╕öα╕¬α╕úα╕╕α╕¢α╕£α╕Ñ</h4><span class="text-muted small">α╕úα╕░α╕Üα╕Üα╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕çα╕ƒα╕Ñα╕╣α╕¡α╕¡α╣äα╕úα╕öα╣îα╣üα╕Ñα╕░α╕¬α╕áα╕▓α╕ºα╕░α╕¬α╕╕α╕éα╕áα╕▓α╕₧ α╕úα╕░α╕öα╕▒α╕Üα╕¢α╕úα╕░α╣Çα╕ùα╕¿</span></div>
++                    <div><h4 class="m-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main); line-height: 1;">α╕úα╕░α╕Üα╕Üα╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕çα╕¬α╕áα╕▓α╕ºα╕░α╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░α╣üα╕Ñα╕░α╕úα╕░α╕öα╕▒α╕Üα╕ƒα╕Ñα╕╣α╕¡α╕¡α╣äα╕úα╕öα╣îα╣âα╕Öα╕Öα╣ëα╕│</h4><span class="text-muted small">Fluorosis and Fluoride Community Surveillance System (FFCSS)</span></div>
+                 </div>
+                 <div class="d-flex align-items-center gap-4">
++                    <a href="/" class="btn btn-sm btn-outline-primary fw-bold" style="border-radius: 20px;"><i class="fas fa-home me-1"></i> α╕½α╕Öα╣ëα╕▓α╕½α╕Ñα╕▒α╕ü</a>
+                     <div class="theme-switch-wrapper me-2">
+                         <span class="small fw-bold text-muted d-none d-md-inline me-1"><i class="fas fa-moon"></i> α╣éα╕½α╕íα╕öα╕íα╕╖α╕ö</span>
+                         <label class="theme-switch" for="chkDarkMode">
+@@ -118,7 +117,7 @@
+                         <!-- 2. National Surveillance Map (100% right after KPIs) -->
+                         <div class="row mb-4">
+                             <div class="col-12">
+-                                <div class="card p-0 overflow-hidden m-0 shadow-sm border-0 bg-glass d-flex flex-column" style="height: 550px;">
++                                <div class="card p-0 overflow-hidden m-0 shadow-sm border-0 bg-glass d-flex flex-column" style="height: 700px;">
+                                     <div class="p-4 border-bottom" style="background: #f8fafc;">
+                                         <h5 class="m-0 fw-bold text-slate-800"><i class="fas fa-map-marked-alt text-theme me-2"></i>α╣üα╕£α╕Öα╕ùα╕╡α╣êα╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕çα╕ƒα╕Ñα╕╣α╕¡α╕¡α╣äα╕úα╕öα╣îα╣üα╕Ñα╕░α╕¬α╕╕α╕éα╕áα╕▓α╕₧α╕ƒα╕▒α╕Ö</h5>
+                                     </div>
+@@ -426,126 +425,7 @@
+                     </div>
+                 </div>
+ 
+-                <!-- Child Cases View -->
+-                <div id="childCasesView" class="view-section" style="display: none;">
+-                    <h4 class="fw-bold text-slate-800 mb-4"><i class="fas fa-child me-2"></i>α╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕çα╕¬α╕áα╕▓α╕ºα╕░α╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░ (α╣Çα╕öα╣çα╕ü)</h4>
+-                    
+-                    <div class="card card-custom shadow-sm border-0 mb-4">
+-                        <div class="card-body p-4">
+-                            <form id="childCaseForm">
+-                                <h5 class="text-theme fw-bold border-bottom pb-2 mb-3">α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕₧α╕╖α╣ëα╕Öα╕Éα╕▓α╕Öα╣Çα╕öα╣çα╕ü</h5>
+-                                <div class="row g-3 mb-4">
+-                                    <div class="col-md-4">
+-                                        <label class="form-label">α╕èα╕╖α╣êα╕¡-α╕¬α╕üα╕╕α╕Ñ α╣Çα╕öα╣çα╕ü</label>
+-                                        <input type="text" class="form-control" id="cFName" required>
+-                                    </div>
+-                                    <div class="col-md-2">
+-                                        <label class="form-label">α╣Çα╕₧α╕¿</label>
+-                                        <select class="form-select" id="cFGender"><option value="α╕èα╕▓α╕ó">α╕èα╕▓α╕ó</option><option value="α╕½α╕ìα╕┤α╕ç">α╕½α╕ìα╕┤α╕ç</option></select>
+-                                    </div>
+-                                    <div class="col-md-2">
+-                                        <label class="form-label">α╕¡α╕▓α╕óα╕╕ (α╕¢α╕╡)</label>
+-                                        <input type="number" class="form-control" id="cFAge" required>
+-                                    </div>
+-                                    <div class="col-md-4">
+-                                        <label class="form-label">α╕úα╕░α╕öα╕▒α╕Üα╕èα╕▒α╣ëα╕Ö</label>
+-                                        <input type="text" class="form-control" id="cFGrade">
+-                                    </div>
+-                                    <div class="col-md-4">
+-                                        <label class="form-label">α╣éα╕úα╕çα╣Çα╕úα╕╡α╕óα╕Ö</label>
+-                                        <input type="text" class="form-control" id="cFSchool">
+-                                    </div>
+-                                    <div class="col-md-4">
+-                                        <label class="form-label">α╕úα╕░α╕óα╕░α╣Çα╕ºα╕Ñα╕▓α╕¡α╕▓α╕¿α╕▒α╕óα╣âα╕Öα╕₧α╕╖α╣ëα╕Öα╕ùα╕╡α╣ê (α╕¢α╕╡)</label>
+-                                        <input type="number" class="form-control" id="cFYears">
+-                                    </div>
+-                                    <div class="col-md-4">
+-                                        <label class="form-label">α╕ºα╕▒α╕Öα╕ùα╕╡α╣êα╕¬α╕│α╕úα╕ºα╕ê</label>
+-                                        <input type="date" class="form-control" id="cFDate" required>
+-                                    </div>
+-                                </div>
+-                                
+-                                <h5 class="text-theme fw-bold border-bottom pb-2 mb-3">α╕¢α╕úα╕░α╣Çα╕áα╕ùα╣üα╕½α╕Ñα╣êα╕çα╕Öα╣ëα╕│α╕öα╕╖α╣êα╕íα╕½α╕Ñα╕▒α╕ü</h5>
+-                                <div class="row g-3 mb-4">
+-                                    <div class="col-md-6">
+-                                        <select class="form-select" id="cFWater" required>
+-                                            <option value="">α╣Çα╕Ñα╕╖α╕¡α╕üα╣üα╕½α╕Ñα╣êα╕çα╕Öα╣ëα╕│α╕öα╕╖α╣êα╕íα╕½α╕Ñα╕▒α╕üα╕ùα╕╡α╣êα╕Üα╣ëα╕▓α╕Ö...</option>
+-                                            <option value="α╕Öα╣ëα╕│α╕¢α╕úα╕░α╕¢α╕▓α╕½α╕íα╕╣α╣êα╕Üα╣ëα╕▓α╕Ö/α╕¢α╕úα╕░α╕¢α╕▓α╕áα╕╣α╣Çα╕éα╕▓">α╕Öα╣ëα╕│α╕¢α╕úα╕░α╕¢α╕▓α╕½α╕íα╕╣α╣êα╕Üα╣ëα╕▓α╕Ö/α╕¢α╕úα╕░α╕¢α╕▓α╕áα╕╣α╣Çα╕éα╕▓</option>
+-                                            <option value="α╕Öα╣ëα╕│α╕¢α╕úα╕░α╕¢α╕▓α╕¬α╣êα╕ºα╕Öα╕áα╕╣α╕íα╕┤α╕áα╕▓α╕ä/α╕Öα╕äα╕úα╕½α╕Ñα╕ºα╕ç">α╕Öα╣ëα╕│α╕¢α╕úα╕░α╕¢α╕▓α╕¬α╣êα╕ºα╕Öα╕áα╕╣α╕íα╕┤α╕áα╕▓α╕ä/α╕Öα╕äα╕úα╕½α╕Ñα╕ºα╕ç</option>
+-                                            <option value="α╕Öα╣ëα╕│α╕Üα╕▓α╕öα╕▓α╕Ñ/α╕Öα╣ëα╕│α╕Üα╣êα╕¡α╕òα╕╖α╣ëα╕Ö">α╕Öα╣ëα╕│α╕Üα╕▓α╕öα╕▓α╕Ñ/α╕Öα╣ëα╕│α╕Üα╣êα╕¡α╕òα╕╖α╣ëα╕Ö (α╣äα╕íα╣êα╕£α╣êα╕▓α╕Öα╕úα╕░α╕Üα╕Üα╕¢α╕úα╕░α╕¢α╕▓)</option>
+-                                            <option value="α╕Öα╣ëα╕│α╕éα╕ºα╕ö/α╕ûα╕▒α╕çα╕¢α╕┤α╕öα╕¬α╕Öα╕┤α╕ù">α╕Öα╣ëα╕│α╕éα╕ºα╕ö/α╕Öα╣ëα╕│α╕ûα╕▒α╕çα╕¢α╕┤α╕öα╕¬α╕Öα╕┤α╕ù (α╕ïα╕╖α╣ëα╕¡)</option>
+-                                            <option value="α╕Öα╣ëα╕│α╕òα╕╣α╣ëα╕½α╕óα╕¡α╕öα╣Çα╕½α╕úα╕╡α╕óα╕ì">α╕Öα╣ëα╕│α╕êα╕▓α╕üα╕òα╕╣α╣ëα╕½α╕óα╕¡α╕öα╣Çα╕½α╕úα╕╡α╕óα╕ì</option>
+-                                            <option value="α╕Öα╣ëα╕│α╕¥α╕Ö">α╕Öα╣ëα╕│α╕¥α╕Ö</option>
+-                                            <option value="α╕¡α╕╖α╣êα╕Öα╣å">α╕¡α╕╖α╣êα╕Öα╣å (α╣éα╕¢α╕úα╕öα╕úα╕░α╕Üα╕╕)</option>
+-                                        </select>
+-                                    </div>
+-                                    <div class="col-md-6">
+-                                        <input type="text" class="form-control" id="cFWaterOther" placeholder="α╕úα╕░α╕Üα╕╕α╣üα╕½α╕Ñα╣êα╕çα╕Öα╣ëα╕│α╕öα╕╖α╣êα╕íα╕¡α╕╖α╣êα╕Öα╣å (α╕ûα╣ëα╕▓α╕íα╕╡)">
+-                                    </div>
+-                                </div>
+-                                
+-                                <h5 class="text-theme fw-bold border-bottom pb-2 mb-3">α╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╕úα╕░α╕öα╕▒α╕Üα╕äα╕ºα╕▓α╕íα╕úα╕╕α╕Öα╣üα╕úα╕çα╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░ (0-5, 9) α╣üα╕óα╕üα╕úα╕▓α╕óα╕ïα╕╡α╣ê</h5>
+-                                <div class="alert alert-info py-2" style="font-size:0.85rem;">
+-                                    <b>α╣Çα╕üα╕ôα╕æα╣îα╣âα╕½α╣ëα╕äα╕░α╣üα╕Öα╕Ö (Dean's Index):</b> 0=α╕¢α╕üα╕òα╕┤, 1=α╕¬α╕çα╕¬α╕▒α╕ó, 2=α╕Öα╣ëα╕¡α╕óα╕íα╕▓α╕ü, 3=α╕Öα╣ëα╕¡α╕ó, 4=α╕¢α╕▓α╕Öα╕üα╕Ñα╕▓α╕ç, 5=α╕úα╕╕α╕Öα╣üα╕úα╕ç, 9=α╣äα╕íα╣êα╕¬α╕▓α╕íα╕▓α╕úα╕ûα╕òα╕úα╕ºα╕êα╣äα╕öα╣ë/α╕ûα╕¡α╕Öα╣äα╕¢α╣üα╕Ñα╣ëα╕º
+-                                </div>
+-                                
+-                                <div class="table-responsive mb-4">
+-                                    <table class="table table-bordered text-center align-middle" style="min-width: 600px;">
+-                                        <thead class="table-light">
+-                                            <tr>
+-                                                <th>α╕òα╕│α╣üα╕½α╕Öα╣êα╕çα╕ƒα╕▒α╕Ö</th>
+-                                                <th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 7</th><th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 6</th><th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 5</th><th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 4</th><th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 3</th><th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 2</th><th>α╕ïα╕╡α╣êα╕ùα╕╡α╣ê 1</th>
+-                                            </tr>
+-                                        </thead>
+-                                        <tbody>
+-                                            <tr>
+-                                                <td class="fw-bold bg-light">α╕ƒα╕▒α╕Öα╕Üα╕Ö (Upper)</td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU7" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU6" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU5" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU4" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU3" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU2" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFU1" min="0" max="9"></td>
+-                                            </tr>
+-                                            <tr>
+-                                                <td class="fw-bold bg-light">α╕ƒα╕▒α╕Öα╕Ñα╣êα╕▓α╕ç (Lower)</td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL7" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL6" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL5" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL4" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL3" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL2" min="0" max="9"></td>
+-                                                <td><input type="number" class="form-control text-center" id="cFL1" min="0" max="9"></td>
+-                                            </tr>
+-                                        </tbody>
+-                                    </table>
+-                                </div>
+-                                
+-                                <div class="row align-items-center mb-4">
+-                                    <div class="col-md-6">
+-                                        <h6 class="fw-bold text-danger">α╕¬α╕úα╕╕α╕¢α╕£α╕Ñα╕öα╕▒α╕èα╕Öα╕╡α╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░α╕éα╕¡α╕çα╣Çα╕öα╣çα╕ü (Dean's Index)</h6>
+-                                    </div>
+-                                    <div class="col-md-6">
+-                                        <select class="form-select border-danger text-danger fw-bold" id="cFDeanIndex" required>
+-                                            <option value="">-- α╣Çα╕Ñα╕╖α╕¡α╕üα╕¬α╕úα╕╕α╕¢α╕äα╕░α╣üα╕Öα╕Ö (α╕₧α╕┤α╕êα╕▓α╕úα╕ôα╕▓α╕êα╕▓α╕ü 2 α╕ïα╕╡α╣êα╕ùα╕╡α╣êα╕úα╕╕α╕Öα╣üα╕úα╕çα╕¬α╕╕α╕ö) --</option>
+-                                            <option value="0">0 - α╕¢α╕üα╕òα╕┤ (Normal)</option>
+-                                            <option value="1">1 - α╕¬α╕çα╕¬α╕▒α╕ó (Questionable)</option>
+-                                            <option value="2">2 - α╕Öα╣ëα╕¡α╕óα╕íα╕▓α╕ü (Very Mild)</option>
+-                                            <option value="3">3 - α╕Öα╣ëα╕¡α╕ó (Mild)</option>
+-                                            <option value="4">4 - α╕¢α╕▓α╕Öα╕üα╕Ñα╕▓α╕ç (Moderate)</option>
+-                                            <option value="5">5 - α╕úα╕╕α╕Öα╣üα╕úα╕ç (Severe)</option>
+-                                        </select>
+-                                    </div>
+-                                </div>
+-                                
+-                                <div class="text-end">
+-                                    <button type="submit" class="btn btn-success px-5 py-2 fw-bold"><i class="fas fa-save me-2"></i>α╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╣Çα╕éα╣ëα╕▓α╕úα╕░α╕Üα╕Ü</button>
+-                                </div>
+-                            </form>
+-                        </div>
+-                    </div>
+-                </div>
++                <!-- Child Cases View (Moved to /child-case) -->
+ 
+                 <div id="investigationReportView" style="display: none;">
+                     <div class="d-flex justify-content-between align-items-end mb-4">
+@@ -636,288 +516,196 @@
+         </div>
+     </div>
+ 
+-    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="padding: 10px;"><div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-0 px-4 pb-4"><div style="width: 70px; height: 70px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><i class="fas fa-lock text-theme" style="font-size: 2rem;"></i></div><h5 class="fw-bold mb-3">α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Ü (Admin)</h5><input type="text" class="form-control form-control-custom text-center mb-2" placeholder="α╕èα╕╖α╣êα╕¡α╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö" id="loginUsername" value="admin"><input type="password" class="form-control form-control-custom text-center mb-3" placeholder="α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö" id="loginPassword"><button class="btn btn-primary-modern w-100 justify-content-center" id="btnSubmitLogin">α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Üα╕ùα╕▒α╕Öα╕ùα╕╡</button>
+-<div class="mt-3"><a href="#" id="linkToRegister" class="text-primary text-decoration-none" style="font-size: 0.9rem;">α╕óα╕▒α╕çα╣äα╕íα╣êα╕íα╕╡α╕Üα╕▒α╕ìα╕èα╕╡? α╕Ñα╕çα╕ùα╕░α╣Çα╕Üα╕╡α╕óα╕Öα╕ùα╕╡α╣êα╕Öα╕╡α╣ê</a></div>
+-</div></div></div></div>
+     
+-    <div class="modal fade" id="importDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
++    <!-- New Login Modal (Glassmorphism) -->
++    
++    <!-- New Login Modal (Blue Flat Design) -->
++    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+         <div class="modal-dialog modal-xl modal-dialog-centered">
+-            <div class="modal-content">
+-                <div class="modal-header border-0 px-4 py-3" style="background: #1e293b; color: white;">
+-                    <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-cloud-upload-alt me-2"></i> α╕Öα╕│α╣Çα╕éα╣ëα╕▓α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕¡α╕▒α╕êα╕ëα╕úα╕┤α╕óα╕░ (Upsert)</h5>
+-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+-                </div>
+-                <div class="modal-body p-4 bg-light">
+-                    <div id="uploadFormArea" class="row">
+-                        <div class="col-md-5 border-end">
+-                            <h6 class="fw-bold text-slate-800 mb-3"><i class="fas fa-download text-theme me-2"></i> 1. α╣éα╕½α╕Ñα╕öα╣üα╕Üα╕Üα╕ƒα╕¡α╕úα╣îα╕í (Template)</h6>
+-                            <p class="small text-muted mb-4">α╕öα╕▓α╕ºα╕Öα╣îα╣éα╕½α╕Ñα╕öα╣üα╕Üα╕Üα╕ƒα╕¡α╕úα╣îα╕í Excel α╕ùα╕╡α╣êα╕íα╕╡α╕½α╕▒α╕ºα╕äα╕¡α╕Ñα╕▒α╕íα╕Öα╣îα╕ûα╕╣α╕üα╕òα╣ëα╕¡α╕ç α╣Çα╕₧α╕╖α╣êα╕¡α╕Öα╕│α╣äα╕¢α╕üα╕úα╕¡α╕üα╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</p>
+-                            <a href="/api/download_template/health" class="btn btn-outline-modern w-100 mb-2 text-start" target="_blank"><i class="fas fa-tooth text-primary me-2"></i> α╣éα╕½α╕Ñα╕öα╕ƒα╕¡α╕úα╣îα╕íα╕¬α╕áα╕▓α╕ºα╕░α╕¬α╕╕α╕éα╕áα╕▓α╕₧</a>
+-                            <a href="/api/download_template/env" class="btn btn-outline-modern w-100 text-start" target="_blank"><i class="fas fa-tint text-info me-2"></i> α╣éα╕½α╕Ñα╕öα╕ƒα╕¡α╕úα╣îα╕íα╕äα╕╕α╕ôα╕áα╕▓α╕₧α╣üα╕½α╕Ñα╣êα╕çα╕Öα╣ëα╕│</a>
++            <div class="modal-content border-0 shadow-lg" style="background: linear-gradient(to bottom, #3b71ca 55%, #f8fafc 55%); border-radius: 12px; min-height: 600px;">
++                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" style="z-index: 100;"></button>
++                <div class="row g-0 h-100 position-relative">
++                    
++                    <!-- Left Side Content -->
++                    <div class="col-lg-7 p-4 p-md-5 text-white d-flex flex-column justify-content-start" style="z-index: 10;">
++                        <div class="mt-md-5 ms-md-4">
++                            <h3 class="fw-bold mb-3" style="letter-spacing: 1px; font-size: 1.8rem;">FFCSS SYSTEM</h3>
++                            <p style="opacity: 0.9; font-size: 0.9rem; line-height: 1.8; max-width: 90%; font-weight: 300;">
++                                α╣Çα╕¢α╣çα╕Öα╕úα╕░α╕Üα╕Üα╕üα╕▓α╕úα╕Üα╕úα╕┤α╕½α╕▓α╕úα╕êα╕▒α╕öα╕üα╕▓α╕úα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕ùα╕▒α╕Öα╕òα╕¬α╕▓α╕ÿα╕▓α╕úα╕ôα╕¬α╕╕α╕éα╣üα╕Üα╕Üα╕¡α╕▒α╕êα╕ëα╕úα╕┤α╕óα╕░<br>
++                                α╣Çα╕₧α╕╖α╣êα╕¡α╣üα╕üα╣ëα╕¢α╕▒α╕ìα╕½α╕▓α╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░α╣üα╕Ñα╕░α╕¢α╕úα╕░α╣Çα╕íα╕┤α╕Öα╕äα╕ºα╕▓α╕íα╣Çα╕¬α╕╡α╣êα╕óα╕çα╣Çα╕èα╕┤α╕çα╕₧α╕╖α╣ëα╕Öα╕ùα╕╡α╣ê (Spatial Analysis)<br>
++                                α╕£α╣êα╕▓α╕Öα╕üα╕▓α╕úα╕ùα╕│α╕Öα╕▓α╕óα╕éα╕¡α╕ç AI α╕¡α╕óα╣êα╕▓α╕çα╣üα╕íα╣êα╕Öα╕óα╕│α╣üα╕Ñα╕░α╕íα╕╡α╕¢α╕úα╕░α╕¬α╕┤α╕ùα╕ÿα╕┤α╕áα╕▓α╕₧
++                            </p>
+                         </div>
+-                        <div class="col-md-7 ps-4">
+-                            <h6 class="fw-bold text-slate-800 mb-3"><i class="fas fa-upload text-theme me-2"></i> 2. α╕¡α╕▒α╕¢α╣éα╕½α╕Ñα╕öα╕éα╣ëα╕¡α╕íα╕╣α╕Ñ (Excel)</h6>
+-                            <select id="uploadCat" class="form-select form-control-custom mb-3"><option value="health">α╕¡α╕▒α╕¢α╣éα╕½α╕Ñα╕öα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕½α╕íα╕ºα╕ö: α╕¬α╕╕α╕éα╕áα╕▓α╕₧ (Dental)</option><option value="env">α╕¡α╕▒α╕¢α╣éα╕½α╕Ñα╕öα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕½α╕íα╕ºα╕ö: α╕¬α╕┤α╣êα╕çα╣üα╕ºα╕öα╕Ñα╣ëα╕¡α╕í (Water)</option></select>
+-                            
+-                            <div class="card p-4 text-center d-flex flex-column justify-content-center align-items-center" style="border: 2px dashed #cbd5e1 !important; background: #fff; cursor: pointer;" id="dropzoneArea">
+-                                <input type="file" id="fileInputDummy" accept=".csv, .xlsx">
+-                                <i class="fas fa-file-excel text-muted mb-2" style="font-size: 2.5rem; pointer-events: none;"></i>
+-                                <p class="small fw-bold text-slate-800 m-0" style="pointer-events: none;">α╕äα╕Ñα╕┤α╕ü α╕½α╕úα╕╖α╕¡ α╕Ñα╕▓α╕üα╣äα╕ƒα╕Ñα╣îα╕íα╕▓α╕ºα╕▓α╕çα╕ùα╕╡α╣êα╕Öα╕╡α╣ê (Drag & Drop)</p>
+-                            </div>
+-
+-                            <div id="importStatusScanning" style="display: none;" class="mt-3">
+-                                <div class="d-flex justify-content-between small mb-1 fw-bold text-theme"><span>α╕üα╕│α╕Ñα╕▒α╕çα╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╣üα╕Üα╕Üα╕ùα╕╡α╕Ñα╕░α╕Üα╕úα╕úα╕ùα╕▒α╕ö (Row-by-Row)...</span><span></span></div>
+-                                <div class="progress" style="height: 6px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-theme" style="width: 100%"></div></div>
+-                            </div>
++                        
++                        <!-- Decorative Map Icon to simulate illustration -->
++                        <div class="mt-auto ms-md-4 mb-4 text-start" style="color: rgba(255,255,255,0.15);">
++                            <i class="fas fa-map-marked-alt" style="font-size: 12rem;"></i>
+                         </div>
+                     </div>
+-
+-                    <div id="importResultArea" style="display: none;">
+-                        <h6 class="fw-bold mb-3"><i class="fas fa-clipboard-check text-success me-2"></i>α╕¬α╕úα╕╕α╕¢α╕£α╕Ñα╕üα╕▓α╕úα╕Öα╕│α╣Çα╕éα╣ëα╕▓α╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</h6>
+-                        <div class="row text-center mb-4">
+-                            <div class="col-4">
+-                                <div class="p-3 bg-success bg-opacity-10 text-success rounded-3">
+-                                    <div class="small fw-bold">α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╣âα╕½α╕íα╣ê</div>
+-                                    <div class="h3 fw-bold m-0" id="resNew">0</div>
+-                                </div>
++                    
++                    <!-- Right Side Login Card -->
++                    <div class="col-lg-5 d-flex align-items-center justify-content-center p-4">
++                        <div class="card border-0 shadow-lg p-4 p-md-5 w-100" style="border-radius: 16px; background: white; margin-top: 20px;">
++                            <div class="text-center mb-5">
++                                <h3 class="fw-bold text-dark mb-3" style="font-size: 1.6rem;">α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Ü</h3>
++                                <p class="text-muted m-0" style="font-size: 0.8rem; line-height: 1.5;">
++                                    α╕óα╕┤α╕Öα╕öα╕╡α╕òα╣ëα╕¡α╕Öα╕úα╕▒α╕Üα╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣ê <span class="fw-bold" style="color: #3b71ca;">α╕úα╕░α╕Üα╕Üα╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕çα╕¬α╕áα╕▓α╕ºα╕░α╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░α╣üα╕Ñα╕░α╕úα╕░α╕öα╕▒α╕Üα╕ƒα╕Ñα╕╣α╕¡α╕¡α╣äα╕úα╕öα╣îα╣âα╕Öα╕Öα╣ëα╕│ (FFCSS)</span><br>
++                                    α╕üα╕úα╕¡α╕üα╕èα╕╖α╣êα╕¡α╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Öα╣Çα╕₧α╕╖α╣êα╕¡α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Ü
++                                </p>
+                             </div>
+-                            <div class="col-4">
+-                                <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3">
+-                                    <div class="small fw-bold">α╕¡α╕▒α╕¢α╣Çα╕öα╕òα╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</div>
+-                                    <div class="h3 fw-bold m-0" id="resUpd">0</div>
++                            <form>
++                                <div class="mb-4">
++                                    <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">α╕èα╕╖α╣êα╕¡α╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö</label>
++                                    <div class="d-flex align-items-center pb-2" style="border-bottom: 2px solid #e2e8f0;">
++                                        <i class="fas fa-user-circle text-muted me-3" style="font-size: 1.1rem; color: #94a3b8 !important;"></i>
++                                        <input type="text" class="form-control border-0 shadow-none p-0 bg-transparent" placeholder="α╣âα╕¬α╣êα╕èα╕╖α╣êα╕¡α╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Öα╕éα╕¡α╕çα╕äα╕╕α╕ô" id="loginUsername" value="admin" style="font-size: 0.9rem; color: #334155;">
++                                    </div>
+                                 </div>
+-                            </div>
+-                            <div class="col-4">
+-                                <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3">
+-                                    <div class="small fw-bold">α╕éα╣ëα╕¡α╕£α╕┤α╕öα╕₧α╕Ñα╕▓α╕ö</div>
+-                                    <div class="h3 fw-bold m-0" id="resErr">0</div>
++                                <div class="mb-4">
++                                    <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö</label>
++                                    <div class="d-flex align-items-center pb-2" style="border-bottom: 2px solid #e2e8f0;">
++                                        <i class="fas fa-lock text-muted me-3" style="font-size: 1.1rem; color: #94a3b8 !important;"></i>
++                                        <input type="password" class="form-control border-0 shadow-none p-0 bg-transparent" placeholder="α╣âα╕¬α╣êα╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Öα╕éα╕¡α╕çα╕äα╕╕α╕ô" id="loginPassword" style="font-size: 0.9rem; color: #334155;">
++                                        <i class="fas fa-eye-slash text-muted ms-2 cursor-pointer" style="color: #cbd5e1 !important;"></i>
++                                    </div>
+                                 </div>
+-                            </div>
+-                        </div>
+-                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+-                            <table class="table table-sm table-hover table-striped">
+-                                <thead class="table-light">
+-                                    <tr>
+-                                        <th>α╣üα╕ûα╕º</th>
+-                                        <th>α╕èα╕╖α╣êα╕¡/α╕êα╕╕α╕öα╕¡α╣ëα╕▓α╕çα╕¡α╕┤α╕ç</th>
+-                                        <th>α╕¬α╕ûα╕▓α╕Öα╕░</th>
+-                                        <th>α╕úα╕▓α╕óα╕Ñα╕░α╣Çα╕¡α╕╡α╕óα╕ö/α╕½α╕íα╕▓α╕óα╣Çα╕½α╕òα╕╕</th>
+-                                    </tr>
+-                                </thead>
+-                                <tbody id="importResultBody">
+-                                </tbody>
+-                            </table>
+-                        </div>
+-                        <div class="text-end mt-3">
+-                            <button type="button" class="btn btn-primary-modern" onclick="$('#importResultArea').hide(); $('#uploadFormArea').show();"><i class="fas fa-redo"></i> α╕Öα╕│α╣Çα╕éα╣ëα╕▓α╣äα╕ƒα╕Ñα╣îα╣Çα╕₧α╕┤α╣êα╕í</button>
++                                <div class="d-flex justify-content-between align-items-center mb-5 mt-2">
++                                    <div class="form-check">
++                                        <input class="form-check-input shadow-none" type="checkbox" id="rememberMe" style="border-color: #cbd5e1;">
++                                        <label class="form-check-label text-muted" for="rememberMe" style="font-size: 0.75rem;">α╕êα╕öα╕êα╕│α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö</label>
++                                    </div>
++                                    <a href="#" class="text-muted text-decoration-none" style="font-size: 0.75rem;">α╕Ñα╕╖α╕íα╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö?</a>
++                                </div>
++                                <button type="button" class="btn w-100 py-2 fw-bold text-white mb-4" id="btnSubmitLogin" style="background-color: #3b71ca; border-radius: 6px; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(59, 113, 202, 0.2);">α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Ü</button>
++                                
++                                <div class="text-center">
++                                    <a href="#" id="linkToRegister" class="text-decoration-none" style="font-size: 0.8rem; font-weight: 600; color: #3b71ca;">α╕Ñα╕çα╕ùα╕░α╣Çα╕Üα╕╡α╕óα╕Öα╣âα╕èα╣ëα╕çα╕▓α╕Öα╣âα╕½α╕íα╣ê (Register)</a>
++                                </div>
++                            </form>
+                         </div>
+                     </div>
+-                </div>
+-                <div class="modal-footer border-0 px-4 py-3 bg-white">
+-                    <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">α╕¢α╕┤α╕öα╕½α╕Öα╣ëα╕▓α╕òα╣êα╕▓α╕ç</button>
++                    
+                 </div>
+             </div>
+         </div>
+     </div>
+ 
+-    <!-- settingsModal -->
+-    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+-        <div class="modal-dialog modal-xl modal-dialog-centered">
+-            <div class="modal-content">
+-                <div class="modal-header border-0 px-4 py-3" style="background: #1e293b; color: white;">
+-                    <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-cog me-2"></i> α╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓α╕úα╕░α╕Üα╕Üα╣üα╕Ñα╕░α╕¢α╕úα╕░α╕ºα╕▒α╕òα╕┤ ROPA (Settings & Audit Logs)</h5>
+-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+-                </div>
+-                <div class="modal-body p-4 bg-light">
+-                    <div class="row">
+-                        <!-- Left Tab selection panel -->
+-                        <div class="col-md-3 border-end pe-4">
+-                            <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-cogs text-theme me-2"></i>α╣Çα╕íα╕Öα╕╣α╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓α╕úα╕░α╕Üα╕Ü</h6>
+-                            <div class="nav flex-column nav-pills mb-3" id="settingsTabs" role="tablist">
+-                                <button class="nav-link active text-start mb-2 py-2 px-3 fw-bold btn-outline-modern" id="tab-report-builder" data-bs-toggle="pill" data-bs-target="#settings-report-builder" type="button" role="tab" style="border-radius: 8px;"><i class="fas fa-tools me-2"></i>α╕¬α╕úα╣ëα╕▓α╕ç/α╣üα╕üα╣ëα╣äα╕éα╕úα╕▓α╕óα╕çα╕▓α╕Ö</button>
+-                                <button class="nav-link text-start mb-2 py-2 px-3 fw-bold btn-outline-modern" id="tab-security-stats" data-bs-toggle="pill" data-bs-target="#settings-security-stats" type="button" role="tab" style="border-radius: 8px;"><i class="fas fa-shield-alt me-2"></i>α╕äα╕ºα╕▓α╕íα╕¢α╕Ñα╕¡α╕öα╕áα╕▒α╕ó & α╕¬α╕ûα╕┤α╕òα╕┤</button>
+-                                <button class="nav-link text-start py-2 px-3 fw-bold btn-outline-modern" id="tab-ropa-logs" data-bs-toggle="pill" data-bs-target="#settings-ropa-logs" type="button" role="tab" style="border-radius: 8px;"><i class="fas fa-history me-2"></i>α╕¢α╕úα╕░α╕ºα╕▒α╕òα╕┤α╣âα╕èα╣ëα╕çα╕▓α╕Ö (ROPA)</button>
+-                            </div>
+-                        </div>
+-
+-                        <!-- Right tab content panels -->
+-                        <div class="col-md-9 ps-4">
+-                            <div class="tab-content" id="settingsTabContent" style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px;">
+-                                <!-- Tab 1: Report Builder -->
+-                                <div class="tab-pane fade show active" id="settings-report-builder" role="tabpanel">
+-                                    <div class="row">
+-                                        <div class="col-md-3 border-end pe-3">
+-                                            <h6 class="fw-bold mb-3 small text-muted">α╕êα╕▒α╕öα╕üα╕▓α╕úα╕úα╕▓α╕óα╕çα╕▓α╕Öα╕ùα╕╡α╣êα╕íα╕╡α╕¡α╕óα╕╣α╣ê</h6>
+-                                            <div class="list-group mb-3" id="reportListGroup" style="max-height: 48vh; overflow-y: auto;"></div>
+-                                            <button class="btn btn-outline-modern w-100 justify-content-center border-dashed btn-sm" id="btnCreateNewReport"><i class="fas fa-plus text-theme"></i> α╕¬α╕úα╣ëα╕▓α╕çα╕úα╕▓α╕óα╕çα╕▓α╕Öα╣âα╕½α╕íα╣ê</button>
+-                                        </div>
+-                                        <div class="col-md-9 ps-3">
+-                                            <div class="d-flex justify-content-between align-items-center mb-3"><h6 class="fw-bold m-0 text-slate-800" id="builderTitle">α╣üα╕üα╣ëα╣äα╕éα╣éα╕äα╕úα╕çα╕¬α╕úα╣ëα╕▓α╕ç: <span id="currentReportName" class="text-theme"></span></h6></div>
+-                                            
+-                                            <div id="newReportForm" style="display: none; background: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+-                                                <h6 class="fw-bold mb-3 text-theme"><i class="fas fa-file-medical-alt me-2"></i> α╕¬α╣êα╕ºα╕Öα╕ùα╕╡α╣ê 1: α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕úα╕▓α╕óα╕çα╕▓α╕Öα╕₧α╕╖α╣ëα╕Öα╕Éα╕▓α╕Ö</h6>
+-                                                <div class="row g-3">
+-                                                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">α╕èα╕╖α╣êα╕¡α╕úα╕▓α╕óα╕çα╕▓α╕Öα╣âα╕½α╕íα╣ê</label><input type="text" class="form-control form-control-custom" id="newReportNameInput" placeholder="α╣Çα╕èα╣êα╕Ö: α╕úα╕▓α╕óα╕çα╕▓α╕Öα╕äα╕╕α╕ôα╕áα╕▓α╕₧α╕¡α╕▓α╕½α╕▓α╕ú"></div>
+-                                                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">α╕½α╕íα╕ºα╕öα╕½α╕íα╕╣α╣êα╕úα╕▓α╕óα╕çα╕▓α╕Ö (Category)</label><select class="form-select form-control-custom" id="newReportCategoryInput"><option value="env">α╕¬α╕┤α╣êα╕çα╣üα╕ºα╕öα╕Ñα╣ëα╕¡α╕í (α╕¬α╕┤α╣êα╕çα╣üα╕ºα╕öα╕Ñα╣ëα╕¡α╕í)</option><option value="health">α╕¬α╕áα╕▓α╕ºα╕░α╕¬α╕╕α╕éα╕áα╕▓α╕₧ (α╕¬α╕▓α╕ÿα╕▓α╕úα╕ôα╕¬α╕╕α╕é)</option></select></div>
+-                                                </div>
+-                                            </div>
+-                                            
+-                                            <div id="schemaFieldsArea">
+-                                                <div class="d-flex justify-content-between align-items-center mb-2"><h6 class="fw-bold m-0 text-slate-700"><i class="fas fa-table text-theme me-2"></i>α╕¬α╣êα╕ºα╕Öα╕ùα╕╡α╣ê 2: α╕üα╕│α╕½α╕Öα╕öα╕äα╕¡α╕Ñα╕▒α╕íα╕Öα╣îα╕òα╕▓α╕úα╕▓α╕ç</h6><button class="btn btn-sm btn-primary-modern" id="btnAddColumnMock"><i class="fas fa-plus"></i> α╣Çα╕₧α╕┤α╣êα╕íα╕ƒα╕┤α╕Ñα╕öα╣î</button></div>
+-                                                <div class="row g-2 mb-2 px-3 fw-bold small text-muted"><div class="col-3">α╕èα╕╖α╣êα╕¡α╕ƒα╕┤α╕Ñα╕öα╣îα╕½α╕Öα╣ëα╕▓α╣Çα╕ºα╣çα╕Ü</div><div class="col-4">α╕¡α╣ëα╕▓α╕çα╕¡α╕┤α╕ç Column α╣âα╕Ö DB</div><div class="col-4">α╕½α╕úα╕╖α╕¡α╣âα╕èα╣ëα╕¬α╕╣α╕òα╕úα╕äα╕│α╕Öα╕ºα╕ô (Formula)</div><div class="col-1 text-center">α╕Ñα╕Ü</div></div>
+-                                                <div id="tableSchemaContainer"></div>
+-
+-                                                <hr class="my-4">
+-                                                
+-                                                <h6 class="fw-bold m-0 text-slate-700 mb-3"><i class="fas fa-chart-pie text-theme me-2"></i>α╕¬α╣êα╕ºα╕Öα╕ùα╕╡α╣ê 3: α╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓α╕üα╕▓α╕úα╣üα╕¬α╕öα╕çα╕£α╕Ñα╕üα╕úα╕▓α╕ƒα╣üα╕Ñα╕░α╣üα╕£α╕Öα╕ùα╕╡α╣ê</h6>
+-                                                <div class="row g-3">
+-                                                    <div class="col-md-4 border-end pe-3">
+-                                                        <label class="form-label fw-bold small text-muted">1. α╕üα╕úα╕▓α╕ƒα╕¬α╕▒α╕öα╕¬α╣êα╕ºα╕Ö (Donut Chart)</label>
+-                                                        <select class="form-select form-control-custom chart-config-dropdown mb-3" id="chartPropCol"><option value="">-- α╣äα╕íα╣êα╣âα╕èα╣ë / α╕äα╣êα╕▓α╣Çα╕úα╕┤α╣êα╕íα╕òα╣ëα╕Ö --</option></select>
+-                                                        
+-                                                        <div class="form-check form-switch mb-2">
+-                                                            <input class="form-check-input" type="checkbox" id="enableGrouping">
+-                                                            <label class="form-check-label small fw-bold text-primary" for="enableGrouping"><i class="fas fa-layer-group"></i> α╕¬α╕úα╣ëα╕▓α╕çα╕üα╕Äα╕êα╕▒α╕öα╕üα╕Ñα╕╕α╣êα╕íα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╣âα╕½α╕íα╣ê</label>
+-                                                        </div>
+-                                                        <div id="groupingBuilder" style="display: none; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+-                                                            <div class="small text-muted mb-2">α╕üα╕│α╕½α╕Öα╕öα╣Çα╕çα╕╖α╣êα╕¡α╕Öα╣äα╕éα╣âα╕½α╣ëα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕ùα╕╡α╣êα╕ûα╕╣α╕üα╣Çα╕Ñα╕╖α╕¡α╕ü</div>
+-                                                            <div id="groupRulesContainer"></div>
+-                                                            <button class="btn btn-sm btn-outline-primary w-100 mt-2" id="btnAddGroupRule"><i class="fas fa-plus"></i> α╣Çα╕₧α╕┤α╣êα╕íα╕üα╕Ñα╕╕α╣êα╕í</button>
+-                                                        </div>
+-                                                    </div>
+-                                                    <div class="col-md-4 border-end pe-3">
+-                                                        <label class="form-label fw-bold small text-muted">2. α╕üα╕úα╕▓α╕ƒα╕¬α╕ûα╕┤α╕òα╕┤α╣Çα╕èα╕┤α╕çα╕Ñα╕╢α╕ü (Bar Chart)</label>
+-                                                        <select class="form-select form-control-custom chart-config-dropdown mb-1" id="chartDrillCol"><option value="">-- α╣äα╕íα╣êα╣âα╕èα╣ë / α╕Öα╕▒α╕Üα╕êα╕│α╕Öα╕ºα╕Ö --</option></select>
+-                                                        <div class="form-text" style="font-size: 0.75rem;">α╕½α╕▓α╕üα╕òα╣ëα╕¡α╕çα╕üα╕▓α╕úα╕½α╕▓α╕äα╣êα╕▓α╣Çα╕ëα╕Ñα╕╡α╣êα╕ó α╣âα╕½α╣ëα╣Çα╕Ñα╕╖α╕¡α╕üα╕äα╕¡α╕Ñα╕▒α╕íα╕Öα╣îα╕ùα╕╡α╣êα╣Çα╕¢α╣çα╕Öα╕òα╕▒α╕ºα╣Çα╕Ñα╕é</div>
+-                                                    </div>
+-                                                    <div class="col-md-4">
+-                                                        <label class="form-label fw-bold small text-muted">3. α╣üα╕£α╕Öα╕ùα╕╡α╣êα╣Çα╕èα╕┤α╕çα╕₧α╕╖α╣ëα╕Öα╕ùα╕╡α╣ê (α╣Çα╕ëα╕öα╕¬α╕╡ Map)</label>
+-                                                        <select class="form-select form-control-custom chart-config-dropdown mb-2" id="chartMapCol"><option value="">-- α╣äα╕íα╣êα╣âα╕èα╣ë / α╕äα╣êα╕▓α╣Çα╕úα╕┤α╣êα╕íα╕òα╣ëα╕Ö --</option></select>
+-                                                        <div class="form-text" style="font-size: 0.75rem; margin-bottom: 15px;">α╕äα╕¡α╕Ñα╕▒α╕íα╕Öα╣îα╕òα╕▒α╕ºα╣Çα╕Ñα╕éα╕ùα╕╡α╣êα╣âα╕èα╣ëα╕äα╕│α╕Öα╕ºα╕ôα╣Çα╕ëα╕öα╕¬α╕╡α╕Üα╕Öα╣üα╕£α╕Öα╕ùα╕╡α╣ê</div>
+-
+-                                                        <label class="form-label fw-bold small text-muted">4. α╣Çα╕üα╕ôα╕æα╣îα╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕ç (α╕½α╕íα╕╕α╕ö Sonar α╕üα╕░α╕₧α╕úα╕┤α╕Ü)</label>
+-                                                        <input type="number" step="any" class="form-control form-control-custom mb-1" id="mapAlertThreshold" placeholder="α╣Çα╕èα╣êα╕Ö 0.7 α╕½α╕úα╕╖α╕¡ 10">
+-                                                        <div class="form-text" style="font-size: 0.75rem;">α╕úα╕░α╕Üα╕╕α╕äα╣êα╕▓α╕òα╕▒α╕ºα╣Çα╕Ñα╕éα╕éα╕▒α╣ëα╕Öα╕òα╣êα╕│α╕ùα╕╡α╣êα╕êα╕░α╕üα╕úα╕░α╕òα╕╕α╣ëα╕Öα╕½α╕íα╕╕α╕öα╣âα╕Öα╣üα╕£α╕Öα╕ùα╕╡α╣êα╣âα╕½α╣ëα╕üα╕░α╕₧α╕úα╕┤α╕Ü</div>
+-                                                    </div>
+-                                                </div>
+-                                                <hr class="my-4">
+-                                            </div>
+ 
+-                                            <h6 class="fw-bold m-0 text-slate-700 mb-3"><i class="fas fa-tachometer-alt text-theme me-2"></i>α╕¬α╣êα╕ºα╕Öα╕ùα╕╡α╣ê 4: α╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓ KPI (4 α╕üα╕Ñα╣êα╕¡α╕çα╣üα╕¬α╕öα╕çα╕£α╕Ñα╕öα╣ëα╕▓α╕Öα╕Üα╕Ö)</h6>
+-                                            <div id="kpiConfigContainer">
+-                                                <script>
+-                                                    for(let i=1; i<=4; i++) {
+-                                                        document.write(`
+-                                                        <div class="row g-2 mb-2 p-3 bg-white border rounded">
+-                                                            <div class="col-md-3">
+-                                                                <label class="small text-muted fw-bold">α╕èα╕╖α╣êα╕¡ KPI ${i}</label>
+-                                                                <input type="text" class="form-control form-control-sm kpi-label-input" id="kpi${i}_label" placeholder="α╣Çα╕èα╣êα╕Ö α╕êα╕│α╕Öα╕ºα╕Öα╕úα╕ºα╕í">
+-                                                            </div>
+-                                                            <div class="col-md-3">
+-                                                                <label class="small text-muted fw-bold">α╕¢α╕úα╕░α╣Çα╕áα╕ùα╕äα╕│α╕Öα╕ºα╕ô</label>
+-                                                                <select class="form-select form-select-sm kpi-type-input" id="kpi${i}_type">
+-                                                                    <option value="count">α╕Öα╕▒α╕Üα╕êα╕│α╕Öα╕ºα╕Öα╕úα╕▓α╕óα╕üα╕▓α╕ú (Count)</option>
+-                                                                    <option value="sum">α╕£α╕Ñα╕úα╕ºα╕íα╕òα╕▒α╕ºα╣Çα╕Ñα╕é (Sum)</option>
+-                                                                    <option value="avg">α╕½α╕▓α╕äα╣êα╕▓α╣Çα╕ëα╕Ñα╕╡α╣êα╕ó (Average)</option>
+-                                                                </select>
+-                                                            </div>
+-                                                            <div class="col-md-3">
+-                                                                <label class="small text-muted fw-bold">α╕äα╕¡α╕Ñα╕▒α╕íα╕Öα╣îα╕¡α╣ëα╕▓α╕çα╕¡α╕┤α╕ç</label>
+-                                                                <select class="form-select form-select-sm kpi-col-input chart-config-dropdown" id="kpi${i}_col"><option value="">-- α╣äα╕íα╣êα╣âα╕èα╣ë --</option></select>
+-                                                            </div>
+-                                                            <div class="col-md-3">
+-                                                                <label class="small text-muted fw-bold">α╕¬α╕╡α╕¬α╕▒α╕ìα╕Ñα╕▒α╕üα╕⌐α╕ôα╣î</label>
+-                                                                <select class="form-select form-select-sm kpi-color-input" id="kpi${i}_color">
+-                                                                    <option value="main">α╕¬α╕╡α╕öα╕│ (α╕ùα╕▒α╣êα╕ºα╣äα╕¢)</option>
+-                                                                    <option value="theme">α╕¬α╕╡α╕½α╕Ñα╕▒α╕ü (α╕ƒα╣ëα╕▓/α╕íα╣êα╕ºα╕ç)</option>
+-                                                                    <option value="danger">α╕¬α╕╡α╣üα╕öα╕ç (α╣Çα╕òα╕╖α╕¡α╕Öα╕áα╕▒α╕ó)</option>
+-                                                                    <option value="success">α╕¬α╕╡α╣Çα╕éα╕╡α╕óα╕º (α╕¢α╕Ñα╕¡α╕öα╕áα╕▒α╕ó)</option>
+-                                                                    <option value="warning">α╕¬α╕╡α╕¬α╣ëα╕í (α╣Çα╕¥α╣ëα╕▓α╕úα╕░α╕ºα╕▒α╕ç)</option>
+-                                                                </select>
+-                                                            </div>
+-                                                        </div>`);
+-                                                    }
+-                                                </script>
+-                                            </div>
+-                                        </div>
++    <!-- New Register Modal (Blue Flat Design) -->
++    
++    <!-- New Register Modal (Blue Flat Design with Smart Cascading) -->
++    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
++        <div class="modal-dialog modal-xl modal-dialog-centered">
++            <div class="modal-content border-0 shadow-lg" style="background: linear-gradient(to bottom, #3b71ca 25%, #f8fafc 25%); border-radius: 12px; min-height: 600px;">
++                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" style="z-index: 100;"></button>
++                <div class="row g-0 h-100 position-relative justify-content-center">
++                    
++                    <div class="col-lg-12 text-center text-white pt-4 pb-2">
++                        <h3 class="fw-bold mb-2" style="letter-spacing: 1px; font-size: 2rem;">α╕Ñα╕çα╕ùα╕░α╣Çα╕Üα╕╡α╕óα╕Öα╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö</h3>
++                        <p style="opacity: 0.9; font-size: 0.9rem; font-weight: 300;">α╕¬α╕úα╣ëα╕▓α╕çα╕Üα╕▒α╕ìα╕èα╕╡α╕£α╕╣α╣ëα╣âα╕èα╣ëα╣âα╕½α╕íα╣êα╕¬α╕│α╕½α╕úα╕▒α╕Üα╕½α╕Öα╣êα╕ºα╕óα╕çα╕▓α╕Öα╕éα╕¡α╕çα╕äα╕╕α╕ô</p>
++                    </div>
++                    
++                    <!-- Register Card -->
++                    <div class="col-lg-10 col-md-12 d-flex align-items-center justify-content-center p-3 p-md-4">
++                        <div class="card border-0 shadow-lg p-4 p-md-5 w-100" style="border-radius: 16px; background: white;">
++                            <form id="registerForm">
++                                <div class="row gx-4">
++                                    <!-- Row 1: α╕èα╕╖α╣êα╕¡, α╕Öα╕▓α╕íα╕¬α╕üα╕╕α╕Ñ -->
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕èα╕╖α╣êα╕¡</label>
++                                        <input type="text" class="form-control shadow-none border-1" id="regFirstname" required style="border-radius: 6px; border-color: #cbd5e1;">
++                                    </div>
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕Öα╕▓α╕íα╕¬α╕üα╕╕α╕Ñ</label>
++                                        <input type="text" class="form-control shadow-none border-1" id="regLastname" required style="border-radius: 6px; border-color: #cbd5e1;">
+                                     </div>
+-                                </div>
+-                                
+-                                <!-- Tab 2: Security & Stats -->
+-                                <div class="tab-pane fade" id="settings-security-stats" role="tabpanel">
+-                                    <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-chart-line text-theme me-2"></i>α╕¬α╕ûα╕┤α╕òα╕┤α╕óα╕¡α╕öα╕üα╕▓α╕úα╣Çα╕éα╣ëα╕▓α╕èα╕íα╣üα╕òα╣êα╕Ñα╕░α╕½α╕íα╕ºα╕öα╕½α╕íα╕╣α╣ê (User Dashboard Visits)</h6>
+-                                    <div style="height: 250px;" class="mb-4 bg-white p-3 border rounded"><canvas id="visitStatsChart"></canvas></div>
+                                     
+-                                    <hr class="my-4">
++                                    <!-- Row 2: Email, α╣Çα╕Üα╕¡α╕úα╣îα╣éα╕ùα╕úα╕¿α╕▒α╕₧α╕ùα╣î -->
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> Email (Username)</label>
++                                        <input type="email" class="form-control shadow-none border-1" id="regEmail" required style="border-radius: 6px; border-color: #cbd5e1;">
++                                    </div>
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;">α╣Çα╕Üα╕¡α╕úα╣îα╣éα╕ùα╕úα╕¿α╕▒α╕₧α╕ùα╣î</label>
++                                        <input type="text" class="form-control shadow-none border-1" id="regPhone" style="border-radius: 6px; border-color: #cbd5e1;">
++                                    </div>
+                                     
+-                                    <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-user-lock text-theme me-2"></i>α╕êα╕▒α╕öα╕üα╕▓α╕úα╕Üα╕▒α╕ìα╕èα╕╡α╣üα╕¡α╕öα╕íα╕┤α╕Öα╕úα╕░α╕Üα╕Ü (Admin Credentials)</h6>
+-                                    <div class="row g-3 bg-white p-3 border rounded mb-3">
+-                                        <div class="col-md-4">
+-                                            <label class="small text-muted fw-bold">α╕èα╕╖α╣êα╕¡α╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö</label>
+-                                            <input type="text" class="form-control form-control-sm" id="newAdminUser" placeholder="α╣Çα╕èα╣êα╕Ö admin2">
+-                                        </div>
+-                                        <div class="col-md-4">
+-                                            <label class="small text-muted fw-bold">α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö</label>
+-                                            <input type="password" class="form-control form-control-sm" id="newAdminPassword" placeholder="α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Öα╕£α╕╣α╣ëα╣âα╕èα╣ë">
+-                                        </div>
+-                                        <div class="col-md-4 d-flex align-items-end">
+-                                            <button class="btn btn-sm btn-primary-modern w-100 justify-content-center" id="btnAddAdmin"><i class="fas fa-user-plus"></i> α╣Çα╕₧α╕┤α╣êα╕í / α╕¡α╕▒α╕¢α╣Çα╕öα╕òα╕Üα╕▒α╕ìα╕èα╕╡</button>
+-                                        </div>
++                                    <!-- Row 3: α╕¢α╕úα╕░α╣Çα╕áα╕ùα╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö, α╕êα╕▒α╕çα╕½α╕ºα╕▒α╕ö -->
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;">α╕¢α╕úα╕░α╣Çα╕áα╕ùα╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö</label>
++                                        <select class="form-select shadow-none border-1" id="regRole" required style="border-radius: 6px; border-color: #cbd5e1; cursor: pointer;">
++                                            <option value="α╕úα╕₧.α╕¬α╕ò.">α╣Çα╕êα╣ëα╕▓α╕½α╕Öα╣ëα╕▓α╕ùα╕╡α╣ê α╕¢α╕úα╕░α╕êα╕│ α╕úα╕₧.α╕¬α╕ò.</option>
++                                            <option value="α╕ùα╣ëα╕¡α╕çα╕ûα╕┤α╣êα╕Ö">α╕¡α╕çα╕äα╣îα╕üα╕úα╕¢α╕üα╕äα╕úα╕¡α╕çα╕¬α╣êα╕ºα╕Öα╕ùα╣ëα╕¡α╕çα╕ûα╕┤α╣êα╕Ö</option>
++                                            <option value="α╕úα╕₧.">α╣éα╕úα╕çα╕₧α╕óα╕▓α╕Üα╕▓α╕Ñα╕èα╕╕α╕íα╕èα╕Ö/α╕ùα╕▒α╣êα╕ºα╣äα╕¢ (α╕úα╕₧.)</option>
++                                            <option value="α╕¬α╕¬α╕ê.">α╕¬α╕│α╕Öα╕▒α╕üα╕çα╕▓α╕Öα╕¬α╕▓α╕ÿα╕▓α╕úα╕ôα╕¬α╕╕α╕éα╕êα╕▒α╕çα╕½α╕ºα╕▒α╕ö (α╕¬α╕¬α╕ê.)</option>
++                                            <option value="admin">α╕£α╕╣α╣ëα╕öα╕╣α╣üα╕Ñα╕úα╕░α╕Üα╕Ü (Admin)</option>
++                                        </select>
++                                    </div>
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕êα╕▒α╕çα╕½α╕ºα╕▒α╕ö</label>
++                                        <select class="form-select shadow-none border-1" id="regProvince" required style="border-radius: 6px; border-color: #cbd5e1; cursor: pointer;">
++                                            <option value="" disabled selected>--α╕üα╕úα╕╕α╕ôα╕▓α╣Çα╕Ñα╕╖α╕¡α╕üα╕êα╕▒α╕çα╕½α╕ºα╕▒α╕ö--</option>
++                                        </select>
++                                    </div>
++                                    
++                                    <!-- Row 4: α╕¡α╕│α╣Çα╕áα╕¡, α╕òα╕│α╕Üα╕Ñ -->
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕¡α╕│α╣Çα╕áα╕¡</label>
++                                        <select class="form-select shadow-none border-1" id="regDistrict" required disabled style="border-radius: 6px; border-color: #cbd5e1; cursor: not-allowed; background-color: #f8fafc;">
++                                            <option value="" disabled selected>--α╕üα╕úα╕╕α╕ôα╕▓α╣Çα╕Ñα╕╖α╕¡α╕üα╕¡α╕│α╣Çα╕áα╕¡--</option>
++                                        </select>
++                                    </div>
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕òα╕│α╕Üα╕Ñ</label>
++                                        <select class="form-select shadow-none border-1" id="regSubdistrict" required disabled style="border-radius: 6px; border-color: #cbd5e1; cursor: not-allowed; background-color: #f8fafc;">
++                                            <option value="" disabled selected>--α╕üα╕úα╕╕α╕ôα╕▓α╣Çα╕Ñα╕╖α╕¡α╕üα╕òα╕│α╕Üα╕Ñ--</option>
++                                        </select>
++                                    </div>
++                                    
++                                    <!-- Row 5: α╣éα╕úα╕çα╕₧α╕óα╕▓α╕Üα╕▓α╕Ñα╣üα╕íα╣êα╕éα╣êα╕▓α╕ó, α╕½α╕Öα╣êα╕ºα╕óα╕çα╕▓α╕Ö -->
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;">α╣éα╕úα╕çα╕₧α╕óα╕▓α╕Üα╕▓α╕Ñα╣üα╕íα╣êα╕éα╣êα╕▓α╕ó</label>
++                                        <select class="form-select shadow-none border-1" id="regParentHosp" disabled style="border-radius: 6px; border-color: #cbd5e1; cursor: not-allowed; background-color: #f8fafc;">
++                                            <option value="" disabled selected>--α╕üα╕úα╕╕α╕ôα╕▓α╣Çα╕Ñα╕╖α╕¡α╕üα╣éα╕úα╕çα╕₧α╕óα╕▓α╕Üα╕▓α╕Ñα╣üα╕íα╣êα╕éα╣êα╕▓α╕ó--</option>
++                                        </select>
+                                     </div>
+-                                    <div class="table-responsive bg-white border rounded">
+-                                        <table class="table table-sm mb-0 table-hover table-striped">
+-                                            <thead class="table-light">
+-                                                <tr>
+-                                                    <th class="ps-3">α╕èα╕╖α╣êα╕¡α╕£α╕╣α╣ëα╣âα╕èα╣ë (Username)</th>
+-                                                    <th>α╕Üα╕ùα╕Üα╕▓α╕ù (Role)</th>
+-                                                    <th>α╕ºα╕▒α╕Öα╕ùα╕╡α╣êα╕¬α╕úα╣ëα╕▓α╕ç (Created Date)</th>
+-                                                    <th class="text-center">α╕üα╕▓α╕úα╕êα╕▒α╕öα╕üα╕▓α╕ú</th>
+-                                                </tr>
+-                                            </thead>
+-                                            <tbody id="adminUsersTableBody">
+-                                                <tr><td colspan="4" class="text-center text-muted">α╕üα╕│α╕Ñα╕▒α╕çα╕öα╕╢α╕çα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕£α╕╣α╣ëα╕öα╕╣α╣üα╕Ñ...</td></tr>
+-                                            </tbody>
+-                                        </table>
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕½α╕Öα╣êα╕ºα╕óα╕çα╕▓α╕Ö</label>
++                                        <select class="form-select shadow-none border-1" id="regOffice" required disabled style="border-radius: 6px; border-color: #cbd5e1; cursor: not-allowed; background-color: #f8fafc;">
++                                            <option value="" disabled selected>--α╕üα╕úα╕╕α╕ôα╕▓α╣Çα╕Ñα╕╖α╕¡α╕üα╕½α╕Öα╣êα╕ºα╕óα╕çα╕▓α╕Ö--</option>
++                                        </select>
++                                    </div>
++                                    
++                                    <!-- Row 6: Password (Hidden but necessary) -->
++                                    <div class="col-md-6 mb-3">
++                                        <label class="form-label fw-bold mb-1" style="font-size: 0.85rem;"><span class="text-danger">*</span> α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö (Password)</label>
++                                        <input type="password" class="form-control shadow-none border-1" id="regPassword" required style="border-radius: 6px; border-color: #cbd5e1;">
+                                     </div>
+                                 </div>
+-
+-                                <!-- Tab 3: ROPA Logs -->
+-                                <div class="tab-pane fade" id="settings-ropa-logs" role="tabpanel">
+-                                    <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-history text-theme me-2"></i>α╕¢α╕úα╕░α╕ºα╕▒α╕òα╕┤α╕üα╕▓α╕úα╕öα╕│α╣Çα╕Öα╕┤α╕Öα╕üα╕┤α╕êα╕üα╕úα╕úα╕íα╣üα╕¡α╕öα╕íα╕┤α╕Ö (ROPA Audit Logs)</h6>
+-                                    <div class="table-responsive bg-white border rounded" style="max-height: 400px; overflow-y: auto;">
+-                                        <table class="table table-hover table-striped table-sm mb-0" style="font-size: 0.85rem;">
+-                                            <thead class="table-light" style="position: sticky; top: 0; z-index: 5;">
+-                                                <tr>
+-                                                    <th class="ps-3">α╕ºα╕▒α╕Ö-α╣Çα╕ºα╕Ñα╕▓</th>
+-                                                    <th>α╣üα╕¡α╕öα╕íα╕┤α╕Ö</th>
+-                                                    <th>α╕äα╕│α╕¬α╕▒α╣êα╕ç</th>
+-                                                    <th>α╣Çα╕¢α╣ëα╕▓α╕½α╕íα╕▓α╕ó</th>
+-                                                    <th>α╕úα╕▓α╕óα╕Ñα╕░α╣Çα╕¡α╕╡α╕óα╕öα╕üα╕▓α╕úα╕üα╕úα╕░α╕ùα╕│</th>
+-                                                    <th>IP Address</th>
+-                                                </tr>
+-                                            </thead>
+-                                            <tbody id="ropaLogsTableBody">
+-                                                <tr><td colspan="6" class="text-center text-muted">α╕üα╕│α╕Ñα╕▒α╕çα╣éα╕½α╕Ñα╕öα╕Ñα╣çα╕¡α╕ü ROPA...</td></tr>
+-                                            </tbody>
+-                                        </table>
++                                
++                                <div class="mb-4 mt-2">
++                                    <label class="fw-bold mb-2 d-block" style="font-size: 0.9rem;">Permission Report</label>
++                                    <div class="form-check">
++                                        <input class="form-check-input shadow-none" type="checkbox" id="regPermissionAll" style="border-color: #3b71ca;" checked>
++                                        <label class="form-check-label fw-bold" for="regPermissionAll" style="font-size: 0.85rem; color: #1e293b;">All Report</label>
+                                     </div>
+                                 </div>
+-
+-
+-                            </div>
++                                
++                                <div class="text-center mt-4 pt-4 border-top">
++                                    <button type="submit" class="btn py-2 px-5 fw-bold text-white mb-2" id="btnSubmitRegister" style="background-color: #3b71ca; border-radius: 6px; font-size: 1rem; box-shadow: 0 4px 6px rgba(59, 113, 202, 0.2);">α╕¬α╕íα╕▒α╕äα╕úα╕¬α╕íα╕▓α╕èα╕┤α╕ü</button>
++                                    <br>
++                                    <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal" class="text-decoration-none" style="font-size: 0.85rem; font-weight: 600; color: #64748b;">α╕üα╕Ñα╕▒α╕Üα╣äα╕¢α╕½α╕Öα╣ëα╕▓α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Ü (Login)</a>
++                                </div>
++                            </form>
+                         </div>
+                     </div>
+-                </div>
+-                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between">
+-                    <button type="button" class="btn btn-outline-danger" id="btnDeleteSchema" style="display: none;"><i class="fas fa-trash"></i> α╕Ñα╕Üα╕úα╕▓α╕óα╕çα╕▓α╕Öα╕Öα╕╡α╣ë</button>
+-                    <div><button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">α╕óα╕üα╣Çα╕Ñα╕┤α╕ü</button><button type="button" class="btn btn-primary-modern px-4" id="btnSaveSchema">α╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╣éα╕äα╕úα╕çα╕¬α╕úα╣ëα╕▓α╕ç</button></div>
++                    
+                 </div>
+             </div>
+         </div>
+     </div>
+ 
+ 
+-
+     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+@@ -951,46 +739,73 @@
+         </div>
+     </div>
+ 
+-    <script src="/static/js/dashboard.js?v=2.4"></script>
++    <script src="/static/js/dashboard.js"></script>
+ 
+-    <!-- Register Modal -->
+-    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
++    <!-- Import Data Modal -->
++    <div class="modal fade" id="importDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+         <div class="modal-dialog modal-dialog-centered">
+-            <div class="modal-content">
++            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                 <div class="modal-header border-0 pb-0">
+-                    <h5 class="fw-bold mb-0">α╕Ñα╕çα╕ùα╕░α╣Çα╕Üα╕╡α╕óα╕Öα╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Öα╣âα╕½α╕íα╣ê</h5>
+-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
++                    <h5 class="fw-bold text-slate-800"><i class="fas fa-file-import text-primary me-2"></i>α╕Öα╕│α╣Çα╕éα╣ëα╕▓α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕úα╕▓α╕óα╕çα╕▓α╕Ö</h5>
++                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                 </div>
+                 <div class="modal-body p-4">
+-                    <form id="registerForm">
+-                        <div class="mb-3">
+-                            <label class="form-label">α╕èα╕╖α╣êα╕¡-α╕Öα╕▓α╕íα╕¬α╕üα╕╕α╕Ñ / α╕èα╕╖α╣êα╕¡α╕½α╕Öα╣êα╕ºα╕óα╕çα╕▓α╕Ö</label>
+-                            <input type="text" class="form-control" id="regFullname" required>
+-                        </div>
+-                        <div class="mb-3">
+-                            <label class="form-label">α╕úα╕½α╕▒α╕¬α╕£α╕╣α╣ëα╣âα╕èα╣ëα╕çα╕▓α╕Ö (Username)</label>
+-                            <input type="text" class="form-control" id="regUsername" required>
+-                        </div>
+-                        <div class="mb-3">
+-                            <label class="form-label">α╕úα╕½α╕▒α╕¬α╕£α╣êα╕▓α╕Ö (Password)</label>
+-                            <input type="password" class="form-control" id="regPassword" required>
++                    <p class="text-muted small mb-4">α╕¡α╕▒α╕¢α╣éα╕½α╕Ñα╕öα╣äα╕ƒα╕Ñα╣îα╕úα╕▓α╕óα╕çα╕▓α╕Ö (Excel/CSV) α╣Çα╕₧α╕╖α╣êα╕¡α╕Öα╕│α╣Çα╕éα╣ëα╕▓α╕¬α╕╣α╣êα╕úα╕░α╕Üα╕Üα╕Éα╕▓α╕Öα╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕üα╕Ñα╕▓α╕ç</p>
++                    <div class="mb-3">
++                        <label class="form-label fw-bold">α╣Çα╕Ñα╕╖α╕¡α╕üα╣äα╕ƒα╕Ñα╣îα╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</label>
++                        <input class="form-control" type="file" id="importFile" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
++                    </div>
++                    <div class="mb-3">
++                        <label class="form-label fw-bold">α╕¢α╕úα╕░α╣Çα╕áα╕ùα╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</label>
++                        <select class="form-select">
++                            <option>α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕äα╕╕α╕ôα╕áα╕▓α╕₧α╕Öα╣ëα╕│ (α╕ƒα╕Ñα╕╣α╕¡α╕¡α╣äα╕úα╕öα╣î)</option>
++                            <option>α╕éα╣ëα╕¡α╕íα╕╣α╕Ñα╕üα╕▓α╕úα╕òα╕úα╕ºα╕êα╕¬α╕╕α╕éα╕áα╕▓α╕₧α╕ƒα╕▒α╕Öα╕òα╕üα╕üα╕úα╕░</option>
++                        </select>
++                    </div>
++                </div>
++                <div class="modal-footer border-0 pt-0">
++                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">α╕óα╕üα╣Çα╕Ñα╕┤α╕ü</button>
++                    <button type="button" class="btn btn-primary px-4"><i class="fas fa-upload me-2"></i>α╕¡α╕▒α╕¢α╣éα╕½α╕Ñα╕öα╕éα╣ëα╕¡α╕íα╕╣α╕Ñ</button>
++                </div>
++            </div>
++        </div>
++    </div>
++
++    <!-- Settings Modal -->
++    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
++        <div class="modal-dialog modal-dialog-centered">
++            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
++                <div class="modal-header border-0 pb-0">
++                    <h5 class="fw-bold text-slate-800"><i class="fas fa-cogs text-secondary me-2"></i>α╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓α╕úα╕░α╕Üα╕Ü (System Settings)</h5>
++                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
++                </div>
++                <div class="modal-body p-4">
++                    <div class="mb-4">
++                        <h6 class="fw-bold mb-3">α╕üα╕▓α╕úα╣üα╕êα╣ëα╕çα╣Çα╕òα╕╖α╕¡α╕Ö</h6>
++                        <div class="form-check form-switch mb-2">
++                            <input class="form-check-input" type="checkbox" id="switchEmail" checked>
++                            <label class="form-check-label" for="switchEmail">α╕úα╕▒α╕Üα╕üα╕▓α╕úα╣üα╕êα╣ëα╕çα╣Çα╕òα╕╖α╕¡α╕Öα╣Çα╕äα╕¬α╕ºα╕┤α╕üα╕ñα╕òα╕£α╣êα╕▓α╕Öα╕¡α╕╡α╣Çα╕íα╕Ñ</label>
+                         </div>
+-                        <div class="mb-3">
+-                            <label class="form-label">α╕úα╕░α╕öα╕▒α╕Üα╕½α╕Öα╣êα╕ºα╕óα╕çα╕▓α╕Ö</label>
+-                            <select class="form-select" id="regRole" required>
+-                                <option value="α╕ùα╣ëα╕¡α╕çα╕ûα╕┤α╣êα╕Ö">α╕¡α╕çα╕äα╣îα╕üα╕úα╕¢α╕üα╕äα╕úα╕¡α╕çα╕¬α╣êα╕ºα╕Öα╕ùα╣ëα╕¡α╕çα╕ûα╕┤α╣êα╕Ö</option>
+-                                <option value="α╕úα╕₧.α╕¬α╕ò.">α╣éα╕úα╕çα╕₧α╕óα╕▓α╕Üα╕▓α╕Ñα╕¬α╣êα╕çα╣Çα╕¬α╕úα╕┤α╕íα╕¬α╕╕α╕éα╕áα╕▓α╕₧α╕òα╕│α╕Üα╕Ñ (α╕úα╕₧.α╕¬α╕ò.)</option>
+-                                <option value="α╕úα╕₧.">α╣éα╕úα╕çα╕₧α╕óα╕▓α╕Üα╕▓α╕Ñα╕èα╕╕α╕íα╕èα╕Ö/α╕ùα╕▒α╣êα╕ºα╣äα╕¢ (α╕úα╕₧.)</option>
+-                                <option value="α╕¬α╕¬α╕ê.">α╕¬α╕│α╕Öα╕▒α╕üα╕çα╕▓α╕Öα╕¬α╕▓α╕ÿα╕▓α╕úα╕ôα╕¬α╕╕α╕éα╕êα╕▒α╕çα╕½α╕ºα╕▒α╕ö (α╕¬α╕¬α╕ê.)</option>
+-                                <option value="admin">α╕£α╕╣α╣ëα╕öα╕╣α╣üα╕Ñα╕úα╕░α╕Üα╕Ü (Admin)</option>
+-                            </select>
++                        <div class="form-check form-switch">
++                            <input class="form-check-input" type="checkbox" id="switchLine">
++                            <label class="form-check-label" for="switchLine">α╣Çα╕èα╕╖α╣êα╕¡α╕íα╕òα╣êα╕¡ LINE Notify</label>
+                         </div>
+-                        <button type="submit" class="btn btn-primary-modern w-100 mt-2">α╕óα╕╖α╕Öα╕óα╕▒α╕Öα╕üα╕▓α╕úα╕Ñα╕çα╕ùα╕░α╣Çα╕Üα╕╡α╕óα╕Ö</button>
+-                    </form>
++                    </div>
++                    <div class="mb-3">
++                        <h6 class="fw-bold mb-3">α╕úα╕╣α╕¢α╣üα╕Üα╕Üα╣üα╕£α╕Öα╕ùα╕╡α╣êα╣Çα╕úα╕┤α╣êα╕íα╕òα╣ëα╕Ö</h6>
++                        <select class="form-select">
++                            <option>α╣üα╕£α╕Öα╕ùα╕╡α╣êα╕öα╕▓α╕ºα╣Çα╕ùα╕╡α╕óα╕í (Satellite)</option>
++                            <option selected>α╣üα╕£α╕Öα╕ùα╕╡α╣êα╕ûα╕Öα╕Ö (Street Map)</option>
++                            <option>α╣üα╕£α╕Öα╕ùα╕╡α╣êα╕áα╕╣α╕íα╕┤α╕¢α╕úα╕░α╣Çα╕ùα╕¿ (Terrain)</option>
++                        </select>
++                    </div>
++                </div>
++                <div class="modal-footer border-0 pt-0">
++                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">α╕¢α╕┤α╕ö</button>
++                    <button type="button" class="btn btn-success px-4"><i class="fas fa-save me-2"></i>α╕Üα╕▒α╕Öα╕ùα╕╢α╕üα╕üα╕▓α╕úα╕òα╕▒α╣ëα╕çα╕äα╣êα╕▓</button>
+                 </div>
+             </div>
+         </div>
+     </div>
+ 
+-</body>
+-</html>
+\ No newline at end of file
++</body>
+\ No newline at end of file

@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบเฝ้าระวังสภาวะฟันตกกระและระดับฟลูออไรด์ในน้ำ</title>
+    <link rel="icon" type="image/png" href="/static/ICON_FLUORIDE.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="theme-home">
+    
+    <div id="loading-overlay"><div class="spinner"></div><div class="fw-bold text-theme" style="font-size: 1.1rem;">กำลังจัดเตรียมข้อมูล...</div></div>
+
+    <div class="app-wrapper">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <img src="/static/ICON_FLUORIDE.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/th/thumb/6/6d/Ministry_of_Public_Health_logo.svg/120px-Ministry_of_Public_Health_logo.svg.png'" height="34" alt="Logo" style="border-radius: 8px;">
+                <h5 class="sidebar-text text-theme ms-2 mb-0" style="font-size: 0.95rem;">ระบบเฝ้าระวังสภาวะฟันตกกระ<br><span style="font-weight: 400; font-size:0.8rem; color:var(--text-muted);">และระดับฟลูออไรด์ในน้ำ</span></h5>
+            </div>
+            
+            <div class="nav-sidebar">
+                <div class="sidebar-heading">รายงานและวิเคราะห์</div>
+                <a class="sidebar-link menu-trigger active" data-type="ทั้งหมด"><i class="fas fa-chart-pie"></i><span class="sidebar-text">หน้าหลัก (ภาพรวม)</span></a>
+                <a class="sidebar-link menu-trigger" data-type="ประเมินความเสี่ยง" style="margin-top: 4px;"><i class="fas fa-brain"></i><span class="sidebar-text">ประเมินความเสี่ยง</span></a>
+                
+                <div class="sidebar-heading">สิ่งแวดล้อม</div>
+                <a data-bs-toggle="collapse" href="#envSubmenu" class="sidebar-link has-submenu"><div><i class="fas fa-leaf"></i><span class="sidebar-text">รายงานแหล่งน้ำ</span></div><i class="fas fa-chevron-down sidebar-toggle-icon" style="font-size: 0.8rem; margin:0;"></i></a>
+                <div class="collapse show" id="envSubmenu"><div class="submenu"></div></div>
+
+                <div class="sidebar-heading">สาธารณสุข</div>
+                <a data-bs-toggle="collapse" href="#healthSubmenu" class="sidebar-link has-submenu"><div><i class="fas fa-heartbeat"></i><span class="sidebar-text">สภาวะสุขภาพ</span></div><i class="fas fa-chevron-down sidebar-toggle-icon" style="font-size: 0.8rem; margin:0;"></i></a>
+                <div class="collapse show" id="healthSubmenu"><div class="submenu"></div></div>
+                <a class="sidebar-link menu-trigger mt-1" data-type="รายงานสอบสวนโรคฟันตกกระ"><i class="fas fa-file-medical"></i><span class="sidebar-text">รายงานสอบสวนโรคฟันตกกระ</span></a>
+
+                <div id="adminMenuSection" style="display: none;">
+                    <div class="sidebar-heading mt-3">ผู้ดูแลระบบ</div>
+                    <a class="sidebar-link" data-bs-toggle="modal" data-bs-target="#importDataModal"><i class="fas fa-database"></i><span class="sidebar-text">จัดการนำเข้าข้อมูล</span></a>
+                    <a class="sidebar-link mt-1" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="fas fa-cog"></i><span class="sidebar-text">ตั้งค่าระบบ</span></a>
+                </div>
+                
+                <div class="mt-auto pt-4 mb-2">
+                    <a class="sidebar-link" id="btnLoginMenu" data-bs-toggle="modal" data-bs-target="#loginModal" style="color: #0ea5e9; background: #e0f2fe;"><i class="fas fa-sign-in-alt"></i><span class="sidebar-text">เข้าสู่ระบบ (Admin)</span></a>
+                    <a class="sidebar-link" id="btnLogoutMenu" style="display: none; color: #ef4444; background: #fef2f2;"><i class="fas fa-sign-out-alt"></i><span class="sidebar-text">ออกจากระบบ</span></a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-wrapper">
+            <header class="top-navbar" data-html2canvas-ignore="true">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                    <div><h4 class="m-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main); line-height: 1;">แดชบอร์ดสรุปผล</h4><span class="text-muted small">ระบบเฝ้าระวังฟลูออไรด์และสภาวะสุขภาพ ระดับประเทศ</span></div>
+                </div>
+                <div class="d-flex align-items-center gap-4">
+                    <div class="theme-switch-wrapper me-2">
+                        <span class="small fw-bold text-muted d-none d-md-inline me-1"><i class="fas fa-moon"></i> โหมดมืด</span>
+                        <label class="theme-switch" for="chkDarkMode">
+                            <input type="checkbox" id="chkDarkMode" />
+                            <span class="slider-switch"></span>
+                        </label>
+                    </div>
+                    <div id="userProfileTop" class="align-items-center gap-3" style="display: none; cursor: pointer; padding: 6px 12px; border-radius: 50px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" class="rounded-circle" width="36" height="36" alt="User">
+                        <div class="d-none d-md-block pe-2"><div class="fw-bold" style="font-size: 0.9rem; line-height: 1;">Administrator</div><div class="text-muted" style="font-size: 0.75rem;">ผู้ดูแลระบบ</div></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-content">
+                <div class="dashboard-container" id="pdfPrintArea">
+                    
+                    <div class="tabs-wrapper" data-html2canvas-ignore="true">
+                        <ul class="nav nav-tabs custom-tabs" id="typeTabs"></ul>
+                    </div>
+
+                    <div class="filter-section card mb-4 p-0 border-0" data-html2canvas-ignore="true">
+                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3 px-4" style="cursor: pointer;" data-bs-toggle="collapse" href="#filterCollapse" role="button" aria-expanded="true" aria-controls="filterCollapse">
+                            <h5 class="m-0" style="font-weight: 700; font-size: 1.1rem;"><i class="fas fa-filter text-theme me-2"></i>ตัวกรองข้อมูล <i class="fas fa-chevron-down ms-2 small text-muted" style="transition: transform 0.2s;"></i></h5>
+                            <button id="btnResetFilters" class="btn btn-sm btn-modern btn-outline-modern" onclick="event.stopPropagation();"><i class="fas fa-undo-alt"></i> ล้างค่า</button>
+                        </div>
+                        <div class="collapse show" id="filterCollapse">
+                            <div class="card-body p-4">
+                                <div class="row g-3">
+                                    <div class="col-md-2"><label class="filter-label">ปีงบประมาณ</label><select id="filter-year" class="form-select minimal-select"><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+                                    <div class="col-md-2"><label class="filter-label">ภูมิภาค</label><select id="filter-region" class="form-select minimal-select"><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+                                    <div class="col-md-2"><label class="filter-label">เขตสุขภาพ</label><select id="filter-zone" class="form-select minimal-select"><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+                                    <div class="col-md-2"><label class="filter-label">จังหวัด</label><select id="filter-province" class="form-select minimal-select"><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+                                    <div class="col-md-2"><label class="filter-label">อำเภอ</label><select id="filter-district" class="form-select minimal-select" disabled><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+                                    <div class="col-md-2"><label class="filter-label">ตำบล</label><select id="filter-subdistrict" class="form-select minimal-select" disabled><option value="ทั้งหมด">ทั้งหมด</option></select></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="homeDashboardView">
+                        <div class="d-flex justify-content-between align-items-end mb-4" data-html2canvas-ignore="true">
+                            <div><h4 class="fw-bold m-0" style="color: #0f172a;">สรุปข้อมูลภาพรวม</h4><span class="text-muted">แสดงความสัมพันธ์ของสภาวะสิ่งแวดล้อมและสุขภาพ</span></div>
+                            <button class="btn btn-modern btn-primary-modern btnExportPDF"><i class="fas fa-file-pdf"></i> Export รายงาน PDF</button>
+                        </div>
+                        
+                        <!-- 1. KPIs Section -->
+                        <div class="row mb-4 g-4" id="homeKPIsContainer"></div>
+
+                        <!-- 2. National Surveillance Map (100% right after KPIs) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card p-0 overflow-hidden m-0 shadow-sm border-0 bg-glass d-flex flex-column" style="height: 550px;">
+                                    <div class="p-4 border-bottom" style="background: #f8fafc;">
+                                        <h5 class="m-0 fw-bold text-slate-800"><i class="fas fa-map-marked-alt text-theme me-2"></i>แผนที่เฝ้าระวังฟลูออไรด์และสุขภาพฟัน</h5>
+                                    </div>
+                                    <div class="card-body p-0 position-relative flex-grow-1">
+                                        <div id="homeMap" style="height: 100%; width: 100%;"></div>
+                                        <div class="map-legend bg-white p-2 rounded shadow-sm border" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; font-size: 0.75rem; max-width: 250px;">
+                                            <div class="fw-bold mb-1"><i class="fas fa-info-circle me-1"></i> สัญลักษณ์เฝ้าระวัง</div>
+                                            <div class="d-flex align-items-center mb-1"><span class="sonar-legend-dot water-alert me-2"></span> แหล่งน้ำเกินมาตรฐาน (&gt;0.7 mg/L)</div>
+                                            <div class="d-flex align-items-center"><span class="sonar-legend-dot dental-alert me-2"></span> เด็กฟันตกกระวิกฤต (&gt;10%)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Page Break for PDF Export -->
+                        <div style="page-break-before: always; height: 0; overflow: hidden;"></div>
+
+                        <!-- 3. Comparative Charts (80% / 20%) -->
+                        <div class="d-flex flex-wrap gap-4 mb-4">
+                            <div style="flex: 0 0 calc(80% - 12px); max-width: calc(80% - 12px);">
+                                <div class="chart-card h-100 m-0"><div class="chart-title"><i class="fas fa-chart-line text-theme"></i> ความสัมพันธ์: ค่าฟลูออไรด์ในน้ำ vs ร้อยละฟันตกกระ</div><div style="height: 350px;" class="p-3"><canvas id="homeCorrelationChart"></canvas></div></div>
+                            </div>
+                            <div style="flex: 0 0 calc(20% - 12px); max-width: calc(20% - 12px);">
+                                <div class="chart-card h-100 m-0"><div class="chart-title"><i class="fas fa-chart-pie text-theme"></i> สัดส่วนผลการประเมินคุณภาพน้ำ</div><div style="height: 350px;" class="p-3"><canvas id="homeDonutChart"></canvas></div></div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Top พื้นที่เฝ้าระวังวิกฤต (Red Zones - 100%) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card p-0 overflow-hidden m-0 shadow-sm border-0 bg-glass d-flex flex-column">
+                                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center" style="background: #fffafa;">
+                                        <h5 class="m-0 fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>พื้นที่เฝ้าระวังระดับวิกฤต</h5>
+                                        <span class="badge bg-danger rounded-pill px-3 py-2">ข้อมูลล่าสุด</span>
+                                    </div>
+                                    <div class="card-body p-0 flex-grow-1" id="topAlertsContainer" style="max-height: 450px; overflow-y: auto;">
+                                        <div class="p-3 text-center text-muted">กำลังคำนวณข้อมูล...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="spatialDashboardView" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-end mb-4" data-html2canvas-ignore="true">
+                            <div><h4 class="fw-bold m-0" style="color: #0f172a;" id="dynamicReportTitle">ชื่อรายงาน</h4></div>
+                            <button class="btn btn-modern btn-primary-modern btnExportPDF"><i class="fas fa-file-pdf"></i> Export รายงาน PDF</button>
+                        </div>
+                        
+                        <!-- 1. KPIs Row -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-3"><div class="kpi-card"><div class="kpi-label" id="kpi-label-1">KPI 1</div><div class="kpi-value" id="kpi-val-1">0</div></div></div>
+                            <div class="col-md-3"><div class="kpi-card"><div class="kpi-label" id="kpi-label-2">KPI 2</div><div class="kpi-value" id="kpi-val-2">0</div></div></div>
+                            <div class="col-md-3"><div class="kpi-card"><div class="kpi-label" id="kpi-label-3">KPI 3</div><div class="kpi-value" id="kpi-val-3">0</div></div></div>
+                            <div class="col-md-3"><div class="kpi-card"><div class="kpi-label" id="kpi-label-4">KPI 4</div><div class="kpi-value" id="kpi-val-4">0</div></div></div>
+                        </div>
+
+                        <!-- 2. Map Section (Full Width) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card p-1 shadow-sm border-0 position-relative" style="height: 700px;" id="leafletMapCard">
+                                    <button class="btn btn-sm btn-outline-modern position-absolute" id="btnToggleMapExpand" style="top: 10px; right: 10px; z-index: 1000; background: rgba(255, 255, 255, 0.85);"><i class="fas fa-expand"></i> ขยายแผนที่</button>
+                                    <div id="leafletMap" style="height: 100%; width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Page Break for PDF Export -->
+                        <div style="page-break-before: always; height: 0; overflow: hidden;"></div>
+
+                        <!-- 3. Charts Section (Proportion Donut & Drilldown Bar Chart) -->
+                        <div class="row mb-4 g-4">
+                            <!-- Left: Proportion Chart -->
+                            <div class="col-md-4">
+                                <div class="chart-card h-100 shadow-sm border-0 bg-glass d-flex flex-column">
+                                    <div class="chart-title" id="title-bar"><i class="fas fa-chart-pie text-theme"></i> สัดส่วนข้อมูล</div>
+                                    <div id="legend-dynamic" class="mb-4 small px-3"></div>
+                                    <div class="flex-grow-1 p-3" style="height: 280px;"><canvas id="proportionBarChart"></canvas></div>
+                                </div>
+                            </div>
+                            <!-- Right: Drilldown Chart -->
+                            <div class="col-md-8">
+                                <div class="chart-card h-100 shadow-sm border-0 bg-glass d-flex flex-column">
+                                    <div class="chart-title" id="title-drilldown"><i class="fas fa-chart-bar text-theme"></i> สถิติเชิงลึก</div>
+                                    <div class="flex-grow-1 p-3" style="height: 280px;"><canvas id="drilldownChart"></canvas></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Table Section (Full Width) -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card p-4 shadow-sm border-0 bg-glass">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <h5 class="m-0" style="font-weight: 700; font-size: 1.1rem;"><i class="fas fa-table text-theme me-2"></i>ตารางแสดงข้อมูล</h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div id="dynamicTableContainer" class="table-responsive">
+                                            <table id="dynamicDataTable" class="table w-100 display responsive nowrap">
+                                                <thead><tr><th>กำลังโหลดข้อมูล...</th></tr></thead><tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                </div>
+
+                <!-- AI Spatial Predictive Modeling View -->
+                <div id="aiPredictionView" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-end mb-4" data-html2canvas-ignore="true">
+                        <div>
+                            <h4 class="fw-bold m-0" style="color: #0f172a;"><i class="fas fa-brain text-theme me-2"></i>ระบบประเมินความเสี่ยง</h4>
+                            <span class="text-muted">ประเมินความเสี่ยงเชิงพื้นที่ โดยวิเคราะห์ความสัมพันธ์ระหว่างปริมาณฟลูออไรด์ในน้ำและโรคฟันตกกระ</span>
+                        </div>
+                        <button class="btn btn-modern btn-primary-modern btnExportPDF"><i class="fas fa-file-pdf"></i> Export รายงาน PDF</button>
+                    </div>
+
+                    <!-- AI Model Explanation Card -->
+                    <div class="card p-4 mb-4 border-0 bg-glass shadow-sm">
+                        <div class="d-flex align-items-start gap-3">
+                            <div style="font-size: 2.2rem; color: var(--primary-color);"><i class="fas fa-info-circle"></i></div>
+                            <div>
+                                <h6 class="fw-bold text-slate-800 mb-1" style="font-size: 0.95rem;">หลักเกณฑ์การประเมินความเสี่ยง</h6>
+                                <p class="small text-muted m-0" id="aiModelEquation" style="font-size: 0.85rem; font-weight: 500;">
+                                    สมการทำนาย: อัตราฟันตกกระคาดการณ์ = α + β * (ปริมาณฟลูออไรด์เฉลี่ย ppm) + γ * (สัดส่วนผู้ป่วยรุนแรง)
+                                </p>
+                                <div class="mt-2 small text-theme fw-bold mb-3" id="aiModelCoefficients" style="font-size: 0.8rem;">
+                                    กำลังคำนวณค่าน้ำหนักสัมประสิทธิ์ทางสถิติ...
+                                </div>
+                                <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 my-3 text-center" style="font-family: 'Prompt', sans-serif;">
+                                    <div class="p-3 bg-light rounded border shadow-sm" style="min-width: 130px;">
+                                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.75rem;">ฟลูออไรด์ในน้ำ (ppm)</div>
+                                        <div class="h6 fw-bold mb-0 text-theme" id="val-coef-beta" style="font-family: 'Outfit';">β = 0.0000</div>
+                                    </div>
+                                    <div style="font-size: 1.2rem; color: var(--text-muted); font-weight: bold;"><i class="fas fa-plus"></i></div>
+                                    <div class="p-3 bg-light rounded border shadow-sm" style="min-width: 130px;">
+                                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.75rem;">สัดส่วนเคสรุนแรง</div>
+                                        <div class="h6 fw-bold mb-0 text-theme" id="val-coef-gamma" style="font-family: 'Outfit';">γ = 0.0000</div>
+                                    </div>
+                                    <div style="font-size: 1.2rem; color: var(--text-muted); font-weight: bold;"><i class="fas fa-plus"></i></div>
+                                    <div class="p-3 bg-light rounded border shadow-sm" style="min-width: 130px;">
+                                        <div class="small text-muted fw-bold mb-1" style="font-size: 0.75rem;">ค่าเริ่มต้น (Intercept)</div>
+                                        <div class="h6 fw-bold mb-0 text-theme" id="val-coef-alpha" style="font-family: 'Outfit';">α = 0.0000</div>
+                                    </div>
+                                    <div style="font-size: 1.2rem; color: var(--text-muted); font-weight: bold;"><i class="fas fa-arrow-right"></i></div>
+                                    <div class="p-3 bg-theme text-white rounded shadow-sm" style="min-width: 140px; background: var(--gradient-theme) !important;">
+                                        <div class="small fw-bold mb-1" style="font-size: 0.75rem;">ดัชนีความเสี่ยงทำนาย</div>
+                                        <div class="h6 fw-bold mb-0" style="font-family: 'Outfit';">% Risk Index</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card p-4 shadow-sm border-0 bg-glass position-relative">
+                                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2" data-html2canvas-ignore="true">
+                                    <h5 class="fw-bold m-0 text-slate-800" style="font-size: 1.05rem;"><i class="fas fa-map-marked-alt text-theme me-2"></i>แผนที่ประเมินความเสี่ยงเชิงพื้นที่</h5>
+                                    <div class="btn-group shadow-sm" role="group" aria-label="AI Map Layer Mode" style="border-radius: 10px; overflow: hidden;">
+                                        <input type="radio" class="btn-check" name="aiMapMode" id="aiMapModeRisk" value="risk" checked>
+                                        <label class="btn btn-outline-primary-modern px-3 py-2 btn-sm" for="aiMapModeRisk" style="font-size: 0.8rem; font-weight: 600;"><i class="fas fa-exclamation-triangle me-1"></i> ดัชนีความเสี่ยงทำนาย</label>
+
+                                        <input type="radio" class="btn-check" name="aiMapMode" id="aiMapModeLisa" value="lisa_cluster">
+                                        <label class="btn btn-outline-primary-modern px-3 py-2 btn-sm" for="aiMapModeLisa" style="font-size: 0.8rem; font-weight: 600;"><i class="fas fa-th-large me-1"></i> LISA Cluster Map</label>
+
+                                        <input type="radio" class="btn-check" name="aiMapMode" id="aiMapModeSignif" value="lisa_significance">
+                                        <label class="btn btn-outline-primary-modern px-3 py-2 btn-sm" for="aiMapModeSignif" style="font-size: 0.8rem; font-weight: 600;"><i class="fas fa-star me-1"></i> LISA Significance Map</label>
+                                    </div>
+                                </div>
+                                <div style="height: 700px; position: relative;">
+                                    <div id="aiMap" style="height: 100%; width: 100%; border-radius: 16px;"></div>
+                                    <div class="map-legend bg-white p-3 rounded shadow-sm border text-slate-800" id="aiMapLegend" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; font-size: 0.75rem; min-width: 220px; font-family: 'Prompt', sans-serif;">
+                                        <!-- Legend content will be updated dynamically via JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Charts Section -->
+                    <div class="row mb-4 g-4">
+                        <div class="col-lg-7">
+                            <div class="chart-card p-4 shadow-sm border-0 bg-glass d-flex flex-column" style="height: 380px;">
+                                <div class="chart-title"><i class="fas fa-chart-line text-theme me-2"></i>ความสัมพันธ์ของฟลูออไรด์และความเสี่ยง</div>
+                                <div class="flex-grow-1 p-3" style="height: 280px;">
+                                    <canvas id="aiScatterChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="chart-card p-4 shadow-sm border-0 bg-glass d-flex flex-column" style="height: 380px;">
+                                <div class="chart-title"><i class="fas fa-chart-bar text-theme me-2"></i>การกระจายตัวเชิงพื้นที่</div>
+                                <div class="flex-grow-1 p-3" style="height: 280px;">
+                                    <canvas id="aiMoranScatterChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Risk Simulation Sandbox Card -->
+                    <div class="row mb-4" data-html2canvas-ignore="true">
+                        <div class="col-12">
+                            <div class="card p-4 shadow-sm border-0 bg-glass position-relative" style="border-radius: 16px;">
+                                <h5 class="fw-bold mb-3 text-slate-800" style="font-size: 1.05rem;"><i class="fas fa-flask text-theme me-2"></i>เครื่องมือจำลองความเสี่ยง</h5>
+                                <div class="row align-items-center">
+                                    <div class="col-md-7 border-end pe-md-4">
+                                        <p class="small text-muted mb-4">ทดลองปรับเปลี่ยนพารามิเตอร์เพื่อประเมินความเสี่ยง</p>
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold text-slate-700" style="font-size: 0.85rem;">1. ปริมาณฟลูออไรด์เฉลี่ยในน้ำดื่ม (Average Fluoride): <span class="text-theme fw-bold" id="sandbox-fluoride-val">0.50</span> ppm</label>
+                                            <input type="range" class="form-range" id="sandbox-fluoride" min="0.0" max="2.0" step="0.05" value="0.50">
+                                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                                                <span>0.0 ppm</span>
+                                                <span>1.0 ppm</span>
+                                                <span>2.0 ppm</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="form-label fw-bold text-slate-700" style="font-size: 0.85rem;">2. สัดส่วนผู้ป่วยฟันตกกรรุนแรง (Severe Cases Ratio): <span class="text-theme fw-bold" id="sandbox-severe-val">0.05</span> (5%)</label>
+                                            <input type="range" class="form-range" id="sandbox-severe" min="0.0" max="0.5" step="0.01" value="0.05">
+                                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                                                <span>0%</span>
+                                                <span>25%</span>
+                                                <span>50%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 text-center ps-md-4 mt-3 mt-md-0">
+                                        <div class="d-inline-block position-relative" style="width: 160px; height: 160px;">
+                                            <div id="sandbox-gauge" class="mx-auto rounded-circle d-flex align-items-center justify-content-center" 
+                                                 style="width: 140px; height: 140px; background: conic-gradient(#10b981 0deg 30deg, #e2e8f0 30deg 360deg); transition: background 0.3s ease;">
+                                                <div class="bg-white rounded-circle d-flex flex-column align-items-center justify-content-center" style="width: 110px; height: 110px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);">
+                                                    <span class="fw-bold text-slate-800" id="sandbox-result-pct" style="font-size: 1.4rem; font-family: 'Outfit';">0.0%</span>
+                                                    <span class="text-muted" style="font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">Risk Index</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="badge bg-success px-3 py-2" id="sandbox-result-badge" style="font-size: 0.8rem; border-radius: 8px;">ปกติ (Low Risk)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card p-4 shadow-sm border-0 bg-glass">
+                                <h5 class="fw-bold mb-3 text-slate-800" style="font-size: 1.1rem;"><i class="fas fa-table text-theme me-2"></i>อันดับพื้นที่เฝ้าระวังฟันตกกระ</h5>
+                                <div class="table-responsive" id="aiPredictionTableContainer">
+                                    <table id="aiPredictionTable" class="table w-100 display responsive nowrap">
+                                        <thead>
+                                            <tr>
+                                                <th>จังหวัด</th>
+                                                <th>อำเภอ</th>
+                                                <th>ฟลูออไรด์เฉลี่ย (ppm)</th>
+                                                <th>ผู้ป่วยฟันตกกระสะสม (คน)</th>
+                                                <th>ผู้ป่วยรุนแรง (คน)</th>
+                                                <th>อัตราความเสี่ยงทำนาย (%)</th>
+                                                <th>ระดับความเสี่ยง</th>
+                                                <th class="text-center">จัดการ/แผนที่</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="aiPredictionTableBody">
+                                            <tr><td colspan="8" class="text-center text-muted">กำลังคำนวณการทำนาย...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+
+                <!-- Tab: Fluorosis Investigations (Main Menu View) -->
+                <div id="investigationReportView" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-end mb-4">
+                        <div>
+                            <h4 class="fw-bold m-0" style="color: #0f172a;"><i class="fas fa-file-medical text-theme me-2"></i>รายงานสอบสวนโรคฟันตกกระ</h4>
+                            <span class="text-muted">ดาวน์โหลดแบบฟอร์ม แนวทางปฏิบัติงาน และเครื่องมืออำนวยความสะดวกในการส่งรายงานโรคทางอีเมล</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4 mb-4">
+                        <!-- Card 1: แบบสอบสวนโรคฟันตกกระ -->
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px;">
+                                <div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: #0284c7; font-size: 1.5rem;">
+                                        <i class="fas fa-file-word"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800">แบบสอบสวนโรคฟันตกกระ</h5>
+                                    <p class="text-muted small mb-0">แบบฟอร์มเปล่าสำหรับพิมพ์นำไปกรอกข้อมูลลงพื้นที่ประเมินเบื้องต้น (.docx)</p>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="/static/downloads/แบบสอบสวนโรคฟันตกกระ.docx" class="btn btn-primary-modern w-100 justify-content-center" download>
+                                        <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม (.docx)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: แนวทางการดำเนินงานสอบสวนโรค -->
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px;">
+                                <div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #ef4444; font-size: 1.5rem;">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800">คู่มือแนวทางสอบสวนโรค</h5>
+                                    <p class="text-muted small mb-0">เอกสารคู่มือแนะนำระเบียบปฏิบัติปฏิบัติการและแนวทางการดำเนินงานสอบสวนโรค (.pdf)</p>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="/static/downloads/แนวทางการสอบสวนโรคฟันตกกระ.pdf" class="btn btn-outline-modern w-100 justify-content-center" target="_blank" download>
+                                        <i class="fas fa-file-pdf me-2"></i>ดาวน์โหลดคู่มือแนวทาง (.pdf)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: ส่งรายงานสอบสวนโรค -->
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px;">
+                                <div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #16a34a; font-size: 1.5rem;">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800">ส่งรายงานทางอีเมล</h5>
+                                    <p class="text-muted small mb-0">ปุ่มคัดลอกร่างข้อความรายงานเคสเพื่อส่งต่อไปยังอีเมลโครงการอย่างสะดวกรวดเร็ว</p>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="#" class="btn btn-primary-modern w-100 justify-content-center" id="btnSendInvestigationMainEmail">
+                                        <i class="fas fa-envelope me-2"></i>กดลิงก์ไปยัง Mail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="background: #f8fafc;">
+                <div class="modal-header border-0 px-4 py-3" style="background: #1e293b; color: white;">
+                    <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-file-pdf me-2 text-danger"></i> ตัวอย่างก่อนดาวน์โหลด PDF (Print Preview)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div id="pdfPreviewLoading" class="my-5"><div class="spinner"></div><div class="mt-3 fw-bold text-theme">กำลังประมวลผลภาพแดชบอร์ด...</div></div>
+                    <div id="pdfPreviewContainer" style="display:none; max-height: 60vh; overflow: auto; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); background: white;">
+                        <img id="pdfPreviewImage" style="width: 100%; height: auto;">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary-modern px-4" id="btnConfirmDownloadPDF"><i class="fas fa-download"></i> ยืนยันดาวน์โหลด PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="padding: 10px;"><div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-0 px-4 pb-4"><div style="width: 70px; height: 70px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><i class="fas fa-lock text-theme" style="font-size: 2rem;"></i></div><h5 class="fw-bold mb-3">เข้าสู่ระบบ (Admin)</h5><input type="text" class="form-control form-control-custom text-center mb-2" placeholder="ชื่อผู้ใช้งาน" id="loginUsername" value="admin"><input type="password" class="form-control form-control-custom text-center mb-3" placeholder="รหัสผ่าน" id="loginPassword"><button class="btn btn-primary-modern w-100 justify-content-center" id="btnSubmitLogin">เข้าสู่ระบบทันที</button></div></div></div></div>
+    
+    <div class="modal fade" id="importDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 px-4 py-3" style="background: #1e293b; color: white;">
+                    <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-cloud-upload-alt me-2"></i> นำเข้าข้อมูลอัจฉริยะ (Upsert)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div id="uploadFormArea" class="row">
+                        <div class="col-md-5 border-end">
+                            <h6 class="fw-bold text-slate-800 mb-3"><i class="fas fa-download text-theme me-2"></i> 1. โหลดแบบฟอร์ม (Template)</h6>
+                            <p class="small text-muted mb-4">ดาวน์โหลดแบบฟอร์ม Excel ที่มีหัวคอลัมน์ถูกต้อง เพื่อนำไปกรอกข้อมูล</p>
+                            <a href="/api/download_template/health" class="btn btn-outline-modern w-100 mb-2 text-start" target="_blank"><i class="fas fa-tooth text-primary me-2"></i> โหลดฟอร์มสภาวะสุขภาพ</a>
+                            <a href="/api/download_template/env" class="btn btn-outline-modern w-100 text-start" target="_blank"><i class="fas fa-tint text-info me-2"></i> โหลดฟอร์มคุณภาพแหล่งน้ำ</a>
+                        </div>
+                        <div class="col-md-7 ps-4">
+                            <h6 class="fw-bold text-slate-800 mb-3"><i class="fas fa-upload text-theme me-2"></i> 2. อัปโหลดข้อมูล (Excel)</h6>
+                            <select id="uploadCat" class="form-select form-control-custom mb-3"><option value="health">อัปโหลดข้อมูลหมวด: สุขภาพ (Dental)</option><option value="env">อัปโหลดข้อมูลหมวด: สิ่งแวดล้อม (Water)</option></select>
+                            
+                            <div class="card p-4 text-center d-flex flex-column justify-content-center align-items-center" style="border: 2px dashed #cbd5e1 !important; background: #fff; cursor: pointer;" id="dropzoneArea">
+                                <input type="file" id="fileInputDummy" accept=".csv, .xlsx">
+                                <i class="fas fa-file-excel text-muted mb-2" style="font-size: 2.5rem; pointer-events: none;"></i>
+                                <p class="small fw-bold text-slate-800 m-0" style="pointer-events: none;">คลิก หรือ ลากไฟล์มาวางที่นี่ (Drag & Drop)</p>
+                            </div>
+
+                            <div id="importStatusScanning" style="display: none;" class="mt-3">
+                                <div class="d-flex justify-content-between small mb-1 fw-bold text-theme"><span>กำลังบันทึกข้อมูลแบบทีละบรรทัด (Row-by-Row)...</span><span></span></div>
+                                <div class="progress" style="height: 6px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-theme" style="width: 100%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="importResultArea" style="display: none;">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-clipboard-check text-success me-2"></i>สรุปผลการนำเข้าข้อมูล</h6>
+                        <div class="row text-center mb-4">
+                            <div class="col-4">
+                                <div class="p-3 bg-success bg-opacity-10 text-success rounded-3">
+                                    <div class="small fw-bold">ข้อมูลใหม่</div>
+                                    <div class="h3 fw-bold m-0" id="resNew">0</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3">
+                                    <div class="small fw-bold">อัปเดตข้อมูล</div>
+                                    <div class="h3 fw-bold m-0" id="resUpd">0</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3">
+                                    <div class="small fw-bold">ข้อผิดพลาด</div>
+                                    <div class="h3 fw-bold m-0" id="resErr">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-hover table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>แถว</th>
+                                        <th>ชื่อ/จุดอ้างอิง</th>
+                                        <th>สถานะ</th>
+                                        <th>รายละเอียด/หมายเหตุ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importResultBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-end mt-3">
+                            <button type="button" class="btn btn-primary-modern" onclick="$('#importResultArea').hide(); $('#uploadFormArea').show();"><i class="fas fa-redo"></i> นำเข้าไฟล์เพิ่ม</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 py-3 bg-white">
+                    <button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- settingsModal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 px-4 py-3" style="background: #1e293b; color: white;">
+                    <h5 class="modal-title" style="font-weight: 600;"><i class="fas fa-cog me-2"></i> ตั้งค่าระบบและประวัติ ROPA (Settings & Audit Logs)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="row">
+                        <!-- Left Tab selection panel -->
+                        <div class="col-md-3 border-end pe-4">
+                            <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-cogs text-theme me-2"></i>เมนูตั้งค่าระบบ</h6>
+                            <div class="nav flex-column nav-pills mb-3" id="settingsTabs" role="tablist">
+                                <button class="nav-link active text-start mb-2 py-2 px-3 fw-bold btn-outline-modern" id="tab-report-builder" data-bs-toggle="pill" data-bs-target="#settings-report-builder" type="button" role="tab" style="border-radius: 8px;"><i class="fas fa-tools me-2"></i>สร้าง/แก้ไขรายงาน</button>
+                                <button class="nav-link text-start mb-2 py-2 px-3 fw-bold btn-outline-modern" id="tab-security-stats" data-bs-toggle="pill" data-bs-target="#settings-security-stats" type="button" role="tab" style="border-radius: 8px;"><i class="fas fa-shield-alt me-2"></i>ความปลอดภัย & สถิติ</button>
+                                <button class="nav-link text-start py-2 px-3 fw-bold btn-outline-modern" id="tab-ropa-logs" data-bs-toggle="pill" data-bs-target="#settings-ropa-logs" type="button" role="tab" style="border-radius: 8px;"><i class="fas fa-history me-2"></i>ประวัติใช้งาน (ROPA)</button>
+                            </div>
+                        </div>
+
+                        <!-- Right tab content panels -->
+                        <div class="col-md-9 ps-4">
+                            <div class="tab-content" id="settingsTabContent" style="max-height: 70vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px;">
+                                <!-- Tab 1: Report Builder -->
+                                <div class="tab-pane fade show active" id="settings-report-builder" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-3 border-end pe-3">
+                                            <h6 class="fw-bold mb-3 small text-muted">จัดการรายงานที่มีอยู่</h6>
+                                            <div class="list-group mb-3" id="reportListGroup" style="max-height: 48vh; overflow-y: auto;"></div>
+                                            <button class="btn btn-outline-modern w-100 justify-content-center border-dashed btn-sm" id="btnCreateNewReport"><i class="fas fa-plus text-theme"></i> สร้างรายงานใหม่</button>
+                                        </div>
+                                        <div class="col-md-9 ps-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-3"><h6 class="fw-bold m-0 text-slate-800" id="builderTitle">แก้ไขโครงสร้าง: <span id="currentReportName" class="text-theme"></span></h6></div>
+                                            
+                                            <div id="newReportForm" style="display: none; background: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                                                <h6 class="fw-bold mb-3 text-theme"><i class="fas fa-file-medical-alt me-2"></i> ส่วนที่ 1: ข้อมูลรายงานพื้นฐาน</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">ชื่อรายงานใหม่</label><input type="text" class="form-control form-control-custom" id="newReportNameInput" placeholder="เช่น: รายงานคุณภาพอาหาร"></div>
+                                                    <div class="col-md-6"><label class="form-label fw-bold small text-muted">หมวดหมู่รายงาน (Category)</label><select class="form-select form-control-custom" id="newReportCategoryInput"><option value="env">สิ่งแวดล้อม (สิ่งแวดล้อม)</option><option value="health">สภาวะสุขภาพ (สาธารณสุข)</option></select></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="schemaFieldsArea">
+                                                <div class="d-flex justify-content-between align-items-center mb-2"><h6 class="fw-bold m-0 text-slate-700"><i class="fas fa-table text-theme me-2"></i>ส่วนที่ 2: กำหนดคอลัมน์ตาราง</h6><button class="btn btn-sm btn-primary-modern" id="btnAddColumnMock"><i class="fas fa-plus"></i> เพิ่มฟิลด์</button></div>
+                                                <div class="row g-2 mb-2 px-3 fw-bold small text-muted"><div class="col-3">ชื่อฟิลด์หน้าเว็บ</div><div class="col-4">อ้างอิง Column ใน DB</div><div class="col-4">หรือใช้สูตรคำนวณ (Formula)</div><div class="col-1 text-center">ลบ</div></div>
+                                                <div id="tableSchemaContainer"></div>
+
+                                                <hr class="my-4">
+                                                
+                                                <h6 class="fw-bold m-0 text-slate-700 mb-3"><i class="fas fa-chart-pie text-theme me-2"></i>ส่วนที่ 3: ตั้งค่าการแสดงผลกราฟและแผนที่</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-4 border-end pe-3">
+                                                        <label class="form-label fw-bold small text-muted">1. กราฟสัดส่วน (Donut Chart)</label>
+                                                        <select class="form-select form-control-custom chart-config-dropdown mb-3" id="chartPropCol"><option value="">-- ไม่ใช้ / ค่าเริ่มต้น --</option></select>
+                                                        
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox" id="enableGrouping">
+                                                            <label class="form-check-label small fw-bold text-primary" for="enableGrouping"><i class="fas fa-layer-group"></i> สร้างกฎจัดกลุ่มข้อมูลใหม่</label>
+                                                        </div>
+                                                        <div id="groupingBuilder" style="display: none; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                                                            <div class="small text-muted mb-2">กำหนดเงื่อนไขให้ข้อมูลที่ถูกเลือก</div>
+                                                            <div id="groupRulesContainer"></div>
+                                                            <button class="btn btn-sm btn-outline-primary w-100 mt-2" id="btnAddGroupRule"><i class="fas fa-plus"></i> เพิ่มกลุ่ม</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 border-end pe-3">
+                                                        <label class="form-label fw-bold small text-muted">2. กราฟสถิติเชิงลึก (Bar Chart)</label>
+                                                        <select class="form-select form-control-custom chart-config-dropdown mb-1" id="chartDrillCol"><option value="">-- ไม่ใช้ / นับจำนวน --</option></select>
+                                                        <div class="form-text" style="font-size: 0.75rem;">หากต้องการหาค่าเฉลี่ย ให้เลือกคอลัมน์ที่เป็นตัวเลข</div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label fw-bold small text-muted">3. แผนที่เชิงพื้นที่ (เฉดสี Map)</label>
+                                                        <select class="form-select form-control-custom chart-config-dropdown mb-2" id="chartMapCol"><option value="">-- ไม่ใช้ / ค่าเริ่มต้น --</option></select>
+                                                        <div class="form-text" style="font-size: 0.75rem; margin-bottom: 15px;">คอลัมน์ตัวเลขที่ใช้คำนวณเฉดสีบนแผนที่</div>
+
+                                                        <label class="form-label fw-bold small text-muted">4. เกณฑ์เฝ้าระวัง (หมุด Sonar กะพริบ)</label>
+                                                        <input type="number" step="any" class="form-control form-control-custom mb-1" id="mapAlertThreshold" placeholder="เช่น 0.7 หรือ 10">
+                                                        <div class="form-text" style="font-size: 0.75rem;">ระบุค่าตัวเลขขั้นต่ำที่จะกระตุ้นหมุดในแผนที่ให้กะพริบ</div>
+                                                    </div>
+                                                </div>
+                                                <hr class="my-4">
+                                            </div>
+
+                                            <h6 class="fw-bold m-0 text-slate-700 mb-3"><i class="fas fa-tachometer-alt text-theme me-2"></i>ส่วนที่ 4: ตั้งค่า KPI (4 กล่องแสดงผลด้านบน)</h6>
+                                            <div id="kpiConfigContainer">
+                                                <script>
+                                                    for(let i=1; i<=4; i++) {
+                                                        document.write(`
+                                                        <div class="row g-2 mb-2 p-3 bg-white border rounded">
+                                                            <div class="col-md-3">
+                                                                <label class="small text-muted fw-bold">ชื่อ KPI ${i}</label>
+                                                                <input type="text" class="form-control form-control-sm kpi-label-input" id="kpi${i}_label" placeholder="เช่น จำนวนรวม">
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label class="small text-muted fw-bold">ประเภทคำนวณ</label>
+                                                                <select class="form-select form-select-sm kpi-type-input" id="kpi${i}_type">
+                                                                    <option value="count">นับจำนวนรายการ (Count)</option>
+                                                                    <option value="sum">ผลรวมตัวเลข (Sum)</option>
+                                                                    <option value="avg">หาค่าเฉลี่ย (Average)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label class="small text-muted fw-bold">คอลัมน์อ้างอิง</label>
+                                                                <select class="form-select form-select-sm kpi-col-input chart-config-dropdown" id="kpi${i}_col"><option value="">-- ไม่ใช้ --</option></select>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                                <label class="small text-muted fw-bold">สีสัญลักษณ์</label>
+                                                                <select class="form-select form-select-sm kpi-color-input" id="kpi${i}_color">
+                                                                    <option value="main">สีดำ (ทั่วไป)</option>
+                                                                    <option value="theme">สีหลัก (ฟ้า/ม่วง)</option>
+                                                                    <option value="danger">สีแดง (เตือนภัย)</option>
+                                                                    <option value="success">สีเขียว (ปลอดภัย)</option>
+                                                                    <option value="warning">สีส้ม (เฝ้าระวัง)</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>`);
+                                                    }
+                                                </script>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tab 2: Security & Stats -->
+                                <div class="tab-pane fade" id="settings-security-stats" role="tabpanel">
+                                    <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-chart-line text-theme me-2"></i>สถิติยอดการเข้าชมแต่ละหมวดหมู่ (User Dashboard Visits)</h6>
+                                    <div style="height: 250px;" class="mb-4 bg-white p-3 border rounded"><canvas id="visitStatsChart"></canvas></div>
+                                    
+                                    <hr class="my-4">
+                                    
+                                    <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-user-lock text-theme me-2"></i>จัดการบัญชีแอดมินระบบ (Admin Credentials)</h6>
+                                    <div class="row g-3 bg-white p-3 border rounded mb-3">
+                                        <div class="col-md-4">
+                                            <label class="small text-muted fw-bold">ชื่อผู้ใช้งาน</label>
+                                            <input type="text" class="form-control form-control-sm" id="newAdminUser" placeholder="เช่น admin2">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="small text-muted fw-bold">รหัสผ่าน</label>
+                                            <input type="password" class="form-control form-control-sm" id="newAdminPassword" placeholder="รหัสผ่านผู้ใช้">
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button class="btn btn-sm btn-primary-modern w-100 justify-content-center" id="btnAddAdmin"><i class="fas fa-user-plus"></i> เพิ่ม / อัปเดตบัญชี</button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive bg-white border rounded">
+                                        <table class="table table-sm mb-0 table-hover table-striped">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-3">ชื่อผู้ใช้ (Username)</th>
+                                                    <th>บทบาท (Role)</th>
+                                                    <th>วันที่สร้าง (Created Date)</th>
+                                                    <th class="text-center">การจัดการ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="adminUsersTableBody">
+                                                <tr><td colspan="4" class="text-center text-muted">กำลังดึงข้อมูลผู้ดูแล...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Tab 3: ROPA Logs -->
+                                <div class="tab-pane fade" id="settings-ropa-logs" role="tabpanel">
+                                    <h6 class="fw-bold mb-3 text-slate-800"><i class="fas fa-history text-theme me-2"></i>ประวัติการดำเนินกิจกรรมแอดมิน (ROPA Audit Logs)</h6>
+                                    <div class="table-responsive bg-white border rounded" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-hover table-striped table-sm mb-0" style="font-size: 0.85rem;">
+                                            <thead class="table-light" style="position: sticky; top: 0; z-index: 5;">
+                                                <tr>
+                                                    <th class="ps-3">วัน-เวลา</th>
+                                                    <th>แอดมิน</th>
+                                                    <th>คำสั่ง</th>
+                                                    <th>เป้าหมาย</th>
+                                                    <th>รายละเอียดการกระทำ</th>
+                                                    <th>IP Address</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ropaLogsTableBody">
+                                                <tr><td colspan="6" class="text-center text-muted">กำลังโหลดล็อก ROPA...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 py-3 bg-white d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-danger" id="btnDeleteSchema" style="display: none;"><i class="fas fa-trash"></i> ลบรายงานนี้</button>
+                    <div><button type="button" class="btn btn-outline-modern" data-bs-dismiss="modal">ยกเลิก</button><button type="button" class="btn btn-primary-modern px-4" id="btnSaveSchema">บันทึกโครงสร้าง</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.13.6/sorting/natural.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    
+    <!-- Slide-over Detail Drawer -->
+    <div id="detailDrawer" class="detail-drawer">
+        <div class="drawer-header bg-light border-bottom d-flex justify-content-between align-items-center py-3 px-4">
+            <h5 class="m-0 fw-bold text-slate-800" id="drawerTitle" style="font-size: 1.1rem;">รายละเอียดพื้นที่</h5>
+            <button type="button" class="btn-close" id="btnCloseDrawer" style="padding: 0.5rem;"></button>
+        </div>
+        <div class="drawer-body p-4" id="drawerBody">
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-info-circle fa-2x mb-3 text-muted"></i>
+                <p class="m-0">เลือกจุดในแผนที่หรือตารางข้อมูลเพื่อดูรายละเอียดข้อมูลเชิงลึก</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

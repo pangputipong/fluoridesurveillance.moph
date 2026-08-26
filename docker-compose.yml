@@ -5,10 +5,10 @@ services:
     container_name: moph_mariadb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: adminpassword
+      TZ: Asia/Bangkok
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-adminpassword}
       MYSQL_DATABASE: moph_fluoride_db
-    ports:
-      - "3307:3306"
+    # ปิด ports: สู่ภายนอกเพื่อความปลอดภัย
     volumes:
       - db_data:/var/lib/mysql
 
@@ -20,8 +20,9 @@ services:
     ports:
       - "8080:80"
     environment:
+      TZ: Asia/Bangkok
       PMA_HOST: fluoride_db
-      MYSQL_ROOT_PASSWORD: adminpassword
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-adminpassword}
     depends_on:
       - fluoride_db
 
@@ -33,30 +34,15 @@ services:
     ports:
       - "5000:5000" # เข้าถึงเว็บผ่านพอร์ต 5000
     environment:
-      # 💡 ตัวแปรเหล่านี้จะไปแทนที่ค่าในไฟล์ .env ของคุณโดยอัตโนมัติ
+      TZ: Asia/Bangkok
       DB_USER: root
-      DB_PASSWORD: adminpassword
-      DB_HOST: fluoride_db  # ⚠️ สำคัญ: ต้องใช้ชื่อ Service ของ DB ไม่ใช่ localhost
-      DB_PORT: 3306         # ⚠️ สำคัญ: ภายใน Docker Network ใช้ 3306 
+      DB_PASSWORD: ${DB_PASSWORD:-adminpassword}
+      DB_HOST: fluoride_db
+      DB_PORT: 3306
       DB_NAME: moph_fluoride_db
-      ADMIN_PASSWORD: admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
     depends_on:
       - fluoride_db # รอให้ DB รันเสร็จก่อนค่อยรัน Web App
-
-  # 4. Ngrok สำหรับทำ Tunneling ออกสู่ภายนอก
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: moph_ngrok
-    restart: unless-stopped
-    command:
-      - "http"
-      - "web_app:5000"
-    ports:
-      - "4040:4040"
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
-    depends_on:
-      - web_app
 
 volumes:
   db_data:
