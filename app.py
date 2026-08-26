@@ -810,7 +810,12 @@ def natural_keys(t): return [int(c) if c.isdigit() else c for c in re.split(r'(\
 # 2. API Routes
 # ==========================================
 @app.route('/')
-def home(): return render_template('index.html')
+def home(): 
+    return render_template('landing.html')
+
+@app.route('/dashboard')
+def dashboard(): 
+    return render_template('index.html')
 
 @app.route('/api/register', methods=['POST'])
 def register():
