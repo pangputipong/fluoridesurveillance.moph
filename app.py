@@ -600,7 +600,7 @@ COLUMN_MAP_REV = {
 VALID_DB_COLUMNS = [
     'hospcode', 'hosp_name', 'fiscal_year', 'region', 'health_zone', 'province', 'district', 'subdistrict',
     'total_kids', 'screened_kids', 'fluorosis_cases', 'pct_fluorosis', 'severe_cases', 'dean_index_status', 'status',
-    'water_type', 'location_name', 'fluoride_level', 'check_date', 'house_no', 'moo', 'latitude', 'longitude',
+    'water_type', 'water_category', 'location_name', 'fluoride_level', 'check_date', 'house_no', 'moo', 'latitude', 'longitude',
     'remark', 'data_source'
 ]
 
