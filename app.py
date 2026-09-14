@@ -2084,6 +2084,18 @@ def debug_load2():
     except Exception as e:
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
 
+
+@app.route('/api/debug_load3', methods=['GET'])
+def debug_load3():
+    import traceback
+    try:
+        sql = "SELECT water_category, COUNT(*) as c FROM water_records GROUP BY water_category"
+        with engine.connect() as conn:
+            res = conn.execute(text(sql)).fetchall()
+        return jsonify([dict(r._mapping) for r in res])
+    except Exception as e:
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
+
 if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)
