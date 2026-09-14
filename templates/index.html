@@ -534,9 +534,52 @@
         </div>
     </div>
 
-    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="padding: 10px;"><div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-0 px-4 pb-4"><div style="width: 70px; height: 70px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><i class="fas fa-lock text-theme" style="font-size: 2rem;"></i></div><h5 class="fw-bold mb-3">เข้าสู่ระบบ (Admin)</h5><input type="text" class="form-control form-control-custom text-center mb-2" placeholder="ชื่อผู้ใช้งาน" id="loginUsername" value="admin"><input type="password" class="form-control form-control-custom text-center mb-3" placeholder="รหัสผ่าน" id="loginPassword"><button class="btn btn-primary-modern w-100 justify-content-center" id="btnSubmitLogin">เข้าสู่ระบบทันที</button>
-<div class="mt-3"><a href="#" id="linkToRegister" class="text-primary text-decoration-none" style="font-size: 0.9rem;">ยังไม่มีบัญชี? ลงทะเบียนที่นี่</a></div>
-</div></div></div></div>
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content overflow-hidden" style="border-radius: 15px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div class="row g-0">
+                    <!-- Left Blue Pane -->
+                    <div class="col-md-5 d-none d-md-flex flex-column justify-content-center align-items-center text-white" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); padding: 40px; position: relative;">
+                        <div style="position: absolute; top: 20px; left: 20px;">
+                            <img src="/static/img/logo.png" alt="Logo" style="height: 40px;" onerror="this.style.display='none'">
+                        </div>
+                        <h2 class="fw-bold mb-3 text-center" style="font-size: 2rem; letter-spacing: 2px; text-transform: uppercase;">Welcome<br>To<br>Fluoride<br>Surveillance</h2>
+                        <div style="width: 50px; height: 3px; background: #0ea5e9; margin: 20px 0;"></div>
+                        <p class="text-center" style="opacity: 0.85; font-size: 0.95rem;">ระบบเฝ้าระวังคุณภาพน้ำและสภาวะฟันตกกระ</p>
+                    </div>
+                    <!-- Right White Pane -->
+                    <div class="col-md-7 p-5 position-relative bg-white">
+                        <button type="button" class="btn-close position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="text-center mb-4 pb-2">
+                            <h3 class="fw-bold" style="color: #1e293b; font-size: 1.8rem;">Sign in</h3>
+                        </div>
+                        <form id="loginForm" onsubmit="event.preventDefault(); document.getElementById('btnSubmitLogin').click();">
+                            <div class="mb-4 text-start">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">User Name</label>
+                                <input type="text" class="form-control" id="loginUsername" placeholder="Enter your username" required style="border-radius: 8px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Password</label>
+                                <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required style="border-radius: 8px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-4 pb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                                    <label class="form-check-label text-muted" for="rememberMe" style="font-size: 0.85rem;">Remember me</label>
+                                </div>
+                                <a href="#" class="text-decoration-none" style="font-size: 0.85rem; color: #0ea5e9; font-weight: 600;">Forgot Password?</a>
+                            </div>
+                            <button type="button" id="btnSubmitLogin" class="btn w-100 mb-4 text-white fw-bold shadow-sm" style="background: linear-gradient(to right, #0f2027, #203a43); border: none; border-radius: 8px; padding: 12px; font-size: 1.1rem; letter-spacing: 1px;">Sign in</button>
+                            <div class="text-center">
+                                <span class="text-muted" style="font-size: 0.9rem;">Don't have an account?</span> 
+                                <a href="#" id="linkToRegister" class="text-decoration-none fw-bold ms-1" style="font-size: 0.9rem; color: #0ea5e9;">Sign up</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="modal fade" id="importDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -878,38 +921,54 @@
 
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="fw-bold mb-0">ลงทะเบียนผู้ใช้งานใหม่</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="registerForm">
-                        <div class="mb-3">
-                            <label class="form-label">ชื่อ-นามสกุล / ชื่อหน่วยงาน</label>
-                            <input type="text" class="form-control" id="regFullname" required>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content overflow-hidden" style="border-radius: 15px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div class="row g-0">
+                    <!-- Left Blue Pane -->
+                    <div class="col-md-5 d-none d-md-flex flex-column justify-content-center align-items-center text-white" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); padding: 40px; position: relative;">
+                        <div style="position: absolute; top: 20px; left: 20px;">
+                            <img src="/static/img/logo.png" alt="Logo" style="height: 40px;" onerror="this.style.display='none'">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">รหัสผู้ใช้งาน (Username)</label>
-                            <input type="text" class="form-control" id="regUsername" required>
+                        <h2 class="fw-bold mb-3 text-center" style="font-size: 2rem; letter-spacing: 2px; text-transform: uppercase;">Join<br>Fluoride<br>Surveillance</h2>
+                        <div style="width: 50px; height: 3px; background: #0ea5e9; margin: 20px 0;"></div>
+                        <p class="text-center" style="opacity: 0.85; font-size: 0.95rem;">ร่วมเป็นส่วนหนึ่งของระบบเฝ้าระวังคุณภาพน้ำและสภาวะฟันตกกระ</p>
+                    </div>
+                    <!-- Right White Pane -->
+                    <div class="col-md-7 p-5 position-relative bg-white">
+                        <button type="button" class="btn-close position-absolute top-0 end-0 m-4" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="text-center mb-4 pb-2">
+                            <h3 class="fw-bold" style="color: #1e293b; font-size: 1.8rem;">Sign up</h3>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">รหัสผ่าน (Password)</label>
-                            <input type="password" class="form-control" id="regPassword" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">ระดับหน่วยงาน</label>
-                            <select class="form-select" id="regRole" required>
-                                <option value="ท้องถิ่น">องค์กรปกครองส่วนท้องถิ่น</option>
-                                <option value="รพ.สต.">โรงพยาบาลส่งเสริมสุขภาพตำบล (รพ.สต.)</option>
-                                <option value="รพ.">โรงพยาบาลชุมชน/ทั่วไป (รพ.)</option>
-                                <option value="สสจ.">สำนักงานสาธารณสุขจังหวัด (สสจ.)</option>
-                                <option value="admin">ผู้ดูแลระบบ (Admin)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary-modern w-100 mt-2">ยืนยันการลงทะเบียน</button>
-                    </form>
+                        <form id="registerForm">
+                            <div class="mb-3 text-start">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">ชื่อ-นามสกุล / ชื่อหน่วยงาน</label>
+                                <input type="text" class="form-control" id="regFullname" placeholder="Enter full name" required style="border-radius: 8px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">User Name</label>
+                                <input type="text" class="form-control" id="regUsername" placeholder="Enter username" required style="border-radius: 8px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">Password</label>
+                                <input type="password" class="form-control" id="regPassword" placeholder="Enter password" required style="border-radius: 8px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                            </div>
+                            <div class="mb-4 text-start">
+                                <label class="form-label text-muted fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase;">ระดับหน่วยงาน</label>
+                                <select class="form-select" id="regRole" required style="border-radius: 8px; padding: 12px 15px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                                    <option value="ท้องถิ่น">องค์กรปกครองส่วนท้องถิ่น</option>
+                                    <option value="รพ.สต.">โรงพยาบาลส่งเสริมสุขภาพตำบล (รพ.สต.)</option>
+                                    <option value="รพ.">โรงพยาบาลชุมชน/ทั่วไป (รพ.)</option>
+                                    <option value="สสจ.">สำนักงานสาธารณสุขจังหวัด (สสจ.)</option>
+                                    <option value="admin">ผู้ดูแลระบบ (Admin)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn w-100 mb-3 text-white fw-bold shadow-sm" style="background: linear-gradient(to right, #0f2027, #203a43); border: none; border-radius: 8px; padding: 12px; font-size: 1.1rem; letter-spacing: 1px;">Sign up</button>
+                            <div class="text-center">
+                                <span class="text-muted" style="font-size: 0.9rem;">Already have an account?</span> 
+                                <a href="#" onclick="document.getElementById('registerModal').querySelector('.btn-close').click(); setTimeout(()=>new bootstrap.Modal(document.getElementById('loginModal')).show(), 500);" class="text-decoration-none fw-bold ms-1" style="font-size: 0.9rem; color: #0ea5e9;">Sign in</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

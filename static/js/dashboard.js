@@ -546,7 +546,7 @@ $(document).ready(function() {
         
         if (isDental) {
             if (subdist !== 'ทั้งหมด') { aggKey = 'raw'; }
-            else if (dist !== 'ทั้งหมด') { aggKey = 'ตำบล'; aggTitle = 'ตำบล'; }
+            else if (dist !== 'ทั้งหมด') { aggKey = 'raw'; } // If district is selected, show facilities (raw data)
             else if (prov !== 'ทั้งหมด') { aggKey = 'อำเภอ'; aggTitle = 'อำเภอ'; }
             else if (zone !== 'ทั้งหมด') { aggKey = 'จังหวัด'; aggTitle = 'จังหวัด'; }
             else { aggKey = 'เขตสุขภาพ'; aggTitle = 'เขตสุขภาพ'; }
@@ -555,6 +555,8 @@ $(document).ready(function() {
         }
 
         let tableData = []; let columnsDef = []; let theadHtml = '<thead><tr>';
+
+        let skipCols = ['check_date', 'location_name', 'hospcode', 'hosp_name', 'status', 'dean_index_status', 'water_type', 'latitude', 'longitude', 'house_no', 'moo', 'remark', 'data_source', 'fiscal_year', 'region', 'health_zone', 'province', 'district', 'subdistrict'];
 
         if(aggKey === 'raw') {
             schema.forEach(col => {
@@ -578,7 +580,6 @@ $(document).ready(function() {
         } 
         else {
             let grouped = {};
-            let skipCols = ['check_date', 'location_name', 'hospcode', 'hosp_name', 'status', 'dean_index_status', 'water_type', 'latitude', 'longitude', 'house_no', 'moo', 'remark', 'data_source'];
             
             dataArray.forEach(row => {
                 let key = row[aggKey] || 'ไม่ระบุ';
@@ -632,10 +633,12 @@ $(document).ready(function() {
         let tfootHtml = '<tfoot><tr>';
         if(aggKey !== 'raw') {
             tfootHtml += '<th class="text-end fw-bold" style="color:var(--text-main);">ผลรวม:</th>';
-            let skipCols = ['check_date', 'location_name', 'hospcode', 'hosp_name', 'status', 'dean_index_status', 'water_type', 'latitude', 'longitude', 'house_no', 'moo', 'remark', 'data_source'];
             schema.forEach(c => { if(!skipCols.includes(c.db_ref)) tfootHtml += '<th></th>'; });
         } else {
-            schema.forEach(c => { tfootHtml += '<th></th>'; });
+            schema.forEach((c, idx) => { 
+                if (idx === 0) tfootHtml += '<th class="text-end fw-bold" style="color:var(--text-main);">ผลรวม:</th>';
+                else tfootHtml += '<th></th>'; 
+            });
             tfootHtml += '<th></th>';
         }
         tfootHtml += '</tr></tfoot>';
@@ -661,10 +664,10 @@ $(document).ready(function() {
                 
                 schema.forEach(c => {
                     let colIdx = columnsDef.findIndex(def => def.name === c.name);
-                    if(colIdx !== -1 && c.type !== 'Formula') {
-                        let dataList = api.column(colIdx).data().toArray().map(v => parseFloat(v) || 0);
+                    if(colIdx !== -1 && c.type !== 'Formula' && !skipCols.includes(c.db_ref)) {
+                        let dataList = api.column(colIdx, { search: 'applied' }).data().toArray().map(v => parseFloat(v) || 0);
                         let total = dataList.reduce((a, b) => a + b, 0);
-                        let isAvgCol = c.db_ref === 'fluoride_level' || c.name.includes('เฉลี่ย') || c.name.includes('ร้อยละ') || c.name.includes('%');
+                        let isAvgCol = c.db_ref === 'fluoride_level' || c.name.includes('เฉลี่ย');
                         let displayVal = isAvgCol ? (dataList.length > 0 ? (total / dataList.length).toFixed(3) : 0) : total.toLocaleString('en-US');
                         totals[c.name] = total;
                         $(api.column(colIdx).footer()).html(`<span class="fw-bold" style="color:var(--text-main);">${displayVal}</span>`);

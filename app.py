@@ -693,7 +693,8 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
             y_val = filters.get('ปี')
             if y_val and y_val != 'ทั้งหมด':
                 sql += " AND `check_date` LIKE :check_date_like"
-                params['check_date_like'] = f"{str(y_val).strip()}%"
+                ce_year = str(int(y_val) - 543) if str(y_val).isdigit() and int(y_val) > 2500 else str(y_val)
+                params['check_date_like'] = f"{ce_year}%"
                 
             with engine.connect() as conn:
                 w_raw = pd.read_sql(text(sql), conn, params=params)
@@ -708,7 +709,15 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                 dates = pd.to_datetime(w_raw['check_date'], errors='coerce')
                 df_w['วันที่ตรวจ'] = dates.dt.strftime('%Y-%m-%d').fillna('')
                 df_w['ว/ด/ป ที่เก็บ'] = df_w['วันที่ตรวจ']
-                df_w['ปี'] = dates.dt.strftime('%Y').fillna('') # สำหรับ Filter
+                
+                # Convert CE to BE for the dropdown filter
+                def to_be(y):
+                    if pd.isna(y) or not str(y).isdigit(): return ''
+                    y_int = int(y)
+                    return str(y_int + 543) if y_int < 2500 else str(y_int)
+                
+                ce_years = dates.dt.strftime('%Y').fillna('')
+                df_w['ปี'] = ce_years.apply(to_be) # สำหรับ Filter
                 
                 df_w['ภาค'] = safe_extract(w_raw, 'region', 'ไม่ระบุ')
                 df_w['เขตสุขภาพ'] = safe_extract(w_raw, 'health_zone', 'ไม่ระบุ')
@@ -758,8 +767,12 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
             if not d_raw.empty:
                 df_d = pd.DataFrame(index=d_raw.index)
                 df_d['ปีงบประมาณ'] = safe_extract(d_raw, 'fiscal_year', 'ไม่ระบุ')
-                df_d['ปี'] = df_d['ปีงบประมาณ']
-                
+                def to_be_d(y):
+                    if pd.isna(y) or y == 'ไม่ระบุ' or not str(y).isdigit(): return y
+                    y_int = int(y)
+                    return str(y_int + 543) if y_int < 2500 else str(y_int)
+                df_d['ปี'] = df_d['ปีงบประมาณ'].apply(to_be_d)
+                df_d['ปีงบประมาณ'] = df_d['ปี']
                 df_d['ภาค'] = safe_extract(d_raw, 'region', 'ไม่ระบุ')
                 df_d['เขตสุขภาพ'] = safe_extract(d_raw, 'health_zone', 'ไม่ระบุ')
                 df_d['จังหวัด'] = safe_extract(d_raw, 'province', 'ไม่ระบุ')
@@ -1405,7 +1418,8 @@ def get_table_data():
         if val and val != 'ทั้งหมด':
             if key == 'ปี' and not is_dental:
                 sql_base += " AND check_date LIKE :year_filter"
-                params['year_filter'] = f"{val}%"
+                ce_year = str(int(val) - 543) if str(val).isdigit() and int(val) > 2500 else str(val)
+                params['year_filter'] = f"{ce_year}%"
             else:
                 sql_base += f" AND `{col}` = :{col}"
                 params[col] = val.strip()
@@ -1457,7 +1471,12 @@ def get_table_data():
                 df_processed = pd.DataFrame(index=df_raw.index)
                 if is_dental:
                     df_processed['ปีงบประมาณ'] = safe_extract(df_raw, 'fiscal_year', 'ไม่ระบุ')
-                    df_processed['ปี'] = df_processed['ปีงบประมาณ']
+                    def to_be_d(y):
+                        if pd.isna(y) or y == 'ไม่ระบุ' or not str(y).isdigit(): return y
+                        y_int = int(y)
+                        return str(y_int + 543) if y_int < 2500 else str(y_int)
+                    df_processed['ปี'] = df_processed['ปีงบประมาณ'].apply(to_be_d)
+                    df_processed['ปีงบประมาณ'] = df_processed['ปี']
                     df_processed['ภาค'] = safe_extract(df_raw, 'region', 'ไม่ระบุ')
                     df_processed['เขตสุขภาพ'] = safe_extract(df_raw, 'health_zone', 'ไม่ระบุ')
                     df_processed['จังหวัด'] = safe_extract(df_raw, 'province', 'ไม่ระบุ')
@@ -1480,7 +1499,13 @@ def get_table_data():
                     dates = pd.to_datetime(df_raw['check_date'], errors='coerce')
                     df_processed['วันที่ตรวจ'] = dates.dt.strftime('%Y-%m-%d').fillna('')
                     df_processed['ว/ด/ป ที่เก็บ'] = df_processed['วันที่ตรวจ']
-                    df_processed['ปี'] = dates.dt.strftime('%Y').fillna('')
+                    
+                    def to_be(y):
+                        if pd.isna(y) or not str(y).isdigit(): return ''
+                        y_int = int(y)
+                        return str(y_int + 543) if y_int < 2500 else str(y_int)
+                    ce_years = dates.dt.strftime('%Y').fillna('')
+                    df_processed['ปี'] = ce_years.apply(to_be)
                     df_processed['ภาค'] = safe_extract(df_raw, 'region', 'ไม่ระบุ')
                     df_processed['เขตสุขภาพ'] = safe_extract(df_raw, 'health_zone', 'ไม่ระบุ')
                     df_processed['จังหวัด'] = safe_extract(df_raw, 'province', 'ไม่ระบุ')
