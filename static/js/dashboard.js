@@ -230,7 +230,32 @@ $(document).ready(function() {
 
     const dbFieldsList = ['hospcode', 'check_date', 'region', 'health_zone', 'province', 'district', 'subdistrict', 'hosp_name', 'total_kids', 'screened_kids', 'fluorosis_cases', 'pct_fluorosis', 'severe_cases', 'dean_index_status', 'location_name', 'water_type', 'fluoride_level', 'status', 'latitude', 'longitude', 'house_no', 'moo', 'remark', 'data_source'];
     let existingSchemas = {}; 
-    const apiToDbRefMap = { 'hospcode': 'รหัสหน่วยบริการ', 'check_date': 'วันที่ตรวจ', 'region': 'ภาค', 'health_zone': 'เขตสุขภาพ', 'province': 'จังหวัด', 'district': 'อำเภอ', 'subdistrict': 'ตำบล', 'location_name': 'สถานที่', 'water_type': 'ประเภทแหล่งน้ำ', 'fluoride_level': 'ปริมาณฟลูออไรด์ (mg/L)', 'status': 'สถานการณ์', 'latitude': 'ละติจูด', 'longitude': 'ลองจิจูด', 'total_kids': 'จำนวนเด็กทั้งหมด', 'screened_kids': 'จำนวนตรวจ', 'fluorosis_cases': 'พบฟันตกกระ', 'pct_fluorosis': 'ร้อยละเด็กฟันตกกระ', 'severe_cases': 'severe_cases', 'hosp_name': 'ชื่อหน่วยบริการ', 'dean_index_status': 'สถานการณ์', 'house_no': 'บ้านเลขที่', 'moo': 'หมู่ที่', 'remark': 'หมายเหตุ', 'data_source': 'แหล่งข้อมูล' };
+    const apiToDbRefMap = {
+    'hospcode': 'รหัสหน่วยบริการ', 
+    'check_date': 'วันที่ตรวจ', 
+    'region': 'ภาค', 
+    'health_zone': 'เขตสุขภาพ', 
+    'province': 'จังหวัด', 
+    'district': 'อำเภอ', 
+    'subdistrict': 'ตำบล', 
+    'location_name': 'สถานที่เก็บ', 
+    'water_type': 'ชนิดน้ำ', 
+    'fluoride_level': 'ปริมาณฟลูออไรด์', 
+    'status': 'สถานการณ์', 
+    'latitude': 'ละติจูด', 
+    'longitude': 'ลองจิจูด', 
+    'total_kids': 'จำนวนเด็กที่คัดกรอง', 
+    'screened_kids': 'จำนวนตรวจ', 
+    'fluorosis_cases': 'พบฟันตกกระ', 
+    'pct_fluorosis': 'ร้อยละเด็กฟันตกกระ', 
+    'severe_cases': 'severe_cases', 
+    'hosp_name': 'ชื่อหน่วยบริการ', 
+    'dean_index_status': 'สถานการณ์', 
+    'house_no': 'บ้านเลขที่', 
+    'moo': 'หมู่ที่', 
+    'remark': 'หมายเหตุ', 
+    'data_source': 'แหล่งที่มาข้อมูล'
+};
 
     function updateChartDropdowns() {
         let fields = []; $('#tableSchemaContainer .col-name').each(function() { let v = $(this).val().trim(); if(v) fields.push(v); });
