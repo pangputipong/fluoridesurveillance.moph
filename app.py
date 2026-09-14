@@ -1086,8 +1086,13 @@ def get_data():
         return jsonify({'dropdowns': {'years': ['ทั้งหมด'], 'regions': ['ทั้งหมด'], 'zones': ['ทั้งหมด'], 'provinces': ['ทั้งหมด'], 'districts': ['ทั้งหมด'], 'subdistricts': ['ทั้งหมด']}, 'table_data': []})
  
     if not is_dental and req_type != 'ทั้งหมด':
-        search_term = req_type.replace('คุณภาพ', '').strip()
-        df_filtered = df_filtered[df_filtered['กลุ่มแหล่งน้ำ'].astype(str).str.contains(search_term, na=False)]
+        search_term = ""
+        if 'ดิบ' in req_type: search_term = 'ดิบ'
+        elif 'ประปา' in req_type: search_term = 'ประปา'
+        elif 'บริโภค' in req_type: search_term = 'บริโภค'
+        
+        if search_term:
+            df_filtered = df_filtered[df_filtered['กลุ่มแหล่งน้ำ'].astype(str).str.contains(search_term, na=False)]
  
     for key in ['ปี', 'ภาค', 'เขตสุขภาพ', 'จังหวัด', 'อำเภอ', 'ตำบล']:
         val = filters.get(key)
@@ -1400,9 +1405,14 @@ def get_table_data():
     params = {}
     
     if not is_dental and req_type != 'ทั้งหมด':
-        search_term = req_type.replace('คุณภาพ', '').strip()
-        sql_base += " AND water_category LIKE :water_category_filter"
-        params['water_category_filter'] = f"%{search_term}%"
+        search_term = ""
+        if 'ดิบ' in req_type: search_term = 'ดิบ'
+        elif 'ประปา' in req_type: search_term = 'ประปา'
+        elif 'บริโภค' in req_type: search_term = 'บริโภค'
+        
+        if search_term:
+            sql_base += " AND water_category LIKE :water_category_filter"
+            params['water_category_filter'] = f"%{search_term}%"
         
     filter_keys = {
         'ปี': 'fiscal_year' if is_dental else 'YEAR(STR_TO_DATE(check_date, "%Y-%m-%d"))',
