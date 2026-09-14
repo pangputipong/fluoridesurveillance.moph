@@ -1469,6 +1469,22 @@ def get_table_data():
             if raw_data:
                 df_raw = pd.DataFrame(raw_data)
                 df_processed = pd.DataFrame(index=df_raw.index)
+                
+                centroids = get_district_centroids()
+                lats, lngs = [], []
+                for _, r in df_raw.iterrows():
+                    lat = pd.to_numeric(r.get('latitude', 0.0), errors='coerce')
+                    lng = pd.to_numeric(r.get('longitude', 0.0), errors='coerce')
+                    if pd.isna(lat) or pd.isna(lng) or lat == 0.0 or lng == 0.0:
+                        prov = str(r.get('province', '')).strip()
+                        dist = str(r.get('district', '')).strip()
+                        fallback = centroids['districts'].get((prov, dist)) or centroids['provinces'].get(prov) or (13.0, 101.5)
+                        lat, lng = fallback[0], fallback[1]
+                    lats.append(lat)
+                    lngs.append(lng)
+                df_raw['latitude_imputed'] = lats
+                df_raw['longitude_imputed'] = lngs
+                
                 if is_dental:
                     df_processed['ปีงบประมาณ'] = safe_extract(df_raw, 'fiscal_year', 'ไม่ระบุ')
                     def to_be_d(y):
@@ -1493,8 +1509,8 @@ def get_table_data():
                     dean_map = {'Normal': 'ปกติ (Normal)', 'Very Mild': 'ระดับอ่อนมาก (Very Mild)', 'Mild': 'ระดับอ่อน (Mild)', 'Moderate': 'ระดับปานกลาง (Moderate)', 'Severe': 'ระดับรุนแรง (Severe)'}
                     df_processed['สถานการณ์'] = s_col.replace(dean_map)
                     df_processed['ประเภทแหล่งน้ำ'] = 'สภาวะฟันตกกระ (เด็ก)'
-                    df_processed['ละติจูด'] = pd.to_numeric(safe_extract(df_raw, 'latitude', 0.0)).fillna(0.0)
-                    df_processed['ลองจิจูด'] = pd.to_numeric(safe_extract(df_raw, 'longitude', 0.0)).fillna(0.0)
+                    df_processed['ละติจูด'] = df_raw['latitude_imputed']
+                    df_processed['ลองจิจูด'] = df_raw['longitude_imputed']
                 else:
                     dates = pd.to_datetime(df_raw['check_date'], errors='coerce')
                     df_processed['วันที่ตรวจ'] = dates.dt.strftime('%Y-%m-%d').fillna('')
@@ -1515,8 +1531,8 @@ def get_table_data():
                     df_processed['ชนิดน้ำ'] = safe_extract(df_raw, 'water_type', 'ไม่ระบุ')
                     df_processed['ปริมาณฟลูออไรด์'] = pd.to_numeric(safe_extract(df_raw, 'fluoride_level', 0.0)).fillna(0.0)
                     df_processed['สถานการณ์'] = safe_extract(df_raw, 'status', 'ไม่ระบุ')
-                    df_processed['ละติจูด'] = pd.to_numeric(safe_extract(df_raw, 'latitude', 0.0)).fillna(0.0)
-                    df_processed['ลองจิจูด'] = pd.to_numeric(safe_extract(df_raw, 'longitude', 0.0)).fillna(0.0)
+                    df_processed['ละติจูด'] = df_raw['latitude_imputed']
+                    df_processed['ลองจิจูด'] = df_raw['longitude_imputed']
                     df_processed['บ้านเลขที่'] = safe_extract(df_raw, 'house_no', '-')
                     df_processed['หมู่ที่'] = safe_extract(df_raw, 'moo', '-')
                     df_processed['หมายเหตุ'] = safe_extract(df_raw, 'remark', '-')
