@@ -702,7 +702,7 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
             
             if not w_raw.empty:
                 w_raw['check_date_parsed'] = pd.to_datetime(w_raw['check_date'], errors='coerce')
-                w_raw = w_raw.sort_values('check_date_parsed', ascending=False).drop_duplicates(subset=['location_name', 'latitude', 'longitude'])
+                w_raw = w_raw.sort_values(['check_date_parsed', 'id'], ascending=[False, False]).drop_duplicates(subset=['location_name', 'latitude', 'longitude'])
                 
                 df_w = pd.DataFrame(index=w_raw.index)
 
