@@ -1087,7 +1087,7 @@ def get_data():
  
     if not is_dental and req_type != 'ทั้งหมด':
         search_term = req_type.replace('คุณภาพ', '').strip()
-        df_filtered = df_filtered[df_filtered['ชนิดน้ำ'].astype(str).str.contains(search_term, na=False)]
+        df_filtered = df_filtered[df_filtered['กลุ่มแหล่งน้ำ'].astype(str).str.contains(search_term, na=False)]
  
     for key in ['ปี', 'ภาค', 'เขตสุขภาพ', 'จังหวัด', 'อำเภอ', 'ตำบล']:
         val = filters.get(key)
@@ -1401,8 +1401,8 @@ def get_table_data():
     
     if not is_dental and req_type != 'ทั้งหมด':
         search_term = req_type.replace('คุณภาพ', '').strip()
-        sql_base += " AND water_type LIKE :water_type_filter"
-        params['water_type_filter'] = f"%{search_term}%"
+        sql_base += " AND water_category LIKE :water_category_filter"
+        params['water_category_filter'] = f"%{search_term}%"
         
     filter_keys = {
         'ปี': 'fiscal_year' if is_dental else 'YEAR(STR_TO_DATE(check_date, "%Y-%m-%d"))',
