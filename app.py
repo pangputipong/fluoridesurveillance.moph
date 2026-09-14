@@ -2068,6 +2068,22 @@ def debug_load():
     except Exception as e:
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
 
+
+@app.route('/api/debug_load2', methods=['GET'])
+def debug_load2():
+    import traceback
+    try:
+        df_w, df_d = load_data_from_db(load_water=True, load_dental=True)
+        groups = df_w['กลุ่มแหล่งน้ำ'].value_counts().to_dict() if 'กลุ่มแหล่งน้ำ' in df_w.columns else 'no column'
+        water_cat = df_w['water_category'].value_counts().to_dict() if 'water_category' in df_w.columns else 'no column'
+        return jsonify({
+            'groups': groups,
+            'water_cat': water_cat,
+            'columns': list(df_w.columns)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
+
 if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)
