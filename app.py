@@ -2055,6 +2055,19 @@ def list_investigations():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@app.route('/api/debug_load', methods=['GET'])
+def debug_load():
+    import traceback
+    try:
+        df_w, df_d = load_data_from_db(load_water=True, load_dental=True)
+        return jsonify({
+            'water_len': len(df_w),
+            'dental_len': len(df_d)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
+
 if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)
