@@ -1065,13 +1065,14 @@ $(document).ready(function() {
         let checkedStatuses = $('.map-layer-toggle:checked').map(function(){ return $(this).val(); }).get();
         let isWaterCategory = (existingSchemas[currentType] ? existingSchemas[currentType].category === 'env' : false);
 
+        let isFiltered = $('#filter-region').val() !== 'ทั้งหมด' || $('#filter-zone').val() !== 'ทั้งหมด' || $('#filter-province').val() !== 'ทั้งหมด' || $('#filter-district').val() !== 'ทั้งหมด' || $('#filter-subdistrict').val() !== 'ทั้งหมด';
         if(activeChartConfig.map && !isWaterCategory) {
             if(!legendAdded) { legendControl.addTo(map); legendAdded = true; } 
             if(geoJsonData && Object.keys(geoJsonData).length > 0) {
                 let activeBounds = L.latLngBounds(); let hasVisibleFeature = false;
                 choroplethLayer = L.geoJSON(geoJsonData, { style: styleArea, onEachFeature: function(f, l) { if (isFeatureInSelectedFilters(f)) { onEachArea(f, l); hasVisibleFeature = true; if(l.getBounds) activeBounds.extend(l.getBounds()); } } }).addTo(map);
                 
-                if (hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([15.0, 100.0], 6);
+                if (isFiltered && hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
             }
         } else {
             if(legendAdded) { map.removeControl(legendControl); legendAdded = false; } 
@@ -1085,7 +1086,7 @@ $(document).ready(function() {
                     }
                 }
             });
-            if (bounds.length > 0) map.flyToBounds(bounds, {padding: [30, 30]}); else map.flyTo([15.0, 100.0], 6);
+            if (isFiltered && bounds.length > 0) map.flyToBounds(bounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
         }
     }
 
@@ -1307,12 +1308,13 @@ $(document).ready(function() {
         if (choroplethLayer) { map.removeLayer(choroplethLayer); choroplethLayer = null; }
         markersGroup.clearLayers(); let bounds = [];
 
+        let isFiltered = $('#filter-region').val() !== 'ทั้งหมด' || $('#filter-zone').val() !== 'ทั้งหมด' || $('#filter-province').val() !== 'ทั้งหมด' || $('#filter-district').val() !== 'ทั้งหมด' || $('#filter-subdistrict').val() !== 'ทั้งหมด';
         if(activeChartConfig.map && !isWaterCategory) {
             if(geoJsonData && Object.keys(geoJsonData).length > 0) {
                 let activeBounds = L.latLngBounds(); let hasVisibleFeature = false;
                 choroplethLayer = L.geoJSON(geoJsonData, { style: styleArea, onEachFeature: function(f, l) { if (isFeatureInSelectedFilters(f)) { onEachArea(f, l); hasVisibleFeature = true; if(l.getBounds) activeBounds.extend(l.getBounds()); } } }).addTo(map);
                 
-                if (hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([15.0, 100.0], 6);
+                if (isFiltered && hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
             }
         } else {
             globalData.forEach(p => {
@@ -1325,7 +1327,7 @@ $(document).ready(function() {
                     }
                 }
             });
-            if (bounds.length > 0) map.flyToBounds(bounds, {padding: [30, 30]}); else map.flyTo([15.0, 100.0], 6);
+            if (isFiltered && bounds.length > 0) map.flyToBounds(bounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
         }
         updateDrilldownChart(); 
     });
