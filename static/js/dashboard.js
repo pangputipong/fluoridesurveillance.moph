@@ -984,13 +984,13 @@ $(document).ready(function() {
             }
         }
         
-        if (isBlinking && !customColor) {
+        if (isBlinking) {
             iconHtml = isWaterCategory
                 ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
                 : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
         } else {
             if(customColor) {
-                iconHtml = `<div class="custom-marker no-default-ripple" style="background-color: ${customColor}; border-color: white;"><div class="marker-dot"></div></div>`;
+                iconHtml = `<div class="custom-marker no-default-ripple"><div class="marker-dot" style="background-color: ${customColor};"></div></div>`;
             } else {
                 let statusClass = statusVal.includes('เกิน') || statusVal.includes('ไม่ผ่าน') ? 'marker-red' : (statusVal.includes('ปกติ') || statusVal.includes('ผ่าน') ? 'marker-green' : 'marker-blue');
                 iconHtml = `<div class="custom-marker ${statusClass}"><div class="marker-dot"></div></div>`;
@@ -1000,8 +1000,8 @@ $(document).ready(function() {
         let customIcon = L.divIcon({
             className: '',
             html: iconHtml,
-            iconSize: (isBlinking && !customColor) ? [20, 20] : [14, 14],
-            iconAnchor: (isBlinking && !customColor) ? [10, 10] : [7, 7]
+            iconSize: (isBlinking) ? [20, 20] : [14, 14],
+            iconAnchor: (isBlinking) ? [10, 10] : [7, 7]
         });
         
         let name = p.สถานที่ || p.สถานที่เก็บ || p.ชื่อหน่วยบริการ || 'จุดตรวจ';
