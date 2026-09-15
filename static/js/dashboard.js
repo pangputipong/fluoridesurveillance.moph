@@ -969,11 +969,11 @@ $(document).ready(function() {
         
         // Use custom map colors if configured for Spatial Map
         let customColor = null;
-        if(globalConfig && globalConfig.map_colors && globalConfig.map_colors.length > 0) {
-            let mapCol = globalConfig.map;
+        if(activeChartConfig && activeChartConfig.map_colors && activeChartConfig.map_colors.length > 0) {
+            let mapCol = activeChartConfig.map;
             let val = parseFloat(p[mapCol]);
             if(!isNaN(val)) {
-                for(let r of globalConfig.map_colors) {
+                for(let r of activeChartConfig.map_colors) {
                     let minOK = (r.min === null) || (val >= r.min);
                     let maxOK = (r.max === null) || (val <= r.max);
                     if(minOK && maxOK) {
