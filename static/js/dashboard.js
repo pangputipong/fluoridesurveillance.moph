@@ -881,7 +881,7 @@ $(document).ready(function() {
 
     function styleArea(feature) {
         if (!isFeatureInSelectedFilters(feature)) return { weight: 0, fillOpacity: 0, opacity: 0, interactive: false }; 
-        let checkedStatuses = $('.map-layer-toggle:checked:visible').map(function(){ return $(this).val(); }).get();
+        let checkedStatuses = $('.map-layer-toggle:checked').map(function(){ return $(this).val(); }).get();
         let areaData = getFilteredAreaData(feature, checkedStatuses); 
         if (areaData.length === 0) return { fillColor: '#f1f5f9', weight: 1.5, opacity: 1, color: '#cbd5e1', dashArray: '4,4', fillOpacity: 0.6 };
         let mapCol = activeChartConfig.map || 'ร้อยละเด็กฟันตกกระ'; let sum = 0; let count = 0;
@@ -892,7 +892,7 @@ $(document).ready(function() {
 
     function onEachArea(feature, layer) {
         if (!isFeatureInSelectedFilters(feature)) return; 
-        let checkedStatuses = $('.map-layer-toggle:checked:visible').map(function(){ return $(this).val(); }).get(); let areaData = getFilteredAreaData(feature, checkedStatuses); let areaName = actualGeoLevel === 'subdistrict' ? getTamName(feature.properties) : (actualGeoLevel === 'district' ? getAmpName(feature.properties) : getProvName(feature.properties)); areaName = areaName || "ไม่ระบุ";
+        let checkedStatuses = $('.map-layer-toggle:checked').map(function(){ return $(this).val(); }).get(); let areaData = getFilteredAreaData(feature, checkedStatuses); let areaName = actualGeoLevel === 'subdistrict' ? getTamName(feature.properties) : (actualGeoLevel === 'district' ? getAmpName(feature.properties) : getProvName(feature.properties)); areaName = areaName || "ไม่ระบุ";
         let mapCol = activeChartConfig.map || 'ร้อยละเด็กฟันตกกระ'; let sum = 0; let count = 0;
         let units = areaData.length;
         let fluorosisCases = 0;
@@ -1062,7 +1062,7 @@ $(document).ready(function() {
         let legendHtml = ''; labels.forEach((l, i) => { legendHtml += `<label class="d-flex align-items-center"><input class="form-check-input map-layer-toggle me-2" type="checkbox" value="${l}" checked> <span style="color:${bgColors[i]}; font-weight:600;">${l}</span></label>`; });
         $('#legend-dynamic').html('<div class="d-flex flex-wrap gap-3">' + legendHtml + '</div>');
 
-        let checkedStatuses = $('.map-layer-toggle:checked:visible').map(function(){ return $(this).val(); }).get();
+        let checkedStatuses = $('.map-layer-toggle:checked').map(function(){ return $(this).val(); }).get();
         let isWaterCategory = (existingSchemas[currentType] ? existingSchemas[currentType].category === 'env' : false);
 
         if(activeChartConfig.map && !isWaterCategory) {
@@ -1092,7 +1092,7 @@ $(document).ready(function() {
     function updateDrilldownChart() {
         let groupKey = 'เขตสุขภาพ'; let p = $('#filter-province').val(); let d = $('#filter-district').val(); let r = $('#filter-region').val(); let z = $('#filter-zone').val(); let sd = $('#filter-subdistrict').val();
         if (d !== 'ทั้งหมด' || sd !== 'ทั้งหมด') { groupKey = 'ชื่อหน่วยบริการ'; } else if (p !== 'ทั้งหมด') { groupKey = 'อำเภอ'; } else if (r !== 'ทั้งหมด' || z !== 'ทั้งหมด') { groupKey = 'จังหวัด'; } else { groupKey = 'เขตสุขภาพ'; }
-        let drillCol = activeChartConfig.drilldown; let checkedStatuses = $('.map-layer-toggle:checked:visible').map(function(){ return $(this).val(); }).get(); let grouped = {}; 
+        let drillCol = activeChartConfig.drilldown; let checkedStatuses = $('.map-layer-toggle:checked').map(function(){ return $(this).val(); }).get(); let grouped = {}; 
         globalData.forEach(row => {
             let statusVal = row['_chart_group_label'];
             if (checkedStatuses.includes(statusVal)) {
@@ -1302,7 +1302,7 @@ $(document).ready(function() {
 
     $(document).on('change', '.map-layer-toggle', function() { 
         let isWaterCategory = (existingSchemas[currentType] ? existingSchemas[currentType].category === 'env' : false);
-        let checkedStatuses = $('.map-layer-toggle:checked:visible').map(function(){ return $(this).val(); }).get();
+        let checkedStatuses = $('.map-layer-toggle:checked').map(function(){ return $(this).val(); }).get();
         
         if (choroplethLayer) { map.removeLayer(choroplethLayer); choroplethLayer = null; }
         markersGroup.clearLayers(); let bounds = [];
