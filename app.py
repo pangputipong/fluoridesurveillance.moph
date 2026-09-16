@@ -37,6 +37,12 @@ def get_region_by_province(province):
 load_dotenv()
 app = Flask(__name__)
 
+@app.context_processor
+def inject_base_url():
+    # If the app is run under a sub-path, set BASE_URL in .env (e.g. BASE_URL=/fluoridesurveillance)
+    return dict(BASE_URL=os.environ.get('BASE_URL', ''))
+
+
 # ==========================================
 # 🛡️ ระบบรักษาความปลอดภัย API
 # ==========================================

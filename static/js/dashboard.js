@@ -42,7 +42,7 @@ $(document).ready(function() {
     $('#btnSubmitLogin').click(function() {
         let username = $('#loginUsername').val() || 'admin';
         let pwd = $('#loginPassword').val();
-        fetch('/api/login', {
+        fetch(BASE_URL + '/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: username, password: pwd })
@@ -113,7 +113,7 @@ $(document).ready(function() {
         $('#uploadFormArea').hide(); 
         $('#importStatusScanning').show(); 
         
-        fetch('/api/upload_data', {
+        fetch(BASE_URL + '/api/upload_data', {
             method: 'POST',
             headers: { 'Authorization': sessionStorage.getItem('adminToken') || '' },
             body: formData
@@ -280,7 +280,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-remove-rule', function() { $(this).closest('.group-rule-row').remove(); });
 
     function fetchSchemas() {
-        return fetch('/api/get_schemas').then(res => res.json()).then(data => {
+        return fetch(BASE_URL + '/api/get_schemas').then(res => res.json()).then(data => {
             if(data.success) {
                 existingSchemas = {};
                 let envSetHtml = '<div class="small fw-bold text-muted px-2 mb-1 mt-2">หมวดสิ่งแวดล้อม</div>'; let healthSetHtml = '<div class="small fw-bold text-muted px-2 mb-1 mt-3">หมวดสุขภาพ</div>';
@@ -498,7 +498,7 @@ $(document).ready(function() {
         
         let originalBtnText = $(this).html(); $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-        fetch('/api/save_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify(payload) })
+        fetch(BASE_URL + '/api/save_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify(payload) })
         .then(res => { if(res.status === 401) throw new Error('Unauthorized'); return res.json(); })
         .then(data => { if(data.success) { alert('บันทึกสำเร็จ!'); location.reload(); } else { alert('Error: ' + data.message); } })
         .catch(err => { if(err.message === 'Unauthorized') alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบแอดมินใหม่'); })
@@ -508,7 +508,7 @@ $(document).ready(function() {
     $('#btnDeleteSchema').click(function() {
         let reportName = $('#currentReportName').text();
         if(confirm(`คุณต้องการลบรายงาน "${reportName}" อย่างถาวรใช่หรือไม่?`)) {
-            fetch('/api/delete_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify({ report_name: reportName }) })
+            fetch(BASE_URL + '/api/delete_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify({ report_name: reportName }) })
             .then(res => { if(res.status === 401) throw new Error('Unauthorized'); return res.json(); }).then(data => { if(data.success) { alert('ลบสำเร็จ!'); location.reload(); } else { alert('Error: ' + data.message); } })
             .catch(err => { if(err.message === 'Unauthorized') alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบแอดมินใหม่'); });
         }
@@ -855,7 +855,7 @@ $(document).ready(function() {
         currentGeoUrl = url;
         if (geoJsonCache[url]) { actualGeoLevel = level; geoJsonData = geoJsonCache[url]; return Promise.resolve(); }
         
-        return fetch(url).then(res => { if (!res.ok) throw new Error('File not found'); return res.json(); }).then(data => { actualGeoLevel = level; geoJsonCache[url] = data; geoJsonData = data; }).catch(err => { actualGeoLevel = 'province'; currentGeoUrl = '/static/provinces.geojson'; if(geoJsonCache[currentGeoUrl]) { geoJsonData = geoJsonCache[currentGeoUrl]; return Promise.resolve(); } else { return fetch(currentGeoUrl).then(r => r.ok ? r.json() : {}).then(d => { geoJsonCache[currentGeoUrl] = d; geoJsonData = d; }).catch(() => Promise.resolve()); } });
+        return fetch(url).then(res => { if (!res.ok) throw new Error('File not found'); return res.json(); }).then(data => { actualGeoLevel = level; geoJsonCache[url] = data; geoJsonData = data; }).catch(err => { actualGeoLevel = 'province'; currentGeoUrl = BASE_URL + '/static/provinces.geojson'; if(geoJsonCache[currentGeoUrl]) { geoJsonData = geoJsonCache[currentGeoUrl]; return Promise.resolve(); } else { return fetch(currentGeoUrl).then(r => r.ok ? r.json() : {}).then(d => { geoJsonCache[currentGeoUrl] = d; geoJsonData = d; }).catch(() => Promise.resolve()); } });
     }
 
     function getFeatureProp(p, keys) { let lowerP = {}; for (let k in p) lowerP[k.toLowerCase()] = p[k]; for (let i = 0; i < keys.length; i++) { let val = lowerP[keys[i].toLowerCase()]; if (val !== undefined && val !== null && String(val).trim() !== "") return String(val); } return ""; }
@@ -1159,7 +1159,7 @@ $(document).ready(function() {
         if (currentType === 'ทั้งหมด') { 
             $('#homeDashboardView').show(); $('#spatialDashboardView').hide(); $('#aiPredictionView').hide(); $('#investigationReportView').hide(); $('body').addClass('theme-home').removeClass('theme-dental'); 
             setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 200); 
-            fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) })
+            fetch(BASE_URL + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) })
             .then(res => res.json()).then(data => {
                 if(data.home_kpis_dynamic && data.home_kpis_dynamic.length > 0) {
                     let kpiHtml = '';
@@ -1256,7 +1256,7 @@ $(document).ready(function() {
         let geoPromise = Promise.resolve(); if(prevLevel !== currentGeoLevel || !geoJsonData) { geoPromise = fetchGeoJsonWithLazyLoading(currentGeoLevel); }
         let lvlTxt = currentGeoLevel === 'province' ? 'จังหวัด' : (currentGeoLevel === 'district' ? 'อำเภอ' : 'ตำบล'); $('#geo-level-text').text(`สถานะพื้นที่ (${lvlTxt})`);
 
-        let apiPromise = fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) }).then(res => res.json());
+        let apiPromise = fetch(BASE_URL + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) }).then(res => res.json());
 
         Promise.all([geoPromise, apiPromise]).then(results => {
             let data = results[1]; globalData = data.table_data;
@@ -1532,7 +1532,7 @@ $(document).ready(function() {
         btn.html('<i class="fas fa-spinner fa-spin"></i> กำลังโหลด...');
         btn.prop('disabled', true);
         
-        fetch('/api/location_history', {
+        fetch(BASE_URL + '/api/location_history', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({location_name: name, latitude: lat, longitude: lng})
@@ -1756,7 +1756,7 @@ $(document).ready(function() {
     // 7. Security & Stats, ROPA, and Page Logging
     // ----------------------------------------------------
     function logVisit(pageName, actionType) {
-        fetch('/api/log_visit', {
+        fetch(BASE_URL + '/api/log_visit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ page_name: pageName, action_type: actionType })
@@ -1766,7 +1766,7 @@ $(document).ready(function() {
     let visitStatsChartInstance = null;
 
     function loadSecurityAndStats() {
-        fetch('/api/get_stats', {
+        fetch(BASE_URL + '/api/get_stats', {
             method: 'GET',
             headers: { 'Authorization': sessionStorage.getItem('adminToken') || '' }
         })
@@ -1842,7 +1842,7 @@ $(document).ready(function() {
             return;
         }
         
-        fetch('/api/manage_admin', {
+        fetch(BASE_URL + '/api/manage_admin', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -1871,7 +1871,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-delete-admin', function() {
         let username = $(this).data('username');
         if (confirm(`คุณต้องการลบแอดมิน "${username}" หรือไม่?`)) {
-            fetch('/api/manage_admin', {
+            fetch(BASE_URL + '/api/manage_admin', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -1896,7 +1896,7 @@ $(document).ready(function() {
     });
 
     function loadRopaLogs() {
-        fetch('/api/get_stats', {
+        fetch(BASE_URL + '/api/get_stats', {
             method: 'GET',
             headers: { 'Authorization': sessionStorage.getItem('adminToken') || '' }
         })
@@ -1950,7 +1950,7 @@ $(document).ready(function() {
     function loadInvestigations() {
         $('#investigationsTableBody').html('<tr><td colspan="8" class="text-center text-muted py-3">กำลังโหลดรายงานสอบสวนโรค...</td></tr>');
         
-        fetch('/api/investigation/list', {
+        fetch(BASE_URL + '/api/investigation/list', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2152,7 +2152,7 @@ $(document).ready(function() {
             'อำเภอ': $('#filter-district').val(), 
             'ตำบล': $('#filter-subdistrict').val() 
         };
-        fetch('/api/predict', {
+        fetch(BASE_URL + '/api/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(filters)
@@ -3089,7 +3089,7 @@ $(document).ready(function() {
 
     // Initial load
     fetchSchemas().then(() => {
-        fetch('/static/provinces.geojson').catch(() => console.log("Loading Map GeoJSON..."));
+        fetch(BASE_URL + '/static/provinces.geojson').catch(() => console.log("Loading Map GeoJSON..."));
         logVisit(currentType, 'VIEW');
         loadData();
     });
@@ -3143,7 +3143,7 @@ $(document).ready(function() {
     
     // --- Smart Cascading Dropdown Logic for Registration ---
     function fetchRegProvinces() {
-        fetch('/api/locations/provinces')
+        fetch(BASE_URL + '/api/locations/provinces')
             .then(r => r.json())
             .then(res => {
                 if(res.success) {
@@ -3168,7 +3168,7 @@ $(document).ready(function() {
         $('#regParentHosp').html('<option value="" disabled selected>--กรุณาเลือกโรงพยาบาลแม่ข่าย--</option>').prop('disabled', true);
         $('#regOffice').html('<option value="" disabled selected>--กรุณาเลือกหน่วยงาน--</option>').prop('disabled', true);
         
-        fetch('/api/locations/districts?province=' + encodeURIComponent(prov))
+        fetch(BASE_URL + '/api/locations/districts?province=' + encodeURIComponent(prov))
             .then(r => r.json())
             .then(res => {
                 if(res.success) {
@@ -3233,7 +3233,7 @@ $(document).ready(function() {
         let oldText = submitBtn.text();
         submitBtn.prop('disabled', true).text('กำลังประมวลผล...');
         
-        fetch('/api/register', {
+        fetch(BASE_URL + '/api/register', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         }).then(r=>r.json()).then(data=>{
@@ -3257,7 +3257,7 @@ $(document).ready(function() {
 });
 
 function loadAdminUsers() {
-    fetch('/api/admin/users').then(r=>r.json()).then(data => {
+    fetch(BASE_URL + '/api/admin/users').then(r=>r.json()).then(data => {
         if(data.success) {
             let html = '';
             data.users.forEach(u => {
@@ -3282,7 +3282,7 @@ function loadAdminUsers() {
 
 window.changeUserStatus = function(id, action) {
     if(confirm(`ต้องการ ${action === 'approve' ? 'อนุมัติ' : 'ระงับ'} ผู้ใช้งานนี้ใช่หรือไม่?`)) {
-        fetch('/api/admin/users/approve', {
+        fetch(BASE_URL + '/api/admin/users/approve', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id: id, action: action})
         }).then(r=>r.json()).then(data=>{

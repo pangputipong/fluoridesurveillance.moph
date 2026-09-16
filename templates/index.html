@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <script>const BASE_URL = "{{ BASE_URL }}";</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบเฝ้าระวังสภาวะฟันตกกระและระดับฟลูออไรด์ในน้ำ</title>
-    <link rel="icon" type="image/png" href="/static/ICON_FLUORIDE.png">
+    <link rel="icon" type="image/png" href="{{ BASE_URL }}/static/ICON_FLUORIDE.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,7 +17,7 @@
     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="/static/css/styles.css?v=2.4">
+    <link rel="stylesheet" href="{{ BASE_URL }}/static/css/styles.css?v=2.4">
 </head>
 <body class="theme-home">
     
@@ -25,7 +26,7 @@
     <div class="app-wrapper">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-logo">
-                <img src="/static/ICON_FLUORIDE.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/th/thumb/6/6d/Ministry_of_Public_Health_logo.svg/120px-Ministry_of_Public_Health_logo.svg.png'" height="34" alt="Logo" style="border-radius: 8px;">
+                <img src="{{ BASE_URL }}/static/ICON_FLUORIDE.png" onerror="this.src='https://upload.wikimedia.org/wikipedia/th/thumb/6/6d/Ministry_of_Public_Health_logo.svg/120px-Ministry_of_Public_Health_logo.svg.png'" height="34" alt="Logo" style="border-radius: 8px;">
                 <h5 class="sidebar-text text-theme ms-2 mb-0" style="font-size: 0.95rem;">ระบบเฝ้าระวังสภาวะฟันตกกระ<br><span style="font-weight: 400; font-size:0.8rem; color:var(--text-muted);">และระดับฟลูออไรด์ในน้ำ</span></h5>
             </div>
             
@@ -465,7 +466,7 @@
                                     <p class="text-muted small mb-0">แบบฟอร์มเปล่าสำหรับพิมพ์นำไปกรอกข้อมูลลงพื้นที่ประเมินเบื้องต้น (.docx)</p>
                                 </div>
                                 <div class="mt-4">
-                                    <a href="/static/downloads/แบบสอบสวนโรคฟันตกกระ.docx" class="btn btn-primary-modern w-100 justify-content-center" download>
+                                    <a href="{{ BASE_URL }}/static/downloads/แบบสอบสวนโรคฟันตกกระ.docx" class="btn btn-primary-modern w-100 justify-content-center" download>
                                         <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม (.docx)
                                     </a>
                                 </div>
@@ -483,7 +484,7 @@
                                     <p class="text-muted small mb-0">เอกสารคู่มือแนะนำระเบียบปฏิบัติปฏิบัติการและแนวทางการดำเนินงานสอบสวนโรค (.pdf)</p>
                                 </div>
                                 <div class="mt-4">
-                                    <a href="/static/downloads/แนวทางการสอบสวนโรคฟันตกกระ.pdf" class="btn btn-outline-modern w-100 justify-content-center" target="_blank" download>
+                                    <a href="{{ BASE_URL }}/static/downloads/แนวทางการสอบสวนโรคฟันตกกระ.pdf" class="btn btn-outline-modern w-100 justify-content-center" target="_blank" download>
                                         <i class="fas fa-file-pdf me-2"></i>ดาวน์โหลดคู่มือแนวทาง (.pdf)
                                     </a>
                                 </div>
@@ -541,7 +542,7 @@
                     <!-- Left Blue Pane -->
                     <div class="col-md-5 d-none d-md-flex flex-column justify-content-center align-items-center text-white" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); padding: 40px; position: relative;">
                         <div style="position: absolute; top: 20px; left: 20px;">
-                            <img src="/static/img/logo.png" alt="Logo" style="height: 40px;" onerror="this.style.display='none'">
+                            <img src="{{ BASE_URL }}/static/img/logo.png" alt="Logo" style="height: 40px;" onerror="this.style.display='none'">
                         </div>
                         <h2 class="fw-bold mb-3 text-center" style="font-size: 2rem; letter-spacing: 2px; text-transform: uppercase;">Welcome<br>To<br>Fluoride<br>Surveillance</h2>
                         <div style="width: 50px; height: 3px; background: #0ea5e9; margin: 20px 0;"></div>
@@ -917,7 +918,7 @@
         </div>
     </div>
 
-    <script src="/static/js/dashboard.js?v=3.8"></script>
+    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.9"></script>
 
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -927,7 +928,7 @@
                     <!-- Left Blue Pane -->
                     <div class="col-md-5 d-none d-md-flex flex-column justify-content-center align-items-center text-white" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); padding: 40px; position: relative;">
                         <div style="position: absolute; top: 20px; left: 20px;">
-                            <img src="/static/img/logo.png" alt="Logo" style="height: 40px;" onerror="this.style.display='none'">
+                            <img src="{{ BASE_URL }}/static/img/logo.png" alt="Logo" style="height: 40px;" onerror="this.style.display='none'">
                         </div>
                         <h2 class="fw-bold mb-3 text-center" style="font-size: 2rem; letter-spacing: 2px; text-transform: uppercase;">Join<br>Fluoride<br>Surveillance</h2>
                         <div style="width: 50px; height: 3px; background: #0ea5e9; margin: 20px 0;"></div>
