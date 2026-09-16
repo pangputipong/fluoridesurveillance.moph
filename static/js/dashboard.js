@@ -724,7 +724,7 @@ $(document).ready(function() {
             dtConfig.serverSide = true;
             dtConfig.processing = true;
             dtConfig.ajax = {
-                url: '/api/table_data',
+                url: BASE_URL + '/api/table_data',
                 type: 'POST',
                 contentType: 'application/json',
                 data: function(d) {
