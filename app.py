@@ -1291,7 +1291,7 @@ def upload_data():
                     wt = str(row_dict['water_type']).strip()
                     if any(k in wt for k in ['ภูเขา', 'บาดาล', 'บ่อ', 'แม่น้ำ', 'น้ำฝน', 'ดิบ']):
                         row_dict['water_category'] = 'แหล่งน้ำดิบ'
-                    elif any(k in wt for k in ['ถัง', 'ขวด', 'หยอดเหรียญ', 'โรงเรียน', 'บริโภค']):
+                    elif any(k in wt for k in ['ถัง', 'ขวด', 'หยอดเหรียญ', 'โรงเรียน', 'บริโภค', 'กรอง']):
                         row_dict['water_category'] = 'แหล่งน้ำบริโภค'
                     elif any(k in wt for k in ['ประปาตำบล', 'ส่วนภูมิภาค', 'นครหลวง', 'ประปา']):
                         row_dict['water_category'] = 'แหล่งน้ำประปา'
