@@ -2167,7 +2167,17 @@ def admin_data_list():
             params['offset'] = start
             res = conn.execute(text(sql), params).fetchall()
             
-            data = [dict(r._mapping) for r in res]
+            
+            data = []
+            for r in res:
+                row_dict = dict(r._mapping)
+                for k, v in row_dict.items():
+                    if hasattr(v, 'isoformat'):  # dates/datetimes
+                        row_dict[k] = v.isoformat()
+                    elif hasattr(v, 'normalize'): # decimals
+                        row_dict[k] = float(v)
+                data.append(row_dict)
+
             
         return jsonify({
             'draw': draw,
