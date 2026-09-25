@@ -154,9 +154,9 @@
             if (dataTable) {
                 dataTable.destroy();
             }
-            #dataTable.empty().html('<thead><tr></tr></thead><tbody></tbody>');
+            $('#dataTable').empty().html('<thead><tr></tr></thead><tbody></tbody>');
             
-            dataTable = #dataTable.DataTable({
+            dataTable = $('#dataTable').DataTable({
                 serverSide: true,
                 processing: true,
                 ajax: {
