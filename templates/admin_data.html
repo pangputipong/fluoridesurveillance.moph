@@ -150,11 +150,11 @@
             ]
         };
 
-        function loadTable() {
+                function loadTable() {
             if (dataTable) {
                 dataTable.destroy();
+                $('#dataTable').empty();
             }
-            $('#dataTable').empty().html('<thead><tr></tr></thead><tbody></tbody>');
             
             dataTable = $('#dataTable').DataTable({
                 serverSide: true,
