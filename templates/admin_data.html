@@ -91,7 +91,7 @@
     <script>
         const BASE_URL = "{{ BASE_URL }}";
         
-        const token = localStorage.getItem('admin_token');
+        const token = sessionStorage.getItem('adminToken');
         if (!token) {
             window.location.href = BASE_URL + '/dashboard';
         }
