@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูล - Fluoride Surveillance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="icon" type="image/png" href="{{ BASE_URL }}/static/ICON_FLUORIDE.png">
+    <link rel="stylesheet" href="{{ BASE_URL }}/static/css/styles.css">
+    <style>
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ BASE_URL }}/dashboard">
+                <img src="{{ BASE_URL }}/static/ICON_FLUORIDE.png" alt="Logo" width="30" height="30" class="me-2 bg-white rounded-circle p-1">
+                <span class="d-none d-sm-inline fw-bold">Fluoride Surveillance Admin</span>
+            </a>
+            <div class="d-flex align-items-center">
+                <a href="{{ BASE_URL }}/admin/dashboard" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-arrow-left me-1"></i> กลับหน้า Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary"><i class="fas fa-database me-2"></i> จัดการข้อมูล (Data Management)</h5>
+                        <div>
+                            <select id="tableSelector" class="form-select form-select-sm d-inline-block w-auto">
+                                <option value="water">ข้อมูลแหล่งน้ำ (Water Records)</option>
+                                <option value="dental">ข้อมูลสภาวะฟัน (Dental Records)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="dataTable" class="table table-striped table-hover w-100">
+                                <thead>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i> แก้ไขข้อมูล</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="edit_id" name="id">
+                        <div class="row" id="editFields">
+                            <!-- Dynamic fields injected here -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn">บันทึกการแก้ไข</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const BASE_URL = "{{ BASE_URL }}";
+        let currentTable = 'water';
+        let dataTable;
+
+        const columns = {
+            'water': [
+                { data: 'id', title: 'ID' },
+                { data: 'location_name', title: 'สถานที่' },
+                { data: 'water_type', title: 'ชนิดน้ำ' },
+                { data: 'fluoride_level', title: 'ฟลูออไรด์ (ppm)' },
+                { data: 'check_date', title: 'วันที่' },
+                { data: 'province', title: 'จังหวัด' },
+                { data: 'latitude', title: 'Lat' },
+                { data: 'longitude', title: 'Lng' },
+                { 
+                    data: null, title: 'จัดการ', orderable: false,
+                    render: function(data, type, row) {
+                        return '<button class="btn btn-sm btn-warning edit-btn me-1" data-id="' + row.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger delete-btn" data-id="' + row.id + '"><i class="fas fa-trash"></i></button>';
+                    }
+                }
+            ],
+            'dental': [
+                { data: 'id', title: 'ID' },
+                { data: 'hosp_name', title: 'โรงเรียน' },
+                { data: 'total_kids', title: 'เด็กทั้งหมด' },
+                { data: 'screened_kids', title: 'ตรวจแล้ว' },
+                { data: 'fluorosis_cases', title: 'ฟันตกกระ' },
+                { data: 'fiscal_year', title: 'ปีงบ' },
+                { data: 'province', title: 'จังหวัด' },
+                { 
+                    data: null, title: 'จัดการ', orderable: false,
+                    render: function(data, type, row) {
+                        return '<button class="btn btn-sm btn-warning edit-btn me-1" data-id="' + row.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger delete-btn" data-id="' + row.id + '"><i class="fas fa-trash"></i></button>';
+                    }
+                }
+            ]
+        };
+
+        const editFields = {
+            'water': [
+                { name: 'location_name', label: 'สถานที่เก็บ', type: 'text' },
+                { name: 'water_type', label: 'ชนิดน้ำ', type: 'text' },
+                { name: 'fluoride_level', label: 'ปริมาณฟลูออไรด์', type: 'number', step: '0.01' },
+                { name: 'check_date', label: 'วันที่ตรวจ (YYYY-MM-DD)', type: 'text' },
+                { name: 'latitude', label: 'ละติจูด (Latitude)', type: 'number', step: 'any' },
+                { name: 'longitude', label: 'ลองจิจูด (Longitude)', type: 'number', step: 'any' }
+            ],
+            'dental': [
+                { name: 'hosp_name', label: 'ชื่อโรงเรียน', type: 'text' },
+                { name: 'total_kids', label: 'จำนวนเด็กทั้งหมด', type: 'number' },
+                { name: 'screened_kids', label: 'จำนวนเด็กที่ตรวจ', type: 'number' },
+                { name: 'fluorosis_cases', label: 'เด็กที่มีฟันตกกระ', type: 'number' },
+                { name: 'fiscal_year', label: 'ปีงบประมาณ (พ.ศ.)', type: 'text' },
+                { name: 'latitude', label: 'ละติจูด (Latitude)', type: 'number', step: 'any' },
+                { name: 'longitude', label: 'ลองจิจูด (Longitude)', type: 'number', step: 'any' }
+            ]
+        };
+
+        function loadTable() {
+            if (dataTable) {
+                dataTable.destroy();
+                $('#dataTable').empty();
+            }
+            
+            dataTable = $('#dataTable').DataTable({
+                serverSide: true,
+                processing: true,
+                ajax: {
+                    url: BASE_URL + '/api/admin/data_list',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: function(d) {
+                        d.table_type = currentTable;
+                        return JSON.stringify(d);
+                    }
+                },
+                columns: columns[currentTable],
+                responsive: true,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/th.json"
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            loadTable();
+
+            $('#tableSelector').change(function() {
+                currentTable = $(this).val();
+                loadTable();
+            });
+
+            $('#dataTable').on('click', '.delete-btn', function() {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'ยืนยันการลบ?',
+                    text: "ข้อมูลนี้จะถูกลบทิ้งถาวร!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'ลบเลย',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post(BASE_URL + '/api/admin/data_delete', { table_type: currentTable, id: id }, function(res) {
+                            if(res.success) {
+                                Swal.fire('ลบแล้ว!', '', 'success');
+                                dataTable.ajax.reload();
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            $('#dataTable').on('click', '.edit-btn', function() {
+                let id = $(this).data('id');
+                let rowData = dataTable.row($(this).parents('tr')).data();
+                
+                $('#edit_id').val(id);
+                let html = '';
+                editFields[currentTable].forEach(f => {
+                    let val = rowData[f.name] !== null ? rowData[f.name] : '';
+                    html += '<div class="col-md-6 mb-3"><label class="form-label">' + f.label + '</label><input type="' + f.type + '" class="form-control" name="' + f.name + '" value="' + val + '" ' + (f.step ? 'step="'+f.step+'"' : '') + '></div>';
+                });
+                $('#editFields').html(html);
+                new bootstrap.Modal(document.getElementById('editModal')).show();
+            });
+
+            $('#saveBtn').click(function() {
+                let formData = $('#editForm').serializeArray();
+                let data = { table_type: currentTable };
+                formData.forEach(item => { data[item.name] = item.value; });
+                
+                $.ajax({
+                    url: BASE_URL + '/api/admin/data_update',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(res) {
+                        if(res.success) {
+                            $('#editModal').modal('hide');
+                            Swal.fire('บันทึกสำเร็จ!', '', 'success');
+                            dataTable.ajax.reload();
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

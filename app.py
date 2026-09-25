@@ -1233,8 +1233,30 @@ def upload_data():
         for r in required:
             if r not in df.columns: return jsonify({'success': False, 'message': f'ขาดคอลัมน์สำคัญ: {r} หรือคุณยังใช้ฟอร์มเวอร์ชันเก่า'})
         
+        def parse_thai_date(date_str):
+            import re
+            if pd.isna(date_str) or str(date_str).strip() == '':
+                return None
+            date_str = str(date_str).strip()
+            if re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+                return date_str
+            match = re.search(r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})', date_str)
+            if match:
+                d, m, y = match.groups()
+                y = int(y)
+                if y > 2500:
+                    y -= 543
+                return f"{y:04d}-{int(m):02d}-{int(d):02d}"
+            try:
+                parsed = pd.to_datetime(date_str, dayfirst=True)
+                if parsed.year > 2500:
+                    parsed = parsed.replace(year=parsed.year - 543)
+                return parsed.strftime('%Y-%m-%d')
+            except:
+                return None
+
         if 'check_date' in df.columns:
-            df['check_date'] = pd.to_datetime(df['check_date'], errors='coerce').dt.strftime('%Y-%m-%d')
+            df['check_date'] = df['check_date'].apply(parse_thai_date)
         if 'fiscal_year' in df.columns:
             df['fiscal_year'] = df['fiscal_year'].astype(str)
 
@@ -2101,6 +2123,112 @@ def debug_load3():
         return jsonify([dict(r._mapping) for r in res])
     except Exception as e:
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()})
+
+
+@app.route('/admin/data')
+@login_required
+def admin_data():
+    return render_template('admin_data.html')
+
+@app.route('/api/admin/data_list', methods=['POST'])
+@login_required
+def admin_data_list():
+    try:
+        req = request.get_json()
+        table_type = req.get('table_type', 'water')
+        draw = req.get('draw', 1)
+        start = int(req.get('start', 0))
+        length = int(req.get('length', 10))
+        search_val = req.get('search', {}).get('value', '')
+        
+        table_name = 'water_records' if table_type == 'water' else 'dental_records'
+        
+        # Build query
+        where_clause = ""
+        params = {}
+        if search_val:
+            if table_type == 'water':
+                where_clause = "WHERE location_name LIKE :search OR province LIKE :search OR check_date LIKE :search"
+            else:
+                where_clause = "WHERE hosp_name LIKE :search OR province LIKE :search OR fiscal_year LIKE :search"
+            params['search'] = f"%{search_val}%"
+            
+        with engine.connect() as conn:
+            # Total count
+            total_sql = f"SELECT COUNT(*) FROM {table_name}"
+            total_records = conn.execute(text(total_sql)).scalar()
+            
+            # Filtered count
+            filtered_sql = f"SELECT COUNT(*) FROM {table_name} {where_clause}"
+            filtered_records = conn.execute(text(filtered_sql), params).scalar()
+            
+            # Data
+            sql = f"SELECT * FROM {table_name} {where_clause} ORDER BY id DESC LIMIT :limit OFFSET :offset"
+            params['limit'] = length
+            params['offset'] = start
+            res = conn.execute(text(sql), params).fetchall()
+            
+            data = [dict(r._mapping) for r in res]
+            
+        return jsonify({
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': filtered_records,
+            'data': data
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/api/admin/data_update', methods=['POST'])
+@login_required
+def admin_data_update():
+    try:
+        data = request.get_json()
+        table_type = data.get('table_type')
+        record_id = data.get('id')
+        if not table_type or not record_id:
+            return jsonify({'success': False, 'message': 'Missing table_type or id'})
+            
+        table_name = 'water_records' if table_type == 'water' else 'dental_records'
+        
+        # Build update query
+        update_fields = []
+        params = {'id': record_id}
+        for k, v in data.items():
+            if k not in ['table_type', 'id']:
+                update_fields.append(f"{k} = :{k}")
+                # handle empty strings as null for numbers
+                if k in ['latitude', 'longitude', 'fluoride_level', 'total_kids', 'screened_kids', 'fluorosis_cases']:
+                    if v == '': v = 0
+                params[k] = v
+                
+        if not update_fields:
+            return jsonify({'success': True})
+            
+        sql = f"UPDATE {table_name} SET {', '.join(update_fields)} WHERE id = :id"
+        
+        with engine.begin() as conn:
+            conn.execute(text(sql), params)
+            
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/data_delete', methods=['POST'])
+@login_required
+def admin_data_delete():
+    try:
+        table_type = request.form.get('table_type')
+        record_id = request.form.get('id')
+        table_name = 'water_records' if table_type == 'water' else 'dental_records'
+        
+        with engine.begin() as conn:
+            conn.execute(text(f"DELETE FROM {table_name} WHERE id = :id"), {'id': record_id})
+            
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 
 if __name__ == '__main__':
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
