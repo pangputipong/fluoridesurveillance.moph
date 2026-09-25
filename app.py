@@ -2126,12 +2126,12 @@ def debug_load3():
 
 
 @app.route('/admin/data')
-@login_required
+@require_admin
 def admin_data():
     return render_template('admin_data.html')
 
 @app.route('/api/admin/data_list', methods=['POST'])
-@login_required
+@require_admin
 def admin_data_list():
     try:
         req = request.get_json()
@@ -2180,7 +2180,7 @@ def admin_data_list():
         return jsonify({'error': str(e)})
 
 @app.route('/api/admin/data_update', methods=['POST'])
-@login_required
+@require_admin
 def admin_data_update():
     try:
         data = request.get_json()
@@ -2215,7 +2215,7 @@ def admin_data_update():
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/admin/data_delete', methods=['POST'])
-@login_required
+@require_admin
 def admin_data_delete():
     try:
         table_type = request.form.get('table_type')
