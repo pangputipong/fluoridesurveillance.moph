@@ -90,6 +90,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const BASE_URL = "{{ BASE_URL }}";
+        
+        const token = localStorage.getItem('admin_token');
+        if (!token) {
+            window.location.href = BASE_URL + '/dashboard';
+        }
+
         let currentTable = 'water';
         let dataTable;
 
@@ -160,6 +166,8 @@
                     url: BASE_URL + '/api/admin/data_list',
                     type: 'POST',
                     contentType: 'application/json',
+                    headers: { 'Authorization': token },
+
                     data: function(d) {
                         d.table_type = currentTable;
                         return JSON.stringify(d);
@@ -192,7 +200,12 @@
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.post(BASE_URL + '/api/admin/data_delete', { table_type: currentTable, id: id }, function(res) {
+                        $.ajax({
+                            url: BASE_URL + '/api/admin/data_delete',
+                            type: 'POST',
+                            headers: { 'Authorization': token },
+                            data: { table_type: currentTable, id: id },
+                            success: function(res) {
                             if(res.success) {
                                 Swal.fire('ลบแล้ว!', '', 'success');
                                 dataTable.ajax.reload();
@@ -227,6 +240,7 @@
                     url: BASE_URL + '/api/admin/data_update',
                     type: 'POST',
                     contentType: 'application/json',
+                    headers: { 'Authorization': token },
                     data: JSON.stringify(data),
                     success: function(res) {
                         if(res.success) {

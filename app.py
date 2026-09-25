@@ -2126,7 +2126,6 @@ def debug_load3():
 
 
 @app.route('/admin/data')
-@require_admin
 def admin_data():
     return render_template('admin_data.html')
 
