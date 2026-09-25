@@ -302,15 +302,15 @@
         </div>
         
         <div class="nav-links d-none d-md-flex">
-            <a href="/" class="active"><i class="fas fa-home me-2"></i>หน้าหลัก (Home)</a>
-            <a href="/knowledge"><i class="fas fa-book-medical me-2"></i>ข้อมูลความรู้</a>
-            <a href="/community"><i class="fas fa-globe-asia me-2"></i>เครือข่ายชุมชน</a>
+            <a href="{{ BASE_URL }}/" class="active"><i class="fas fa-home me-2"></i>หน้าหลัก (Home)</a>
+            <a href="{{ BASE_URL }}/knowledge"><i class="fas fa-book-medical me-2"></i>ข้อมูลความรู้</a>
+            <a href="{{ BASE_URL }}/community"><i class="fas fa-globe-asia me-2"></i>เครือข่ายชุมชน</a>
         </div>
         
         <div class="nav-actions">
             <div class="d-flex align-items-center gap-3">
 
-                <a href="/dashboard" class="btn-dashboard">
+                <a href="{{ BASE_URL }}/dashboard" class="btn-dashboard">
                     เข้าสู่ระบบ Dashboard <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
@@ -627,7 +627,7 @@
                                 <span class="badge" style="background: rgba(255,255,255,0.15);">อ.ดอยสะเก็ด</span>
                             </div>
                             <!-- Arrow Button -->
-                            <a href="/dashboard" style="position: absolute; bottom: 20px; right: 20px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.2); color:white; display:flex; align-items:center; justify-content:center; text-decoration:none; transition: background 0.3s;">
+                            <a href="{{ BASE_URL }}/dashboard" style="position: absolute; bottom: 20px; right: 20px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.2); color:white; display:flex; align-items:center; justify-content:center; text-decoration:none; transition: background 0.3s;">
                                 <i class="fas fa-arrow-right"></i>
                             </a>
                         </div>
