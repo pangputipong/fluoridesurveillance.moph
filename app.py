@@ -1,3 +1,11 @@
+import sys
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
 from flask import Flask, render_template, request, jsonify, send_file
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -77,7 +85,7 @@ def log_audit(username, action, target, details=None):
         with engine.begin() as conn:
             conn.execute(text("INSERT INTO `audit_logs` (`username`, `action`, `target`, `details`, `ip_address`) VALUES (:u, :a, :t, :d, :ip)"), {"u": username, "a": action, "t": target, "d": details, "ip": ip})
     except Exception as e:
-        print(f"❌ ROPA Log Error: {e}")
+        print(f" ROPA Log Error: {e}")
 
 def log_visit(page_name, action_type):
     try:
@@ -85,7 +93,7 @@ def log_visit(page_name, action_type):
         with engine.begin() as conn:
             conn.execute(text("INSERT INTO `user_visits` (`page_name`, `action_type`, `ip_address`) VALUES (:p, :a, :ip)"), {"p": page_name, "a": action_type, "ip": ip})
     except Exception as e:
-        print(f"❌ Visit Log Error: {e}")
+        print(f" Visit Log Error: {e}")
 
 API_TO_DB_REF_MAP = {
     'hospcode': 'รหัสหน่วยบริการ', 'check_date': 'วันที่ตรวจ', 'region': 'ภาค', 'health_zone': 'เขตสุขภาพ',
@@ -152,7 +160,7 @@ DB_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}
 engine = create_engine(DB_URI)
 
 def init_database_tables():
-    print("⚙️ กำลังตรวจสอบตารางและตั้งค่าระบบ (อัปเกรด Blueprint ล่าสุด)...")
+    print("️ กำลังตรวจสอบตารางและตั้งค่าระบบ (อัปเกรด Blueprint ล่าสุด)...")
     try:
         with engine.begin() as conn:
             # Create admin_users table
@@ -413,7 +421,7 @@ def init_database_tables():
             ]:
                 try: conn.execute(text(idx_sql))
                 except Exception: pass
-    except Exception as e: print(f"❌ Error: {e}")
+    except Exception as e: print(f" Error: {e}")
 
 def seed_health_facilities_master():
     try:
@@ -425,10 +433,10 @@ def seed_health_facilities_master():
             
         path = "health_office.xlsx"
         if not os.path.exists(path):
-            print("⚠️ ไม่พบไฟล์ health_office.xlsx ที่ระบบ งดการ Seeding")
+            print("️ ไม่พบไฟล์ health_office.xlsx ที่ระบบ งดการ Seeding")
             return
             
-        print("📥 กำลังนำเข้าทะเบียนหน่วยบริการกลาง 44,181 รายการจาก health_office.xlsx (กรุณารอสักครู่)...")
+        print(" กำลังนำเข้าทะเบียนหน่วยบริการกลาง 44,181 รายการจาก health_office.xlsx (กรุณารอสักครู่)...")
         df = pd.read_excel(path)
         
         df.rename(columns={
@@ -465,7 +473,7 @@ def seed_health_facilities_master():
         df = df.drop_duplicates(subset=['hospcode'])
         
         df.to_sql('health_facilities_master', con=engine, if_exists='append', index=False, chunksize=1000)
-        print(f"✅ นำเข้าทะเบียนหน่วยบริการกลางสำเร็จ! จำนวน {len(df)} แห่ง")
+        print(f" นำเข้าทะเบียนหน่วยบริการกลางสำเร็จ! จำนวน {len(df)} แห่ง")
         
         if len(df) == 0:
             print("ℹ️ ทะเบียนหน่วยบริการกลางในไฟล์ health_office.xlsx ไม่มีรหัส 5 หลัก ระบบจะนำเข้ารายการหน่วยบริการอ้างอิงจำลองเพื่อให้นำเข้าข้อมูลตรวจได้")
@@ -587,9 +595,9 @@ def seed_health_facilities_master():
             ]
             df_mock = pd.DataFrame(mock_locs)
             df_mock.to_sql('health_facilities_master', con=engine, if_exists='append', index=False)
-            print(f"✅ นำเข้ารายการจำลอง {len(df_mock)} แห่งเพื่อใช้เป็นหน่วยบริการอ้างอิงเสร็จสิ้น!")
+            print(f" นำเข้ารายการจำลอง {len(df_mock)} แห่งเพื่อใช้เป็นหน่วยบริการอ้างอิงเสร็จสิ้น!")
     except Exception as e:
-        print(f"❌ Error seeding health facilities master: {e}")
+        print(f" Error seeding health facilities master: {e}")
 
 # Mapping หัวตารางภาษาไทย สำหรับ Excel Upsert
 COLUMN_MAP_REV = {
@@ -651,7 +659,7 @@ def get_district_centroids():
                 if (prov, dist) not in centroids:
                     centroids[(prov, dist)] = (float(r[2]), float(r[3]))
     except Exception as e:
-        print(f"⚠️ Error building centroid lookup: {e}")
+        print(f"️ Error building centroid lookup: {e}")
         
     province_centroids = {}
     for (prov, dist), (lat, lng) in centroids.items():
@@ -755,7 +763,7 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                     lngs.append(lng)
                 df_w['ละติจูด'] = lats
                 df_w['ลองจิจูด'] = lngs
-        except Exception as e: print(f"⚠️ Water DB Error: {e}")
+        except Exception as e: print(f"️ Water DB Error: {e}")
 
     if load_dental:
         try:
@@ -812,7 +820,7 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                     lngs.append(lng)
                 df_d['ละติจูด'] = lats
                 df_d['ลองจิจูด'] = lngs
-        except Exception as e: print(f"⚠️ Dental DB Error: {e}")
+        except Exception as e: print(f"️ Dental DB Error: {e}")
         
     return df_w, df_d
 
@@ -1427,7 +1435,7 @@ def get_table_data():
                 if res:
                     schema_keys = json.loads(res[0]) if isinstance(res[0], str) else res[0]
         except Exception as e:
-            print(f"⚠️ Error loading schema for table_data: {e}")
+            print(f"️ Error loading schema for table_data: {e}")
             
     sql_base = f"SELECT * FROM {table} WHERE 1=1"
     params = {}
@@ -1615,7 +1623,7 @@ def get_table_data():
                 'data': processed_data
             })
     except Exception as e:
-        print(f"❌ Server-side table data error: {e}")
+        print(f" Server-side table data error: {e}")
         return jsonify({
             'draw': draw,
             'recordsTotal': 0,
@@ -1999,7 +2007,7 @@ def predict_risk():
             'dropdowns': dropdowns
         })
     except Exception as e:
-        print(f"❌ AI Prediction error: {e}")
+        print(f" AI Prediction error: {e}")
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/investigation/submit', methods=['POST'])
