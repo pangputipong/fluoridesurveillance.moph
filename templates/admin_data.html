@@ -3,17 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการข้อมูล - Fluoride Surveillance</title>
+    <title>จัดการข้อมูลตาราง - Fluoride Surveillance</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="icon" type="image/png" href="{{ BASE_URL }}/static/ICON_FLUORIDE.png">
     <link rel="stylesheet" href="{{ BASE_URL }}/static/css/styles.css">
     <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
         .dataTables_wrapper .dataTables_paginate .paginate_button {
             padding: 0 !important;
             margin: 0 !important;
             border: none !important;
+        }
+        .card-header-gradient {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+        }
+        .table thead th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
         }
     </style>
 </head>
@@ -22,32 +45,77 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{{ BASE_URL }}/dashboard">
-                <img src="{{ BASE_URL }}/static/ICON_FLUORIDE.png" alt="Logo" width="30" height="30" class="me-2 bg-white rounded-circle p-1">
-                <span class="d-none d-sm-inline fw-bold">Fluoride Surveillance Admin</span>
+                <img src="{{ BASE_URL }}/static/ICON_FLUORIDE.png" alt="Logo" width="32" height="32" class="me-2 bg-white rounded-circle p-1">
+                <span class="fw-bold">Fluoride Surveillance Admin</span>
             </a>
-            <div class="d-flex align-items-center">
-                <a href="{{ BASE_URL }}/admin/dashboard" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-arrow-left me-1"></i> กลับหน้า Admin</a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ BASE_URL }}/dashboard" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> กลับหน้าหลักแดชบอร์ด
+                </a>
+                <button id="btnLogout" class="btn btn-danger btn-sm" style="display: none;">
+                    <i class="fas fa-sign-out-alt me-1"></i> ออกจากระบบ
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid py-4">
-        <div class="row mb-4">
+    <div class="container-fluid py-4 px-md-4">
+        <!-- Login Card (Shown when not logged in) -->
+        <div id="loginCard" class="row justify-content-center py-5" style="display: none;">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card shadow border-0 rounded-4">
+                    <div class="card-body p-4 p-md-5 text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-user-shield fa-3x text-primary"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-2">เข้าสู่ระบบจัดการข้อมูล</h4>
+                        <p class="text-muted small mb-4">กรุณาเข้าสู่ระบบด้วยบัญชีแอดมินเพื่อดูและแก้ไขตารางข้อมูล</p>
+                        
+                        <div id="loginAlert" class="alert alert-danger py-2 small" style="display: none;"></div>
+
+                        <form id="adminLoginForm">
+                            <div class="mb-3 text-start">
+                                <label class="form-label small fw-semibold text-secondary">ชื่อผู้ใช้งาน</label>
+                                <input type="text" id="loginUsername" class="form-control" placeholder="ชื่อผู้ใช้" value="admin" required>
+                            </div>
+                            <div class="mb-4 text-start">
+                                <label class="form-label small fw-semibold text-secondary">รหัสผ่าน</label>
+                                <input type="password" id="loginPassword" class="form-control" placeholder="รหัสผ่าน" required autofocus>
+                            </div>
+                            <button type="submit" id="btnLoginSubmit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="fas fa-sign-in-alt me-1"></i> เข้าสู่ระบบ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Data Card (Shown when logged in) -->
+        <div id="mainCard" class="row" style="display: none;">
             <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-primary"><i class="fas fa-database me-2"></i> จัดการข้อมูล (Data Management)</h5>
-                        <div>
-                            <select id="tableSelector" class="form-select form-select-sm d-inline-block w-auto">
-                                <option value="water">ข้อมูลแหล่งน้ำ (Water Records)</option>
-                                <option value="dental">ข้อมูลสภาวะฟัน (Dental Records)</option>
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-table text-primary fs-5"></i>
+                            <h5 class="mb-0 fw-bold text-dark">จัดการข้อมูลตาราง (Data Management)</h5>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0 fw-semibold text-secondary small">เลือกชุดข้อมูล:</label>
+                            <select id="tableSelector" class="form-select form-select-sm" style="min-width: 220px;">
+                                <option value="water">💧 ข้อมูลแหล่งน้ำ (Water Records)</option>
+                                <option value="dental">🦷 ข้อมูลสภาวะฟัน (Dental Records)</option>
                             </select>
+                            <button id="btnReload" class="btn btn-sm btn-outline-secondary" title="โหลดข้อมูลใหม่">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-3">
                         <div class="table-responsive">
-                            <table id="dataTable" class="table table-striped table-hover w-100">
-                                
+                            <table id="dataTable" class="table table-striped table-hover align-middle w-100">
+                                <thead><tr></tr></thead>
+                                <tbody></tbody>
                             </table>
                         </div>
                     </div>
@@ -59,22 +127,24 @@
     <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i> แก้ไขข้อมูล</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <form id="editForm">
                         <input type="hidden" id="edit_id" name="id">
-                        <div class="row" id="editFields">
-                            <!-- Dynamic fields injected here -->
+                        <div class="row g-3" id="editFields">
+                            <!-- Injected dynamically -->
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="button" class="btn btn-primary" id="saveBtn">บันทึกการแก้ไข</button>
+                    <button type="button" class="btn btn-primary px-4" id="saveBtn">
+                        <i class="fas fa-save me-1"></i> บันทึกการแก้ไข
+                    </button>
                 </div>
             </div>
         </div>
@@ -88,44 +158,58 @@
     <script>
         const BASE_URL = "{{ BASE_URL }}";
         
-        const token = sessionStorage.getItem('adminToken');
-        if (!token) {
-            window.location.href = BASE_URL + '/dashboard';
-        }
-
+        let token = sessionStorage.getItem('adminToken') || localStorage.getItem('adminToken');
         let currentTable = 'water';
-        let dataTable;
+        let dataTable = null;
 
         const columns = {
             'water': [
                 { data: 'id', title: 'ID' },
-                { data: 'location_name', title: 'สถานที่' },
+                { data: 'location_name', title: 'สถานที่เก็บ' },
                 { data: 'water_type', title: 'ชนิดน้ำ' },
-                { data: 'water_category', title: 'กลุ่มน้ำ' },
+                { 
+                    data: 'water_category', 
+                    title: 'กลุ่มน้ำ',
+                    render: function(data) {
+                        if (!data || data === 'ไม่ระบุ') return '<span class="badge bg-secondary">ไม่ระบุ</span>';
+                        if (data === 'แหล่งน้ำบริโภค') return '<span class="badge bg-primary">น้ำบริโภค</span>';
+                        if (data === 'แหล่งน้ำประปา') return '<span class="badge bg-info text-dark">น้ำประปา</span>';
+                        if (data === 'แหล่งน้ำดิบ') return '<span class="badge bg-success">น้ำดิบ</span>';
+                        return '<span class="badge bg-secondary">' + data + '</span>';
+                    }
+                },
                 { data: 'fluoride_level', title: 'ฟลูออไรด์ (ppm)' },
-                { data: 'check_date', title: 'วันที่' },
+                { data: 'check_date', title: 'วันที่ตรวจ' },
                 { data: 'province', title: 'จังหวัด' },
+                { data: 'district', title: 'อำเภอ' },
                 { data: 'latitude', title: 'Lat' },
                 { data: 'longitude', title: 'Lng' },
                 { 
                     data: null, title: 'จัดการ', orderable: false,
                     render: function(data, type, row) {
-                        return '<button class="btn btn-sm btn-warning edit-btn me-1" data-id="' + row.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger delete-btn" data-id="' + row.id + '"><i class="fas fa-trash"></i></button>';
+                        return '<div class="d-flex gap-1">' +
+                               '<button class="btn btn-sm btn-outline-warning btn-action edit-btn" data-id="' + row.id + '" title="แก้ไข"><i class="fas fa-edit"></i></button>' +
+                               '<button class="btn btn-sm btn-outline-danger btn-action delete-btn" data-id="' + row.id + '" title="ลบ"><i class="fas fa-trash"></i></button>' +
+                               '</div>';
                     }
                 }
             ],
             'dental': [
                 { data: 'id', title: 'ID' },
-                { data: 'hosp_name', title: 'โรงเรียน' },
+                { data: 'hosp_name', title: 'โรงเรียน / หน่วยบริการ' },
                 { data: 'total_kids', title: 'เด็กทั้งหมด' },
                 { data: 'screened_kids', title: 'ตรวจแล้ว' },
                 { data: 'fluorosis_cases', title: 'ฟันตกกระ' },
                 { data: 'fiscal_year', title: 'ปีงบ' },
                 { data: 'province', title: 'จังหวัด' },
+                { data: 'district', title: 'อำเภอ' },
                 { 
                     data: null, title: 'จัดการ', orderable: false,
                     render: function(data, type, row) {
-                        return '<button class="btn btn-sm btn-warning edit-btn me-1" data-id="' + row.id + '"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger delete-btn" data-id="' + row.id + '"><i class="fas fa-trash"></i></button>';
+                        return '<div class="d-flex gap-1">' +
+                               '<button class="btn btn-sm btn-outline-warning btn-action edit-btn" data-id="' + row.id + '" title="แก้ไข"><i class="fas fa-edit"></i></button>' +
+                               '<button class="btn btn-sm btn-outline-danger btn-action delete-btn" data-id="' + row.id + '" title="ลบ"><i class="fas fa-trash"></i></button>' +
+                               '</div>';
                     }
                 }
             ]
@@ -136,27 +220,47 @@
                 { name: 'location_name', label: 'สถานที่เก็บ', type: 'text' },
                 { name: 'water_type', label: 'ชนิดน้ำ', type: 'text' },
                 { name: 'water_category', label: 'กลุ่มแหล่งน้ำ', type: 'select', options: ['แหล่งน้ำบริโภค', 'แหล่งน้ำประปา', 'แหล่งน้ำดิบ', 'ไม่ระบุ'] },
-                { name: 'fluoride_level', label: 'ปริมาณฟลูออไรด์', type: 'number', step: '0.01' },
+                { name: 'fluoride_level', label: 'ปริมาณฟลูออไรด์ (mg/L)', type: 'number', step: '0.01' },
                 { name: 'check_date', label: 'วันที่ตรวจ (YYYY-MM-DD)', type: 'text' },
+                { name: 'subdistrict', label: 'ตำบล', type: 'text' },
+                { name: 'district', label: 'อำเภอ', type: 'text' },
+                { name: 'province', label: 'จังหวัด', type: 'text' },
                 { name: 'latitude', label: 'ละติจูด (Latitude)', type: 'number', step: 'any' },
                 { name: 'longitude', label: 'ลองจิจูด (Longitude)', type: 'number', step: 'any' }
             ],
             'dental': [
-                { name: 'hosp_name', label: 'ชื่อโรงเรียน', type: 'text' },
+                { name: 'hosp_name', label: 'ชื่อโรงเรียน / หน่วยบริการ', type: 'text' },
                 { name: 'total_kids', label: 'จำนวนเด็กทั้งหมด', type: 'number' },
                 { name: 'screened_kids', label: 'จำนวนเด็กที่ตรวจ', type: 'number' },
                 { name: 'fluorosis_cases', label: 'เด็กที่มีฟันตกกระ', type: 'number' },
                 { name: 'fiscal_year', label: 'ปีงบประมาณ (พ.ศ.)', type: 'text' },
+                { name: 'subdistrict', label: 'ตำบล', type: 'text' },
+                { name: 'district', label: 'อำเภอ', type: 'text' },
+                { name: 'province', label: 'จังหวัด', type: 'text' },
                 { name: 'latitude', label: 'ละติจูด (Latitude)', type: 'number', step: 'any' },
                 { name: 'longitude', label: 'ลองจิจูด (Longitude)', type: 'number', step: 'any' }
             ]
         };
 
-                function loadTable() {
+        function checkAuthAndInit() {
+            token = sessionStorage.getItem('adminToken') || localStorage.getItem('adminToken');
+            if (token) {
+                $('#loginCard').hide();
+                $('#mainCard').show();
+                $('#btnLogout').show();
+                loadTable();
+            } else {
+                $('#mainCard').hide();
+                $('#loginCard').show();
+                $('#btnLogout').hide();
+            }
+        }
+
+        function loadTable() {
             if (dataTable) {
                 dataTable.destroy();
-                $('#dataTable').empty();
             }
+            $('#dataTable').empty().html('<thead><tr></tr></thead><tbody></tbody>');
             
             dataTable = $('#dataTable').DataTable({
                 serverSide: true,
@@ -166,56 +270,136 @@
                     type: 'POST',
                     contentType: 'application/json',
                     headers: { 'Authorization': token },
-
                     data: function(d) {
                         d.table_type = currentTable;
                         return JSON.stringify(d);
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 401 || xhr.status === 403) {
+                            sessionStorage.removeItem('adminToken');
+                            localStorage.removeItem('adminToken');
+                            token = null;
+                            $('#mainCard').hide();
+                            $('#loginCard').show();
+                            $('#btnLogout').hide();
+                            $('#loginAlert').text('เซสชันแอดมินหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง').show();
+                        }
                     }
                 },
                 columns: columns[currentTable],
                 responsive: true,
                 language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/th.json"
+                    processing: '<div class="spinner-border spinner-border-sm text-primary me-2"></div>กำลังโหลดข้อมูล...',
+                    search: "ค้นหา:",
+                    lengthMenu: "แสดง _MENU_ รายการ",
+                    info: "แสดง _START_ ถึง _END_ จากทั้งหมด _TOTAL_ รายการ",
+                    infoEmpty: "ไม่มีข้อมูลในระบบ",
+                    infoFiltered: "(กรองจากทั้งหมด _MAX_ รายการ)",
+                    zeroRecords: "ไม่พบข้อมูลที่ค้นหา",
+                    paginate: {
+                        first: "หน้าแรก",
+                        previous: "ก่อนหน้า",
+                        next: "ถัดไป",
+                        last: "หน้าสุดท้าย"
+                    }
                 }
             });
         }
 
         $(document).ready(function() {
-            loadTable();
+            checkAuthAndInit();
 
+            // Handle Login Form Submit
+            $('#adminLoginForm').on('submit', function(e) {
+                e.preventDefault();
+                let username = $('#loginUsername').val().trim();
+                let password = $('#loginPassword').val();
+                
+                $('#btnLoginSubmit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> กำลังเข้าสู่ระบบ...');
+                $('#loginAlert').hide();
+
+                $.ajax({
+                    url: BASE_URL + '/api/login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username: username, password: password }),
+                    success: function(res) {
+                        $('#btnLoginSubmit').prop('disabled', false).html('<i class="fas fa-sign-in-alt me-1"></i> เข้าสู่ระบบ');
+                        if (res.success) {
+                            token = res.token;
+                            sessionStorage.setItem('adminToken', token);
+                            localStorage.setItem('adminToken', token);
+                            sessionStorage.setItem('userRole', res.role);
+                            localStorage.setItem('userRole', res.role);
+                            $('#loginPassword').val('');
+                            checkAuthAndInit();
+                        } else {
+                            $('#loginAlert').text(res.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง').show();
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#btnLoginSubmit').prop('disabled', false).html('<i class="fas fa-sign-in-alt me-1"></i> เข้าสู่ระบบ');
+                        $('#loginAlert').text('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (' + xhr.status + ')').show();
+                    }
+                });
+            });
+
+            // Handle Logout
+            $('#btnLogout').click(function() {
+                sessionStorage.removeItem('adminToken');
+                localStorage.removeItem('adminToken');
+                token = null;
+                checkAuthAndInit();
+            });
+
+            // Table switcher
             $('#tableSelector').change(function() {
                 currentTable = $(this).val();
                 loadTable();
             });
 
+            // Reload button
+            $('#btnReload').click(function() {
+                if (dataTable) dataTable.ajax.reload();
+            });
+
+            // Delete Record
             $('#dataTable').on('click', '.delete-btn', function() {
                 let id = $(this).data('id');
                 Swal.fire({
-                    title: 'ยืนยันการลบ?',
-                    text: "ข้อมูลนี้จะถูกลบทิ้งถาวร!",
+                    title: 'ยืนยันการลบข้อมูล?',
+                    text: "ข้อมูล ID " + id + " จะถูกลบทิ้งจากฐานข้อมูลอย่างถาวร!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'ลบเลย',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-trash me-1"></i> ลบข้อมูล',
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
                             url: BASE_URL + '/api/admin/data_delete',
                             type: 'POST',
+                            contentType: 'application/json',
                             headers: { 'Authorization': token },
-                            data: { table_type: currentTable, id: id },
+                            data: JSON.stringify({ table_type: currentTable, id: id }),
                             success: function(res) {
-                            if(res.success) {
-                                Swal.fire('ลบแล้ว!', '', 'success');
-                                dataTable.ajax.reload();
-                            } else {
-                                Swal.fire('Error', res.message, 'error');
+                                if (res.success) {
+                                    Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ', timer: 1500, showConfirmButton: false });
+                                    dataTable.ajax.reload(null, false);
+                                } else {
+                                    Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
                             }
-                        } });
+                        });
                     }
                 });
             });
 
+            // Edit Record Click
             $('#dataTable').on('click', '.edit-btn', function() {
                 let id = $(this).data('id');
                 let rowData = dataTable.row($(this).parents('tr')).data();
@@ -226,20 +410,24 @@
                     let val = (rowData[f.name] !== null && rowData[f.name] !== undefined) ? rowData[f.name] : '';
                     if (f.type === 'select') {
                         let opts = f.options.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
-                        html += '<div class="col-md-6 mb-3"><label class="form-label">' + f.label + '</label><select class="form-select" name="' + f.name + '">' + opts + '</select></div>';
+                        html += '<div class="col-md-6 mb-3"><label class="form-label small fw-semibold text-secondary">' + f.label + '</label><select class="form-select" name="' + f.name + '">' + opts + '</select></div>';
                     } else {
-                        html += '<div class="col-md-6 mb-3"><label class="form-label">' + f.label + '</label><input type="' + f.type + '" class="form-control" name="' + f.name + '" value="' + val + '" ' + (f.step ? 'step="'+f.step+'"' : '') + '></div>';
+                        html += '<div class="col-md-6 mb-3"><label class="form-label small fw-semibold text-secondary">' + f.label + '</label><input type="' + f.type + '" class="form-control" name="' + f.name + '" value="' + val + '" ' + (f.step ? 'step="'+f.step+'"' : '') + '></div>';
                     }
                 });
                 $('#editFields').html(html);
                 new bootstrap.Modal(document.getElementById('editModal')).show();
             });
 
+            // Save Edit Record
             $('#saveBtn').click(function() {
                 let formData = $('#editForm').serializeArray();
                 let data = { table_type: currentTable };
                 formData.forEach(item => { data[item.name] = item.value; });
                 
+                let btn = $(this);
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> กำลังบันทึก...');
+
                 $.ajax({
                     url: BASE_URL + '/api/admin/data_update',
                     type: 'POST',
@@ -247,13 +435,18 @@
                     headers: { 'Authorization': token },
                     data: JSON.stringify(data),
                     success: function(res) {
-                        if(res.success) {
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> บันทึกการแก้ไข');
+                        if (res.success) {
                             $('#editModal').modal('hide');
-                            Swal.fire('บันทึกสำเร็จ!', '', 'success');
-                            dataTable.ajax.reload();
+                            Swal.fire({ icon: 'success', title: 'บันทึกการแก้ไขเรียบร้อยแล้ว', timer: 1500, showConfirmButton: false });
+                            dataTable.ajax.reload(null, false);
                         } else {
-                            Swal.fire('Error', res.message, 'error');
+                            Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
                         }
+                    },
+                    error: function() {
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> บันทึกการแก้ไข');
+                        Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
                     }
                 });
             });

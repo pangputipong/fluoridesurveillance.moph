@@ -31,7 +31,10 @@ $(document).ready(function() {
     // ----------------------------------------------------
     // 2. Authentication Logic
     // ----------------------------------------------------
-    if(sessionStorage.getItem('adminToken')) {
+    let initialToken = sessionStorage.getItem('adminToken') || localStorage.getItem('adminToken');
+    if(initialToken) {
+        sessionStorage.setItem('adminToken', initialToken);
+        localStorage.setItem('adminToken', initialToken);
         $('#btnLoginMenu').hide();
         $('#adminMenuSection').show();
         $('#btnLogoutMenu').show();
@@ -50,7 +53,9 @@ $(document).ready(function() {
         .then(res => res.json()).then(data => { 
             if(data.success) {
                 sessionStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminToken', data.token);
                 sessionStorage.setItem('userRole', data.role);
+                localStorage.setItem('userRole', data.role);
                 sessionStorage.setItem('userName', username);
                 $('#loginModal').modal('hide');
                 $('#loginPassword').val('');
@@ -69,6 +74,7 @@ $(document).ready(function() {
 
     $('#btnLogoutMenu').click(function() {
         sessionStorage.removeItem('adminToken');
+        localStorage.removeItem('adminToken');
         $('#adminMenuSection').slideUp();
         $(this).hide();
         $('#btnLoginMenu').show();

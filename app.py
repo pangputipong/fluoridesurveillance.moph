@@ -2177,13 +2177,13 @@ def admin_data():
 @app.route('/api/admin/data_list', methods=['POST'])
 @require_admin
 def admin_data_list():
+    req = request.get_json(silent=True) or {}
+    draw = int(req.get('draw', 1))
     try:
-        req = request.get_json()
         table_type = req.get('table_type', 'water')
-        draw = req.get('draw', 1)
         start = int(req.get('start', 0))
         length = int(req.get('length', 10))
-        search_val = req.get('search', {}).get('value', '')
+        search_val = req.get('search', {}).get('value', '').strip()
         
         table_name = 'water_records' if table_type == 'water' else 'dental_records'
         
@@ -2192,26 +2192,25 @@ def admin_data_list():
         params = {}
         if search_val:
             if table_type == 'water':
-                where_clause = "WHERE location_name LIKE :search OR province LIKE :search OR check_date LIKE :search"
+                where_clause = "WHERE location_name LIKE :search OR province LIKE :search OR district LIKE :search OR subdistrict LIKE :search OR check_date LIKE :search OR water_type LIKE :search OR water_category LIKE :search"
             else:
-                where_clause = "WHERE hosp_name LIKE :search OR province LIKE :search OR fiscal_year LIKE :search"
+                where_clause = "WHERE hosp_name LIKE :search OR province LIKE :search OR district LIKE :search OR subdistrict LIKE :search OR fiscal_year LIKE :search"
             params['search'] = f"%{search_val}%"
             
         with engine.connect() as conn:
             # Total count
-            total_sql = f"SELECT COUNT(*) FROM {table_name}"
-            total_records = conn.execute(text(total_sql)).scalar()
+            total_sql = f"SELECT COUNT(*) FROM `{table_name}`"
+            total_records = conn.execute(text(total_sql)).scalar() or 0
             
             # Filtered count
-            filtered_sql = f"SELECT COUNT(*) FROM {table_name} {where_clause}"
-            filtered_records = conn.execute(text(filtered_sql), params).scalar()
+            filtered_sql = f"SELECT COUNT(*) FROM `{table_name}` {where_clause}"
+            filtered_records = conn.execute(text(filtered_sql), params).scalar() or 0
             
             # Data
-            sql = f"SELECT * FROM {table_name} {where_clause} ORDER BY id DESC LIMIT :limit OFFSET :offset"
+            sql = f"SELECT * FROM `{table_name}` {where_clause} ORDER BY id DESC LIMIT :limit OFFSET :offset"
             params['limit'] = length
             params['offset'] = start
             res = conn.execute(text(sql), params).fetchall()
-            
             
             data = []
             for r in res:
@@ -2221,9 +2220,12 @@ def admin_data_list():
                         row_dict[k] = v.isoformat()
                     elif hasattr(v, 'normalize'): # decimals
                         row_dict[k] = float(v)
+                    elif v is None:
+                        row_dict[k] = ''
+                if table_type == 'water' and not row_dict.get('water_category'):
+                    row_dict['water_category'] = classify_water_category(row_dict.get('water_type'))
                 data.append(row_dict)
 
-            
         return jsonify({
             'draw': draw,
             'recordsTotal': total_records,
@@ -2231,13 +2233,20 @@ def admin_data_list():
             'data': data
         })
     except Exception as e:
-        return jsonify({'error': str(e)})
+        print(f"[ERROR] admin_data_list: {e}")
+        return jsonify({
+            'draw': draw,
+            'recordsTotal': 0,
+            'recordsFiltered': 0,
+            'data': [],
+            'error': str(e)
+        })
 
 @app.route('/api/admin/data_update', methods=['POST'])
 @require_admin
 def admin_data_update():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or request.form.to_dict()
         table_type = data.get('table_type')
         record_id = data.get('id')
         if not table_type or not record_id:
@@ -2250,16 +2259,16 @@ def admin_data_update():
         params = {'id': record_id}
         for k, v in data.items():
             if k not in ['table_type', 'id']:
-                update_fields.append(f"{k} = :{k}")
+                update_fields.append(f"`{k}` = :{k}")
                 # handle empty strings as null for numbers
                 if k in ['latitude', 'longitude', 'fluoride_level', 'total_kids', 'screened_kids', 'fluorosis_cases']:
-                    if v == '': v = 0
+                    if v == '' or v is None: v = 0
                 params[k] = v
                 
         if not update_fields:
             return jsonify({'success': True})
             
-        sql = f"UPDATE {table_name} SET {', '.join(update_fields)} WHERE id = :id"
+        sql = f"UPDATE `{table_name}` SET {', '.join(update_fields)} WHERE id = :id"
         
         with engine.begin() as conn:
             conn.execute(text(sql), params)
@@ -2272,12 +2281,16 @@ def admin_data_update():
 @require_admin
 def admin_data_delete():
     try:
-        table_type = request.form.get('table_type')
-        record_id = request.form.get('id')
+        data = request.get_json(silent=True) or request.form
+        table_type = data.get('table_type')
+        record_id = data.get('id')
+        if not table_type or not record_id:
+            return jsonify({'success': False, 'message': 'Missing table_type or id'})
+            
         table_name = 'water_records' if table_type == 'water' else 'dental_records'
         
         with engine.begin() as conn:
-            conn.execute(text(f"DELETE FROM {table_name} WHERE id = :id"), {'id': record_id})
+            conn.execute(text(f"DELETE FROM `{table_name}` WHERE id = :id"), {'id': record_id})
             
         return jsonify({'success': True})
     except Exception as e:
