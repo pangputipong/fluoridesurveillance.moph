@@ -621,6 +621,42 @@ VALID_DB_COLUMNS = [
 init_database_tables()
 seed_health_facilities_master()
 
+def classify_water_category(wt):
+    if not wt or str(wt).strip() in ['', 'None', 'ไม่ระบุ', 'nan', 'null']:
+        return 'ไม่ระบุ'
+    s = str(wt).strip().lower()
+    
+    # 1. แหล่งน้ำบริโภค (Drinking water, Bottled, Filtered, Vending machine)
+    if any(k in s for k in ['ดื่ม', 'บริโภค', 'ถัง', 'ขวด', 'กรอง', 'ตู้', 'หยอดเหรียญ', 'บรรจุ', 'ro', 'uv', 'โอโซน']):
+        return 'แหล่งน้ำบริโภค'
+        
+    # 2. แหล่งน้ำประปา (Tap water, Piped water)
+    if any(k in s for k in ['ประปา', 'กปภ', 'กปน', 'เทศบาล']):
+        return 'แหล่งน้ำประปา'
+        
+    # 3. แหล่งน้ำดิบ (Raw water: Groundwater, Well, Rain, River, Canal, Mountain)
+    if any(k in s for k in ['ดิบ', 'บาดาล', 'บ่อ', 'สระ', 'คลอง', 'แม่น้ำ', 'ห้วย', 'หนอง', 'ภูเขา', 'ฝน', 'ธรรมชาติ', 'อ่างเก็บน้ำ']):
+        return 'แหล่งน้ำดิบ'
+        
+    return 'ไม่ระบุ'
+
+def auto_migrate_water_categories():
+    try:
+        with engine.begin() as conn:
+            rows = conn.execute(text("SELECT id, water_type FROM water_records WHERE water_category IS NULL OR water_category = 'ไม่ระบุ' OR water_category = ''")).fetchall()
+            if rows:
+                migrated = 0
+                for r in rows:
+                    cat = classify_water_category(r[1])
+                    if cat != 'ไม่ระบุ':
+                        conn.execute(text("UPDATE water_records SET water_category = :cat WHERE id = :id"), {"cat": cat, "id": r[0]})
+                        migrated += 1
+                print(f"[MIGRATE] Auto-categorized {migrated} existing water records in database.")
+    except Exception as e:
+        print(f"[WARN] Error in auto_migrate_water_categories: {e}")
+
+auto_migrate_water_categories()
+
 def safe_extract(df, col_name, default_val):
     return df[col_name] if col_name in df.columns else default_val
 
@@ -740,7 +776,16 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                 df_w['ตำบล'] = safe_extract(w_raw, 'subdistrict', 'ไม่ระบุ')
                 df_w['สถานที่เก็บ'] = safe_extract(w_raw, 'location_name', 'ไม่ระบุ')
                 df_w['ชนิดน้ำ'] = safe_extract(w_raw, 'water_type', 'ไม่ระบุ')
-                df_w['กลุ่มแหล่งน้ำ'] = safe_extract(w_raw, 'water_category', 'ไม่ระบุ')
+                
+                # Dynamic fallback for water_category if null or 'ไม่ระบุ'
+                cats = []
+                for _, r in w_raw.iterrows():
+                    c = str(r.get('water_category') or '').strip()
+                    if not c or c in ['None', 'ไม่ระบุ', 'nan', 'null']:
+                        c = classify_water_category(r.get('water_type'))
+                    cats.append(c)
+                df_w['กลุ่มแหล่งน้ำ'] = cats
+                
                 df_w['ปริมาณฟลูออไรด์'] = pd.to_numeric(safe_extract(w_raw, 'fluoride_level', 0.0), errors='coerce').fillna(0.0)
                 df_w['สถานการณ์'] = safe_extract(w_raw, 'status', 'ไม่ระบุ')
                 df_w['บ้านเลขที่'] = safe_extract(w_raw, 'house_no', '-')
@@ -1318,15 +1363,7 @@ def upload_data():
                 ref_name = row_dict.get('hosp_name' if cat == 'health' else 'location_name', f"แถวที่ {idx+1}")
                 
                 if cat != 'health' and 'water_type' in row_dict:
-                    wt = str(row_dict['water_type']).strip()
-                    if any(k in wt for k in ['ภูเขา', 'บาดาล', 'บ่อ', 'แม่น้ำ', 'น้ำฝน', 'ดิบ']):
-                        row_dict['water_category'] = 'แหล่งน้ำดิบ'
-                    elif any(k in wt for k in ['ถัง', 'ขวด', 'หยอดเหรียญ', 'โรงเรียน', 'บริโภค', 'กรอง']):
-                        row_dict['water_category'] = 'แหล่งน้ำบริโภค'
-                    elif any(k in wt for k in ['ประปาตำบล', 'ส่วนภูมิภาค', 'นครหลวง', 'ประปา']):
-                        row_dict['water_category'] = 'แหล่งน้ำประปา'
-                    else:
-                        row_dict['water_category'] = 'ไม่ระบุ'
+                    row_dict['water_category'] = classify_water_category(row_dict['water_type'])
                 
                 if len(row_dict) > 0:
                     # Validate
@@ -2280,3 +2317,15 @@ def migrate_water():
         return "Migration complete!"
     except Exception as e:
         return str(e)
+
+@app.route('/api/migrate_water_categories', methods=['GET', 'POST'])
+def api_migrate_water_categories():
+    try:
+        auto_migrate_water_categories()
+        with engine.connect() as conn:
+            res = conn.execute(text("SELECT water_category, COUNT(*) as c FROM water_records GROUP BY water_category")).fetchall()
+            stats = [dict(r._mapping) for r in res]
+        return jsonify({'success': True, 'stats': stats})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+

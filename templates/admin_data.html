@@ -101,6 +101,7 @@
                 { data: 'id', title: 'ID' },
                 { data: 'location_name', title: 'สถานที่' },
                 { data: 'water_type', title: 'ชนิดน้ำ' },
+                { data: 'water_category', title: 'กลุ่มน้ำ' },
                 { data: 'fluoride_level', title: 'ฟลูออไรด์ (ppm)' },
                 { data: 'check_date', title: 'วันที่' },
                 { data: 'province', title: 'จังหวัด' },
@@ -134,6 +135,7 @@
             'water': [
                 { name: 'location_name', label: 'สถานที่เก็บ', type: 'text' },
                 { name: 'water_type', label: 'ชนิดน้ำ', type: 'text' },
+                { name: 'water_category', label: 'กลุ่มแหล่งน้ำ', type: 'select', options: ['แหล่งน้ำบริโภค', 'แหล่งน้ำประปา', 'แหล่งน้ำดิบ', 'ไม่ระบุ'] },
                 { name: 'fluoride_level', label: 'ปริมาณฟลูออไรด์', type: 'number', step: '0.01' },
                 { name: 'check_date', label: 'วันที่ตรวจ (YYYY-MM-DD)', type: 'text' },
                 { name: 'latitude', label: 'ละติจูด (Latitude)', type: 'number', step: 'any' },
@@ -221,8 +223,13 @@
                 $('#edit_id').val(id);
                 let html = '';
                 editFields[currentTable].forEach(f => {
-                    let val = rowData[f.name] !== null ? rowData[f.name] : '';
-                    html += '<div class="col-md-6 mb-3"><label class="form-label">' + f.label + '</label><input type="' + f.type + '" class="form-control" name="' + f.name + '" value="' + val + '" ' + (f.step ? 'step="'+f.step+'"' : '') + '></div>';
+                    let val = (rowData[f.name] !== null && rowData[f.name] !== undefined) ? rowData[f.name] : '';
+                    if (f.type === 'select') {
+                        let opts = f.options.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
+                        html += '<div class="col-md-6 mb-3"><label class="form-label">' + f.label + '</label><select class="form-select" name="' + f.name + '">' + opts + '</select></div>';
+                    } else {
+                        html += '<div class="col-md-6 mb-3"><label class="form-label">' + f.label + '</label><input type="' + f.type + '" class="form-control" name="' + f.name + '" value="' + val + '" ' + (f.step ? 'step="'+f.step+'"' : '') + '></div>';
+                    }
                 });
                 $('#editFields').html(html);
                 new bootstrap.Modal(document.getElementById('editModal')).show();
