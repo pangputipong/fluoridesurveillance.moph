@@ -852,6 +852,55 @@ $(document).ready(function() {
 
     let legendAdded = false; let geoJsonData = null; let currentGeoLevel = 'province'; let actualGeoLevel = 'province'; let currentGeoUrl = ''; let geoJsonCache = {}; let choroplethLayer = null;
 
+    // --- Marker Legend Control (สัญลักษณ์เฝ้าระวัง) ---
+    let markerLegendControl = L.control({position: 'bottomright'});
+    markerLegendControl.onAdd = function () {
+        let div = L.DomUtil.create('div', 'info legend marker-legend-box');
+        div.id = 'marker-legend-box';
+        div.innerHTML = ''; // populated dynamically
+        return div;
+    };
+    let markerLegendAdded = false;
+
+    function buildMarkerLegendHtml(isWaterCategory) {
+        let threshold = activeChartConfig.alert_threshold;
+        let hasCustomColors = activeChartConfig.map_colors && activeChartConfig.map_colors.length > 0;
+        let html = '<b style="display:block; margin-bottom:6px; font-size:13px;"><i class="fas fa-eye me-1"></i> สัญลักษณ์เฝ้าระวัง</b>';
+
+        // Custom color ranges from KPI settings
+        if (hasCustomColors) {
+            activeChartConfig.map_colors.forEach(c => {
+                let label = '';
+                if (c.min !== null && c.max !== null) label = `${c.min} – ${c.max}`;
+                else if (c.min !== null) label = `≥ ${c.min}`;
+                else if (c.max !== null) label = `≤ ${c.max}`;
+                else label = 'ทั้งหมด';
+                html += `<div style="margin-bottom:3px;"><i style="background:${c.color}; border-radius:50%;"></i> ${label}</div>`;
+            });
+            html += '<hr style="margin:6px 0; border-color:#e2e8f0;">';
+        }
+
+        // Alert (blinking) criteria
+        if (isWaterCategory) {
+            let thresholdVal = (!isNaN(parseFloat(threshold))) ? parseFloat(threshold) : 0.7;
+            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>${thresholdVal} mg/L)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> ผ่านเกณฑ์ / ปกติ</div>`;
+        } else {
+            let waterThreshold = 0.7;
+            let dentalThreshold = (!isNaN(parseFloat(threshold))) ? parseFloat(threshold) : 10;
+            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>${waterThreshold} mg/L)</div>`;
+            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot dental-alert"></span> เด็กฟันตกกระวิกฤต (>${dentalThreshold}%)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> ผ่านเกณฑ์ / ปกติ</div>`;
+        }
+
+        if (!hasCustomColors) {
+            html += `<div style="margin-bottom:3px;"><i style="background:#ef4444; border-radius:50%;"></i> เกินมาตรฐาน / ไม่ผ่าน</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#3b82f6; border-radius:50%;"></i> อื่น ๆ</div>`;
+        }
+
+        return html;
+    }
+
     function fetchGeoJsonWithLazyLoading(level) {
         let url = '/static/provinces.geojson'; 
         if(level === 'district') url = '/static/districts.geojson'; 
@@ -1073,7 +1122,9 @@ $(document).ready(function() {
 
         let isFiltered = $('#filter-region').val() !== 'ทั้งหมด' || $('#filter-zone').val() !== 'ทั้งหมด' || $('#filter-province').val() !== 'ทั้งหมด' || $('#filter-district').val() !== 'ทั้งหมด' || $('#filter-subdistrict').val() !== 'ทั้งหมด';
         if(activeChartConfig.map && !isWaterCategory) {
-            if(!legendAdded) { legendControl.addTo(map); legendAdded = true; } 
+            // Choropleth mode: show choropleth legend, hide marker legend
+            if(!legendAdded) { legendControl.addTo(map); legendAdded = true; }
+            if(markerLegendAdded) { map.removeControl(markerLegendControl); markerLegendAdded = false; }
             if(geoJsonData && Object.keys(geoJsonData).length > 0) {
                 let activeBounds = L.latLngBounds(); let hasVisibleFeature = false;
                 choroplethLayer = L.geoJSON(geoJsonData, { style: styleArea, onEachFeature: function(f, l) { if (isFeatureInSelectedFilters(f)) { onEachArea(f, l); hasVisibleFeature = true; if(l.getBounds) activeBounds.extend(l.getBounds()); } } }).addTo(map);
@@ -1081,7 +1132,12 @@ $(document).ready(function() {
                 if (isFiltered && hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
             }
         } else {
-            if(legendAdded) { map.removeControl(legendControl); legendAdded = false; } 
+            // Marker mode: show marker legend, hide choropleth legend
+            if(legendAdded) { map.removeControl(legendControl); legendAdded = false; }
+            if(!markerLegendAdded) { markerLegendControl.addTo(map); markerLegendAdded = true; }
+            let legendBox = document.getElementById('marker-legend-box');
+            if(legendBox) { legendBox.innerHTML = buildMarkerLegendHtml(isWaterCategory); }
+
             globalData.forEach(p => {
                 let statusVal = p['_chart_group_label'];
                 if(checkedStatuses.includes(statusVal)) {
@@ -1428,6 +1484,19 @@ $(document).ready(function() {
             }).addTo(homeMap);
             homeMarkersGroup = L.markerClusterGroup({ disableClusteringAtZoom: 12 });
             homeMap.addLayer(homeMarkersGroup);
+
+            // Add surveillance legend to home map
+            let homeLegend = L.control({position: 'bottomright'});
+            homeLegend.onAdd = function() {
+                let div = L.DomUtil.create('div', 'info legend marker-legend-box');
+                div.innerHTML = '<b style="display:block; margin-bottom:6px; font-size:13px;"><i class="fas fa-eye me-1"></i> สัญลักษณ์เฝ้าระวัง</b>'
+                    + '<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>0.7 mg/L)</div>'
+                    + '<div style="margin-bottom:3px;"><span class="sonar-legend-dot dental-alert"></span> เด็กฟันตกกระวิกฤต (>10%)</div>'
+                    + '<div style="margin-bottom:3px;"><i style="background:#3b82f6; border-radius:50%;"></i> แหล่งน้ำปกติ</div>'
+                    + '<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> สุขภาพช่องปากปกติ</div>';
+                return div;
+            };
+            homeLegend.addTo(homeMap);
         }
         
         homeMarkersGroup.clearLayers();
