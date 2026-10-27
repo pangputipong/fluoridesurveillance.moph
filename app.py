@@ -742,6 +742,15 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                     sql += f" AND `{col}` = :{col}"
                     params[col] = str(val).strip()
             
+            r_val = filters.get('ภาค')
+            if r_val and r_val != 'ทั้งหมด':
+                prov_list = REGION_PROVINCES.get(str(r_val).strip(), [])
+                if prov_list:
+                    clause = ', '.join([f':rp_w_{i}' for i in range(len(prov_list))])
+                    sql += f" AND `province` IN ({clause})"
+                    for i, p in enumerate(prov_list):
+                        params[f"rp_w_{i}"] = p
+            
             y_val = filters.get('ปี')
             if y_val and y_val != 'ทั้งหมด':
                 sql += " AND `check_date` LIKE :check_date_like"
@@ -821,6 +830,15 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                 if val and val != 'ทั้งหมด':
                     sql += f" AND `{col}` = :{col}"
                     params[col] = str(val).strip()
+            
+            r_val = filters.get('ภาค')
+            if r_val and r_val != 'ทั้งหมด':
+                prov_list = REGION_PROVINCES.get(str(r_val).strip(), [])
+                if prov_list:
+                    clause = ', '.join([f':rp_d_{i}' for i in range(len(prov_list))])
+                    sql += f" AND `province` IN ({clause})"
+                    for i, p in enumerate(prov_list):
+                        params[f"rp_d_{i}"] = p
                     
             with engine.connect() as conn:
                 d_raw = pd.read_sql(text(sql), conn, params=params)
