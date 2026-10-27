@@ -49,7 +49,13 @@ app = Flask(__name__)
 @app.context_processor
 def inject_base_url():
     # If the app is run under a sub-path, set BASE_URL in .env (e.g. BASE_URL=/fluoridesurveillance)
-    return dict(BASE_URL=os.environ.get('BASE_URL', ''))
+    base_url = os.environ.get('BASE_URL')
+    if not base_url:
+        try:
+            base_url = request.script_root if request and hasattr(request, 'script_root') and request.script_root else ''
+        except Exception:
+            base_url = ''
+    return dict(BASE_URL=base_url.rstrip('/') if base_url else '')
 
 
 # ==========================================

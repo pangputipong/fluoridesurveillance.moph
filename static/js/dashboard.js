@@ -1,6 +1,13 @@
 /* E-Fluoride Pro Frontend Application Logic */
 
-    $(document).on('change', '.kpi-op-input', function() {
+function getAppBaseUrl() {
+    if (typeof BASE_URL !== 'undefined' && BASE_URL) return BASE_URL.replace(/\/+$/, '');
+    let p = window.location.pathname;
+    if (p.includes('/fluoridesurveillance')) return '/fluoridesurveillance';
+    return '';
+}
+
+$(document).on('change', '.kpi-op-input', function() {
         let idx = $(this).data('idx');
         if ($(this).val() === 'between') {
             $(`#kpi${idx}_val2_wrap`).show();
@@ -54,7 +61,7 @@ $(document).ready(function() {
     $('#btnSubmitLogin').click(function() {
         let username = $('#loginUsername').val() || 'admin';
         let pwd = $('#loginPassword').val();
-        fetch(BASE_URL + '/api/login', {
+        fetch(getAppBaseUrl() + '/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: username, password: pwd })
@@ -128,7 +135,7 @@ $(document).ready(function() {
         $('#uploadFormArea').hide(); 
         $('#importStatusScanning').show(); 
         
-        fetch(BASE_URL + '/api/upload_data', {
+        fetch(getAppBaseUrl() + '/api/upload_data', {
             method: 'POST',
             headers: { 'Authorization': sessionStorage.getItem('adminToken') || '' },
             body: formData
@@ -295,7 +302,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-remove-rule', function() { $(this).closest('.group-rule-row').remove(); });
 
     function fetchSchemas() {
-        return fetch(BASE_URL + '/api/get_schemas').then(res => res.json()).then(data => {
+        return fetch(getAppBaseUrl() + '/api/get_schemas').then(res => res.json()).then(data => {
             if(data.success) {
                 existingSchemas = {};
                 let envSetHtml = '<div class="small fw-bold text-muted px-2 mb-1 mt-2">หมวดสิ่งแวดล้อม</div>'; let healthSetHtml = '<div class="small fw-bold text-muted px-2 mb-1 mt-3">หมวดสุขภาพ</div>';
@@ -553,7 +560,7 @@ $(document).ready(function() {
         
         let originalBtnText = $(this).html(); $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-        fetch(BASE_URL + '/api/save_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify(payload) })
+        fetch(getAppBaseUrl() + '/api/save_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify(payload) })
         .then(res => { if(res.status === 401) throw new Error('Unauthorized'); return res.json(); })
         .then(data => { if(data.success) { alert('บันทึกสำเร็จ!'); location.reload(); } else { alert('Error: ' + data.message); } })
         .catch(err => { if(err.message === 'Unauthorized') alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบแอดมินใหม่'); })
@@ -563,7 +570,7 @@ $(document).ready(function() {
     $('#btnDeleteSchema').click(function() {
         let reportName = $('#currentReportName').text();
         if(confirm(`คุณต้องการลบรายงาน "${reportName}" อย่างถาวรใช่หรือไม่?`)) {
-            fetch(BASE_URL + '/api/delete_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify({ report_name: reportName }) })
+            fetch(getAppBaseUrl() + '/api/delete_schema', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': sessionStorage.getItem('adminToken') || '' }, body: JSON.stringify({ report_name: reportName }) })
             .then(res => { if(res.status === 401) throw new Error('Unauthorized'); return res.json(); }).then(data => { if(data.success) { alert('ลบสำเร็จ!'); location.reload(); } else { alert('Error: ' + data.message); } })
             .catch(err => { if(err.message === 'Unauthorized') alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบแอดมินใหม่'); });
         }
@@ -779,7 +786,7 @@ $(document).ready(function() {
             dtConfig.serverSide = true;
             dtConfig.processing = true;
             dtConfig.ajax = {
-                url: BASE_URL + '/api/table_data',
+                url: getAppBaseUrl() + '/api/table_data',
                 type: 'POST',
                 contentType: 'application/json',
                 data: function(d) {
@@ -904,16 +911,68 @@ $(document).ready(function() {
     // ==========================================
     // 🌐 3-Tier Drilldown Data & Helper Functions
     // ==========================================
-    window.provCentersData = null;
+    
+
+    const DEFAULT_PROV_CENTERS = {"พะเยา": {"lat": 19.254362, "lng": 100.218854, "code": "56"}, "เชียงราย": {"lat": 19.815651, "lng": 99.801999, "code": "57"}, "แพร่": {"lat": 18.18034, "lng": 100.026111, "code": "54"}, "น่าน": {"lat": 18.860644, "lng": 100.801075, "code": "55"}, "ตาก": {"lat": 16.82174, "lng": 98.66448, "code": "63"}, "สุโขทัย": {"lat": 17.263062, "lng": 99.743914, "code": "64"}, "อุทัยธานี": {"lat": 15.328086, "lng": 99.520556, "code": "61"}, "กำแพงเพชร": {"lat": 16.361374, "lng": 99.493228, "code": "62"}, "นครสวรรค์": {"lat": 15.699464, "lng": 100.021484, "code": "60"}, "เพชรบูรณ์": {"lat": 16.327173, "lng": 101.197603, "code": "67"}, "พิษณุโลก": {"lat": 16.989924, "lng": 100.540959, "code": "65"}, "พิจิตร": {"lat": 16.260346, "lng": 100.371616, "code": "66"}, "นครราชสีมา": {"lat": 15.049753, "lng": 102.217287, "code": "30"}, "บุรีรัมย์": {"lat": 15.061463, "lng": 103.034463, "code": "31"}, "สมุทรสาคร": {"lat": 13.581863, "lng": 100.360849, "code": "74"}, "สมุทรสงคราม": {"lat": 13.386631, "lng": 99.947256, "code": "75"}, "สุพรรณบุรี": {"lat": 14.657006, "lng": 99.857128, "code": "72"}, "นครปฐม": {"lat": 13.816994, "lng": 100.205712, "code": "73"}, "ราชบุรี": {"lat": 13.561025, "lng": 99.63767, "code": "70"}, "บึงกาฬ": {"lat": 18.048655, "lng": 103.656396, "code": "38"}, "กาญจนบุรี": {"lat": 14.665458, "lng": 99.019942, "code": "71"}, "หนองบัวลำภู": {"lat": 17.1612, "lng": 102.243575, "code": "39"}, "ลพบุรี": {"lat": 15.119342, "lng": 100.90318, "code": "16"}, "ชัยภูมิ": {"lat": 16.121803, "lng": 101.913492, "code": "36"}, "สิงห์บุรี": {"lat": 14.897131, "lng": 100.339467, "code": "17"}, "พระนครศรีอยุธยา": {"lat": 14.402835, "lng": 100.540805, "code": "14"}, "อำนาจเจริญ": {"lat": 15.830604, "lng": 104.692406, "code": "37"}, "อ่างทอง": {"lat": 14.613151, "lng": 100.35599, "code": "15"}, "อุบลราชธานี": {"lat": 15.150301, "lng": 105.049631, "code": "34"}, "ยโสธร": {"lat": 15.860717, "lng": 104.346093, "code": "35"}, "นนทบุรี": {"lat": 13.902207, "lng": 100.467122, "code": "12"}, "สุรินทร์": {"lat": 15.042601, "lng": 103.614488, "code": "32"}, "ปทุมธานี": {"lat": 14.044164, "lng": 100.641714, "code": "13"}, "กรุงเทพมหานคร": {"lat": 13.663124, "lng": 100.462308, "code": "10"}, "ศรีสะเกษ": {"lat": 14.940708, "lng": 104.322537, "code": "33"}, "สมุทรปราการ": {"lat": 13.640764, "lng": 100.598791, "code": "11"}, "เพชรบุรี": {"lat": 12.984825, "lng": 99.54526, "code": "76"}, "ประจวบคีรีขันธ์": {"lat": 11.796586, "lng": 99.571626, "code": "77"}, "อุดรธานี": {"lat": 17.483855, "lng": 102.942058, "code": "41"}, "เลย": {"lat": 17.377487, "lng": 101.5897, "code": "42"}, "ชลบุรี": {"lat": 12.99964, "lng": 101.073666, "code": "20"}, "ขอนแก่น": {"lat": 16.441997, "lng": 102.498326, "code": "40"}, "ระนอง": {"lat": 9.88619, "lng": 98.608891, "code": "85"}, "ชุมพร": {"lat": 10.367934, "lng": 99.14741, "code": "86"}, "ภูเก็ต": {"lat": 7.900846, "lng": 98.366893, "code": "83"}, "สุราษฎร์ธานี": {"lat": 9.324611, "lng": 99.470987, "code": "84"}, "กระบี่": {"lat": 7.894205, "lng": 99.013176, "code": "81"}, "มุกดาหาร": {"lat": 16.582287, "lng": 104.487898, "code": "49"}, "พังงา": {"lat": 8.698312, "lng": 98.284315, "code": "82"}, "สระแก้ว": {"lat": 13.783972, "lng": 102.330755, "code": "27"}, "สกลนคร": {"lat": 17.503812, "lng": 103.799102, "code": "47"}, "นครศรีธรรมราช": {"lat": 8.475692, "lng": 99.702248, "code": "80"}, "นครพนม": {"lat": 17.334964, "lng": 104.298245, "code": "48"}, "ปราจีนบุรี": {"lat": 14.020141, "lng": 101.576405, "code": "25"}, "ร้อยเอ็ด": {"lat": 15.904701, "lng": 103.832394, "code": "45"}, "นครนายก": {"lat": 14.249245, "lng": 101.21751, "code": "26"}, "กาฬสินธุ์": {"lat": 16.625361, "lng": 103.625496, "code": "46"}, "ตราด": {"lat": 12.067796, "lng": 102.510427, "code": "23"}, "หนองคาย": {"lat": 17.934328, "lng": 102.863019, "code": "43"}, "ฉะเชิงเทรา": {"lat": 13.610719, "lng": 101.362643, "code": "24"}, "มหาสารคาม": {"lat": 15.988314, "lng": 103.166623, "code": "44"}, "ระยอง": {"lat": 12.843944, "lng": 101.442738, "code": "21"}, "จันทบุรี": {"lat": 12.820737, "lng": 102.1161, "code": "22"}, "ชัยนาท": {"lat": 15.148053, "lng": 100.060024, "code": "18"}, "สระบุรี": {"lat": 14.63577, "lng": 101.012449, "code": "19"}, "ลำปาง": {"lat": 18.238869, "lng": 99.462562, "code": "52"}, "อุตรดิตถ์": {"lat": 17.739948, "lng": 100.47269, "code": "53"}, "เชียงใหม่": {"lat": 18.733383, "lng": 98.705709, "code": "50"}, "ลำพูน": {"lat": 18.065749, "lng": 98.944955, "code": "51"}, "นราธิวาส": {"lat": 6.132375, "lng": 101.688208, "code": "96"}, "ปัตตานี": {"lat": 6.728153, "lng": 101.353026, "code": "94"}, "ยะลา": {"lat": 6.199154, "lng": 101.217952, "code": "95"}, "ตรัง": {"lat": 7.458325, "lng": 99.524767, "code": "92"}, "พัทลุง": {"lat": 7.503238, "lng": 100.03059, "code": "93"}, "สงขลา": {"lat": 6.896958, "lng": 100.533101, "code": "90"}, "แม่ฮ่องสอน": {"lat": 18.720597, "lng": 98.035025, "code": "58"}, "สตูล": {"lat": 6.68793, "lng": 99.715647, "code": "91"}};
+    window.provCentersData = DEFAULT_PROV_CENTERS;
     window.distCentersData = null;
 
     function loadCentroidsData() {
-        if (window.provCentersData && window.distCentersData) return Promise.resolve();
-        let p1 = fetch(BASE_URL + '/static/province_centers.json').then(r => r.json()).then(d => { window.provCentersData = d; });
-        let p2 = fetch(BASE_URL + '/static/district_centers.json').then(r => r.json()).then(d => { window.distCentersData = d; });
-        return Promise.all([p1, p2]).catch(err => console.log('Error loading centroids:', err));
+        if (window.distCentersData) return Promise.resolve();
+        let baseUrl = getAppBaseUrl();
+        let tryFetch = function(url) {
+            return fetch(url).then(r => {
+                if (!r.ok) throw new Error('Status ' + r.status);
+                return r.json();
+            });
+        };
+
+        return tryFetch(baseUrl + '/static/district_centers.json')
+            .catch(() => tryFetch('./static/district_centers.json'))
+            .catch(() => tryFetch('static/district_centers.json'))
+            .catch(() => tryFetch('/fluoridesurveillance/static/district_centers.json'))
+            .then(d => {
+                window.distCentersData = d;
+                let selProv = $('#filter-province').val();
+                if (selProv && selProv !== 'ทั้งหมด') {
+                    if (currentType === 'ทั้งหมด') renderHomeMap();
+                    else updateMapDisplay();
+                }
+            })
+            .catch(err => console.warn('Could not load district centers:', err));
     }
     loadCentroidsData();
+
+    function setFilterOption(selectId, val) {
+        if (!val) return;
+        let sel = $(selectId);
+        let cleanVal = cleanName(val);
+        let opt = sel.find('option').filter(function() {
+            return cleanName($(this).val()) === cleanVal || cleanName($(this).text()) === cleanVal;
+        });
+        if (opt.length) {
+            sel.val(opt.val());
+        } else {
+            sel.append(`<option value="${val}" selected>${val}</option>`).val(val);
+        }
+    }
+
+    function drillToProvince(provName, isHome) {
+        if (map) map.closePopup();
+        if (homeMap) homeMap.closePopup();
+        setFilterOption('#filter-province', provName);
+        $('#filter-district, #filter-subdistrict').val('ทั้งหมด');
+        $('#filter-province').trigger('change');
+    }
+
+    function drillToDistrict(provName, distName, isHome) {
+        if (map) map.closePopup();
+        if (homeMap) homeMap.closePopup();
+        setFilterOption('#filter-province', provName);
+        setFilterOption('#filter-district', distName);
+        $('#filter-subdistrict').val('ทั้งหมด');
+        $('#filter-district').trigger('change');
+    }
 
     function getFluorideTierColor(val) {
         if (val === null || val === undefined || isNaN(val) || val <= 0) return '#94a3b8';
@@ -946,19 +1005,40 @@ $(document).ready(function() {
     function findDistrictCenter(prov, dist) {
         let p = normalizeProv(prov);
         let d = normalizeDist(dist);
-        if (!window.distCentersData) return null;
-        let key1 = `${p}:${d}`;
-        if (window.distCentersData[key1]) return window.distCentersData[key1];
-        let key2 = `${p}:เมือง${p}`;
-        if (d === 'เมือง' && window.distCentersData[key2]) return window.distCentersData[key2];
-        let key3 = `${p}:${d.replace('เมือง', '')}`;
-        if (window.distCentersData[key3]) return window.distCentersData[key3];
-        let provPrefix = `${p}:`;
-        for (let k in window.distCentersData) {
-            if (k.startsWith(provPrefix)) {
-                let ampName = k.split(':')[1];
-                if (ampName.includes(d) || d.includes(ampName)) return window.distCentersData[k];
+        if (window.distCentersData) {
+            let key1 = `${p}:${d}`;
+            if (window.distCentersData[key1]) return window.distCentersData[key1];
+            let key2 = `${p}:เมือง${p}`;
+            if (d === 'เมือง' && window.distCentersData[key2]) return window.distCentersData[key2];
+            let key3 = `${p}:${d.replace('เมือง', '')}`;
+            if (window.distCentersData[key3]) return window.distCentersData[key3];
+            let provPrefix = `${p}:`;
+            for (let k in window.distCentersData) {
+                if (k.startsWith(provPrefix)) {
+                    let ampName = k.split(':')[1];
+                    if (ampName.includes(d) || d.includes(ampName)) return window.distCentersData[k];
+                }
             }
+        }
+        // Fallback: calculate centroid average from current points in data
+        let points = (currentType === 'ทั้งหมด') ? (window.currentWaterPoints || []) : (window.globalData || []);
+        let lats = [], lngs = [];
+        points.forEach(pt => {
+            let ptProv = normalizeProv(pt.prov || pt['จังหวัด'] || '');
+            let ptDist = normalizeDist(pt.dist || pt['อำเภอ'] || '');
+            if (ptProv === p && (ptDist === d || ptDist.includes(d) || d.includes(ptDist))) {
+                let lat = parseFloat(pt.lat || pt['ละติจูด']);
+                let lng = parseFloat(pt.lng || pt['ลองจิจูด']);
+                if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                    lats.push(lat);
+                    lngs.push(lng);
+                }
+            }
+        });
+        if (lats.length > 0) {
+            let avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+            let avgLng = lngs.reduce((a, b) => a + b, 0) / lngs.length;
+            return { lat: avgLat, lng: avgLng };
         }
         return null;
     }
@@ -998,7 +1078,9 @@ $(document).ready(function() {
             </div>
         `;
 
-        return L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+        let m = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+        m.on('dblclick', function(e) { if (e && e.originalEvent) L.DomEvent.stopPropagation(e); drillToProvince(provName, isHome); });
+        return m;
     }
 
     function createTierDistrictMarker(provName, distName, maxVal, count, lat, lng, isHome) {
@@ -1037,7 +1119,9 @@ $(document).ready(function() {
             </div>
         `;
 
-        return L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+        let m = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+        m.on('dblclick', function(e) { if (e && e.originalEvent) L.DomEvent.stopPropagation(e); drillToDistrict(provName, distName, isHome); });
+        return m;
     }
 
     // Breadcrumbs Controls
@@ -1050,11 +1134,12 @@ $(document).ready(function() {
     };
     let reportBreadcrumbAdded = false;
 
-    function updateReportBreadcrumb(level, provOrLabel, dist) {
+    function updateReportBreadcrumb(level, provOrLabel, dist, tagLabel) {
         let container = document.getElementById('reportMapBreadcrumb');
         if (!container) return;
+        let suffix = tagLabel || 'ข้อมูล';
         if (level === 1) {
-            container.innerHTML = `<span class="badge bg-white text-dark shadow-sm border p-2" style="font-size:0.8rem;"><i class="fas fa-thumbtack text-primary me-1"></i> <b>${provOrLabel || 'ภาพรวม 77 จังหวัด'}</b> (คลิกจุดเพื่อเจาะลึก)</span>`;
+            container.innerHTML = `<span class="badge bg-white text-dark shadow-sm border p-2" style="font-size:0.8rem;"><i class="fas fa-thumbtack text-primary me-1"></i> <b>${provOrLabel || 'ภาพรวม 77 จังหวัด'}</b> (คลิกพื้นที่เพื่อเจาะลึก)</span>`;
         } else if (level === 2) {
             container.innerHTML = `
                 <div class="btn-group shadow-sm">
@@ -1066,7 +1151,7 @@ $(document).ready(function() {
                 <div class="btn-group shadow-sm">
                     <button class="btn btn-sm btn-light border btn-back-to-77">ทั้งหมด</button>
                     <button class="btn btn-sm btn-light border btn-back-to-dist">จ.${provOrLabel}</button>
-                    <span class="btn btn-sm btn-success active fw-bold">อ.${dist} (แหล่งน้ำ)</span>
+                    <span class="btn btn-sm btn-success active fw-bold">อ.${dist} (${suffix})</span>
                 </div>`;
         }
     }
@@ -1145,15 +1230,40 @@ $(document).ready(function() {
     }
 
     function fetchGeoJsonWithLazyLoading(level) {
-        let url = BASE_URL + '/static/provinces.geojson'; 
-        if(level === 'district') url = BASE_URL + '/static/districts.geojson'; 
-        else if(level === 'subdistrict') url = BASE_URL + '/static/subdistricts.geojson';
-        
-        if (currentGeoUrl === url && geoJsonData) { actualGeoLevel = level; return Promise.resolve(); } 
-        currentGeoUrl = url;
-        if (geoJsonCache[url]) { actualGeoLevel = level; geoJsonData = geoJsonCache[url]; return Promise.resolve(); }
-        
-        return fetch(url).then(res => { if (!res.ok) throw new Error('File not found'); return res.json(); }).then(data => { actualGeoLevel = level; geoJsonCache[url] = data; geoJsonData = data; }).catch(err => { actualGeoLevel = 'province'; currentGeoUrl = BASE_URL + '/static/provinces.geojson'; if(geoJsonCache[currentGeoUrl]) { geoJsonData = geoJsonCache[currentGeoUrl]; return Promise.resolve(); } else { return fetch(currentGeoUrl).then(r => r.ok ? r.json() : {}).then(d => { geoJsonCache[currentGeoUrl] = d; geoJsonData = d; }).catch(() => Promise.resolve()); } });
+        if (geoJsonCache[level]) {
+            actualGeoLevel = level;
+            geoJsonData = geoJsonCache[level];
+            return Promise.resolve();
+        }
+
+        let baseUrl = getAppBaseUrl();
+        let fileName = 'provinces.geojson';
+        if (level === 'district') fileName = 'districts.geojson';
+        else if (level === 'subdistrict') fileName = 'subdistricts.geojson';
+
+        let tryFetchGeo = function(url) {
+            return fetch(url).then(res => {
+                if (!res.ok) throw new Error('Status ' + res.status);
+                return res.json();
+            });
+        };
+
+        return tryFetchGeo(baseUrl + '/static/' + fileName)
+            .catch(() => tryFetchGeo('./static/' + fileName))
+            .catch(() => tryFetchGeo('static/' + fileName))
+            .catch(() => tryFetchGeo('/fluoridesurveillance/static/' + fileName))
+            .then(data => {
+                actualGeoLevel = level;
+                geoJsonCache[level] = data;
+                geoJsonData = data;
+            })
+            .catch(err => {
+                console.error(`Error loading GeoJSON for level ${level}:`, err);
+                if (geoJsonCache['province']) {
+                    actualGeoLevel = 'province';
+                    geoJsonData = geoJsonCache['province'];
+                }
+            });
     }
 
     function getFeatureProp(p, keys) { let lowerP = {}; for (let k in p) lowerP[k.toLowerCase()] = p[k]; for (let i = 0; i < keys.length; i++) { let val = lowerP[keys[i].toLowerCase()]; if (val !== undefined && val !== null && String(val).trim() !== "") return String(val); } return ""; }
@@ -1164,10 +1274,24 @@ $(document).ready(function() {
     function getPolygonColor(val) { if (val < 0) return '#e2e8f0'; if (val > 40) return '#ef4444'; if (val > 30) return '#f59e0b'; if (val > 20) return '#eab308'; if (val > 10) return '#84cc16'; return '#10b981'; }
 
     function isFeatureInSelectedFilters(feature) {
-        let p = feature.properties; let fProv = getProvName(p); let fAmp = getAmpName(p); let sProv = $('#filter-province').val().replace(/\s+/g, ''); let sAmp = $('#filter-district').val().replace(/\s+/g, ''); let sReg = $('#filter-region').val(); let sZone = $('#filter-zone').val();
-        if (sProv !== 'ทั้งหมด' && fProv && fProv !== sProv) return false;
-        if (sAmp !== 'ทั้งหมด' && fAmp) { let cleanSAmp = sAmp.replace(/^เมือง.*/, 'เมือง'); if (fAmp !== cleanSAmp) return false; }
-        if (sProv === 'ทั้งหมด' && (sReg !== 'ทั้งหมด' || sZone !== 'ทั้งหมด')) { let allowedProvinces = []; $('#filter-province option').each(function() { let v = $(this).val(); if (v !== 'ทั้งหมด') allowedProvinces.push(v.replace(/\s+/g, '')); }); if (fProv && !allowedProvinces.includes(fProv)) return false; }
+        let p = feature.properties;
+        let fProv = getProvName(p);
+        let fAmp = getAmpName(p);
+        let sProv = cleanName($('#filter-province').val());
+        let sAmp = cleanName($('#filter-district').val());
+        let sReg = $('#filter-region').val();
+        let sZone = $('#filter-zone').val();
+
+        if (sProv && sProv !== 'ทั้งหมด' && fProv && fProv !== sProv) return false;
+        if (sAmp && sAmp !== 'ทั้งหมด' && fAmp && fAmp !== sAmp) return false;
+        if ((!sProv || sProv === 'ทั้งหมด') && (sReg !== 'ทั้งหมด' || sZone !== 'ทั้งหมด')) {
+            let allowedProvinces = [];
+            $('#filter-province option').each(function() {
+                let v = $(this).val();
+                if (v && v !== 'ทั้งหมด') allowedProvinces.push(cleanName(v));
+            });
+            if (allowedProvinces.length > 0 && fProv && !allowedProvinces.includes(fProv)) return false;
+        }
         return true;
     }
 
@@ -1223,27 +1347,10 @@ $(document).ready(function() {
             dblclick: function(e) {
                 if (e && e.originalEvent) L.DomEvent.stopPropagation(e);
                 if (actualGeoLevel === 'province') {
-                    let cleanTarget = cleanName(areaName);
-                    let opt = $('#filter-province option').filter(function() {
-                        return cleanName($(this).val()) === cleanTarget || cleanName($(this).text()) === cleanTarget;
-                    });
-                    if (opt.length) {
-                        $('#filter-province').val(opt.val()).trigger('change');
-                    } else {
-                        $('#filter-province').val(areaName).trigger('change');
-                    }
+                    drillToProvince(areaName, false);
                 } else if (actualGeoLevel === 'district') {
-                    let cleanTarget = cleanName(areaName);
-                    let opt = $('#filter-district option').filter(function() {
-                        let v = cleanName($(this).val());
-                        let t = cleanName($(this).text());
-                        return v === cleanTarget || t === cleanTarget || v.replace('เมือง','') === cleanTarget.replace('เมือง','');
-                    });
-                    if (opt.length) {
-                        $('#filter-district').val(opt.val()).trigger('change');
-                    } else {
-                        $('#filter-district').val(areaName).trigger('change');
-                    }
+                    let p = $('#filter-province').val();
+                    drillToDistrict(p, areaName, false);
                 }
             }
         });
@@ -1391,9 +1498,34 @@ $(document).ready(function() {
             // Choropleth mode: show choropleth legend, hide marker legend
             if(!legendAdded) { legendControl.addTo(map); legendAdded = true; }
             if(markerLegendAdded) { map.removeControl(markerLegendControl); markerLegendAdded = false; }
+
+            // Add breadcrumb control for health choropleth map
+            if(!reportBreadcrumbAdded) {
+                reportBreadcrumbControl.addTo(map);
+                reportBreadcrumbAdded = true;
+            }
+            if (actualGeoLevel === 'province') {
+                let crumbLabel = 'ภาพรวม 77 จังหวัด';
+                if ($('#filter-region').val() !== 'ทั้งหมด') crumbLabel = $('#filter-region').val();
+                else if ($('#filter-zone').val() !== 'ทั้งหมด') crumbLabel = `เขตสุขภาพที่ ${$('#filter-zone').val()}`;
+                updateReportBreadcrumb(1, crumbLabel, '', 'รายอำเภอ');
+            } else if (actualGeoLevel === 'district') {
+                updateReportBreadcrumb(2, $('#filter-province').val(), '', 'รายอำเภอ');
+            } else if (actualGeoLevel === 'subdistrict') {
+                updateReportBreadcrumb(3, $('#filter-province').val(), $('#filter-district').val(), 'รายตำบล');
+            }
+
             if(geoJsonData && Object.keys(geoJsonData).length > 0) {
                 let activeBounds = L.latLngBounds(); let hasVisibleFeature = false;
-                choroplethLayer = L.geoJSON(geoJsonData, { style: styleArea, onEachFeature: function(f, l) { if (isFeatureInSelectedFilters(f)) { onEachArea(f, l); hasVisibleFeature = true; if(l.getBounds) activeBounds.extend(l.getBounds()); } } }).addTo(map);
+                choroplethLayer = L.geoJSON(geoJsonData, { 
+                    filter: isFeatureInSelectedFilters,
+                    style: styleArea, 
+                    onEachFeature: function(f, l) { 
+                        onEachArea(f, l); 
+                        hasVisibleFeature = true; 
+                        if(l.getBounds) activeBounds.extend(l.getBounds()); 
+                    } 
+                }).addTo(map);
                 
                 if (isFiltered && hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
             }
@@ -1630,7 +1762,7 @@ $(document).ready(function() {
         if (currentType === 'ทั้งหมด') { 
             $('#homeDashboardView').show(); $('#spatialDashboardView').hide(); $('#aiPredictionView').hide(); $('#investigationReportView').hide(); $('body').addClass('theme-home').removeClass('theme-dental'); 
             setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 200); 
-            fetch(BASE_URL + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) })
+            fetch(getAppBaseUrl() + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) })
             .then(res => res.json()).then(data => {
                 if(data.home_kpis_dynamic && data.home_kpis_dynamic.length > 0) {
                     let kpiHtml = '';
@@ -1688,7 +1820,6 @@ $(document).ready(function() {
                     `;
                 });
                 if(alertsHtml === '') alertsHtml = '<div class="p-3 text-center text-muted">ไม่มีข้อมูลเฝ้าระวัง</div>'; $('#topAlertsContainer').html(alertsHtml);
-                window.currentWaterPoints = data.water_points || []; window.currentDentalPoints = data.dental_points || []; renderHomeMap();
                 
                 if (data.dropdowns) {
                     function updateSelect(id, options, currentValue) { 
@@ -1711,6 +1842,10 @@ $(document).ready(function() {
                     $('#filter-district').prop('disabled', p === 'ทั้งหมด'); 
                     $('#filter-subdistrict').prop('disabled', p === 'ทั้งหมด' || d === 'ทั้งหมด');
                 }
+
+                window.currentWaterPoints = data.water_points || []; 
+                window.currentDentalPoints = data.dental_points || []; 
+                renderHomeMap();
             }).finally(() => hideLoading()); return; 
         }
         
@@ -1727,7 +1862,7 @@ $(document).ready(function() {
         let geoPromise = Promise.resolve(); if(prevLevel !== currentGeoLevel || !geoJsonData) { geoPromise = fetchGeoJsonWithLazyLoading(currentGeoLevel); }
         let lvlTxt = currentGeoLevel === 'province' ? 'จังหวัด' : (currentGeoLevel === 'district' ? 'อำเภอ' : 'ตำบล'); $('#geo-level-text').text(`สถานะพื้นที่ (${lvlTxt})`);
 
-        let apiPromise = fetch(BASE_URL + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) }).then(res => res.json());
+        let apiPromise = fetch(getAppBaseUrl() + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) }).then(res => res.json());
 
         Promise.all([geoPromise, apiPromise]).then(results => {
             let data = results[1]; globalData = data.table_data;
@@ -1845,7 +1980,15 @@ $(document).ready(function() {
         if(activeChartConfig.map && !isWaterCategory) {
             if(geoJsonData && Object.keys(geoJsonData).length > 0) {
                 let activeBounds = L.latLngBounds(); let hasVisibleFeature = false;
-                choroplethLayer = L.geoJSON(geoJsonData, { style: styleArea, onEachFeature: function(f, l) { if (isFeatureInSelectedFilters(f)) { onEachArea(f, l); hasVisibleFeature = true; if(l.getBounds) activeBounds.extend(l.getBounds()); } } }).addTo(map);
+                choroplethLayer = L.geoJSON(geoJsonData, { 
+                    filter: isFeatureInSelectedFilters,
+                    style: styleArea, 
+                    onEachFeature: function(f, l) { 
+                        onEachArea(f, l); 
+                        hasVisibleFeature = true; 
+                        if(l.getBounds) activeBounds.extend(l.getBounds()); 
+                    } 
+                }).addTo(map);
                 
                 if (isFiltered && hasVisibleFeature && activeBounds.isValid()) map.flyToBounds(activeBounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
             }
@@ -2190,7 +2333,7 @@ $(document).ready(function() {
         btn.html('<i class="fas fa-spinner fa-spin"></i> กำลังโหลด...');
         btn.prop('disabled', true);
         
-        fetch(BASE_URL + '/api/location_history', {
+        fetch(getAppBaseUrl() + '/api/location_history', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({location_name: name, latitude: lat, longitude: lng})
@@ -2414,7 +2557,7 @@ $(document).ready(function() {
     // 7. Security & Stats, ROPA, and Page Logging
     // ----------------------------------------------------
     function logVisit(pageName, actionType) {
-        fetch(BASE_URL + '/api/log_visit', {
+        fetch(getAppBaseUrl() + '/api/log_visit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ page_name: pageName, action_type: actionType })
@@ -2424,7 +2567,7 @@ $(document).ready(function() {
     let visitStatsChartInstance = null;
 
     function loadSecurityAndStats() {
-        fetch(BASE_URL + '/api/get_stats', {
+        fetch(getAppBaseUrl() + '/api/get_stats', {
             method: 'GET',
             headers: { 'Authorization': sessionStorage.getItem('adminToken') || '' }
         })
@@ -2500,7 +2643,7 @@ $(document).ready(function() {
             return;
         }
         
-        fetch(BASE_URL + '/api/manage_admin', {
+        fetch(getAppBaseUrl() + '/api/manage_admin', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -2529,7 +2672,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-delete-admin', function() {
         let username = $(this).data('username');
         if (confirm(`คุณต้องการลบแอดมิน "${username}" หรือไม่?`)) {
-            fetch(BASE_URL + '/api/manage_admin', {
+            fetch(getAppBaseUrl() + '/api/manage_admin', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -2554,7 +2697,7 @@ $(document).ready(function() {
     });
 
     function loadRopaLogs() {
-        fetch(BASE_URL + '/api/get_stats', {
+        fetch(getAppBaseUrl() + '/api/get_stats', {
             method: 'GET',
             headers: { 'Authorization': sessionStorage.getItem('adminToken') || '' }
         })
@@ -2608,7 +2751,7 @@ $(document).ready(function() {
     function loadInvestigations() {
         $('#investigationsTableBody').html('<tr><td colspan="8" class="text-center text-muted py-3">กำลังโหลดรายงานสอบสวนโรค...</td></tr>');
         
-        fetch(BASE_URL + '/api/investigation/list', {
+        fetch(getAppBaseUrl() + '/api/investigation/list', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2810,7 +2953,7 @@ $(document).ready(function() {
             'อำเภอ': $('#filter-district').val(), 
             'ตำบล': $('#filter-subdistrict').val() 
         };
-        fetch(BASE_URL + '/api/predict', {
+        fetch(getAppBaseUrl() + '/api/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(filters)
@@ -3747,7 +3890,7 @@ $(document).ready(function() {
 
     // Initial load
     fetchSchemas().then(() => {
-        fetch(BASE_URL + '/static/provinces.geojson').catch(() => console.log("Loading Map GeoJSON..."));
+        fetch(getAppBaseUrl() + '/static/provinces.geojson').catch(() => console.log("Loading Map GeoJSON..."));
         logVisit(currentType, 'VIEW');
         loadData();
     });
@@ -3801,7 +3944,7 @@ $(document).ready(function() {
     
     // --- Smart Cascading Dropdown Logic for Registration ---
     function fetchRegProvinces() {
-        fetch(BASE_URL + '/api/locations/provinces')
+        fetch(getAppBaseUrl() + '/api/locations/provinces')
             .then(r => r.json())
             .then(res => {
                 if(res.success) {
@@ -3826,7 +3969,7 @@ $(document).ready(function() {
         $('#regParentHosp').html('<option value="" disabled selected>--กรุณาเลือกโรงพยาบาลแม่ข่าย--</option>').prop('disabled', true);
         $('#regOffice').html('<option value="" disabled selected>--กรุณาเลือกหน่วยงาน--</option>').prop('disabled', true);
         
-        fetch(BASE_URL + '/api/locations/districts?province=' + encodeURIComponent(prov))
+        fetch(getAppBaseUrl() + '/api/locations/districts?province=' + encodeURIComponent(prov))
             .then(r => r.json())
             .then(res => {
                 if(res.success) {
@@ -3891,7 +4034,7 @@ $(document).ready(function() {
         let oldText = submitBtn.text();
         submitBtn.prop('disabled', true).text('กำลังประมวลผล...');
         
-        fetch(BASE_URL + '/api/register', {
+        fetch(getAppBaseUrl() + '/api/register', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         }).then(r=>r.json()).then(data=>{
@@ -3915,7 +4058,7 @@ $(document).ready(function() {
 });
 
 function loadAdminUsers() {
-    fetch(BASE_URL + '/api/admin/users').then(r=>r.json()).then(data => {
+    fetch(getAppBaseUrl() + '/api/admin/users').then(r=>r.json()).then(data => {
         if(data.success) {
             let html = '';
             data.users.forEach(u => {
@@ -3940,7 +4083,7 @@ function loadAdminUsers() {
 
 window.changeUserStatus = function(id, action) {
     if(confirm(`ต้องการ ${action === 'approve' ? 'อนุมัติ' : 'ระงับ'} ผู้ใช้งานนี้ใช่หรือไม่?`)) {
-        fetch(BASE_URL + '/api/admin/users/approve', {
+        fetch(getAppBaseUrl() + '/api/admin/users/approve', {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id: id, action: action})
         }).then(r=>r.json()).then(data=>{
@@ -3974,39 +4117,20 @@ window.changeUserStatus = function(id, action) {
         e.preventDefault();
         e.stopPropagation();
         let prov = $(this).data('prov');
+        let isHome = $(this).hasClass('btn-home-drill-prov');
         if (prov) {
-            if (map) map.closePopup();
-            if (homeMap) homeMap.closePopup();
-            let cleanP = cleanName(prov);
-            let opt = $('#filter-province option').filter(function() { 
-                return cleanName($(this).val()) === cleanP || cleanName($(this).text()) === cleanP; 
-            });
-            if (opt.length) {
-                $('#filter-province').val(opt.val()).trigger('change');
-            } else {
-                $('#filter-province').val(prov).trigger('change');
-            }
+            drillToProvince(prov, isHome);
         }
     });
 
     $(document).on('click', '.btn-drill-dist, .btn-home-drill-dist', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        let prov = $(this).data('prov') || $('#filter-province').val();
         let dist = $(this).data('dist');
+        let isHome = $(this).hasClass('btn-home-drill-dist');
         if (dist) {
-            if (map) map.closePopup();
-            if (homeMap) homeMap.closePopup();
-            let cleanD = cleanName(dist);
-            let opt = $('#filter-district option').filter(function() { 
-                let v = cleanName($(this).val());
-                let t = cleanName($(this).text());
-                return v === cleanD || t === cleanD || v.replace('เมือง','') === cleanD.replace('เมือง','');
-            });
-            if (opt.length) {
-                $('#filter-district').val(opt.val()).trigger('change');
-            } else {
-                $('#filter-district').val(dist).trigger('change');
-            }
+            drillToDistrict(prov, dist, isHome);
         }
     });
 
@@ -4015,22 +4139,10 @@ window.changeUserStatus = function(id, action) {
         e.stopPropagation();
         let type = $(this).data('type');
         let name = $(this).data('name');
-        if (map) map.closePopup();
         if (type === 'prov') {
-            let cleanTarget = cleanName(name);
-            let opt = $('#filter-province option').filter(function() {
-                return cleanName($(this).val()) === cleanTarget || cleanName($(this).text()) === cleanTarget;
-            });
-            if (opt.length) $('#filter-province').val(opt.val()).trigger('change');
-            else $('#filter-province').val(name).trigger('change');
+            drillToProvince(name, false);
         } else if (type === 'dist') {
-            let cleanTarget = cleanName(name);
-            let opt = $('#filter-district option').filter(function() {
-                let v = cleanName($(this).val());
-                let t = cleanName($(this).text());
-                return v === cleanTarget || t === cleanTarget || v.replace('เมือง','') === cleanTarget.replace('เมือง','');
-            });
-            if (opt.length) $('#filter-district').val(opt.val()).trigger('change');
-            else $('#filter-district').val(name).trigger('change');
+            let p = $('#filter-province').val();
+            drillToDistrict(p, name, false);
         }
     });

@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <script>const BASE_URL = "{{ BASE_URL }}";</script>
+    <script>
+        let detectedBaseUrl = "{{ BASE_URL }}";
+        if (!detectedBaseUrl && window.location.pathname.startsWith('/fluoridesurveillance')) {
+            detectedBaseUrl = '/fluoridesurveillance';
+        }
+        const BASE_URL = detectedBaseUrl.replace(/\/+$/, '');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบเฝ้าระวังสภาวะฟันตกกระและระดับฟลูออไรด์ในน้ำ</title>
