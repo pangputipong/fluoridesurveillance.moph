@@ -466,9 +466,11 @@ body.theme-dental .submenu-link.active::before {
 }
 
 /* Donut & Map Configurations */
-#leafletMap {
+#leafletMap, #homeMap {
     border-radius: var(--border-radius-lg) !important;
     border: 1px solid var(--border-color);
+    width: 100%;
+    min-height: 550px;
 }
 
 .info.legend {

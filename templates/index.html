@@ -23,7 +23,7 @@
     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="{{ BASE_URL }}/static/css/styles.css?v=2.4">
+    <link rel="stylesheet" href="{{ BASE_URL }}/static/css/styles.css?v=2.5">
 </head>
 <body class="theme-home">
     
@@ -154,15 +154,8 @@
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="card-body p-0 position-relative flex-grow-1" style="min-height: 400px;">
-                                        <div id="homeMap" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
-
-
-                                        <div class="map-legend bg-white p-2 rounded shadow-sm border" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; font-size: 0.75rem; max-width: 250px;">
-                                            <div class="fw-bold mb-1"><i class="fas fa-info-circle me-1"></i> สัญลักษณ์เฝ้าระวัง</div>
-                                            <div class="d-flex align-items-center mb-1"><span class="sonar-legend-dot water-alert me-2"></span> แหล่งน้ำเกินมาตรฐาน (&gt;0.7 mg/L)</div>
-                                            <div class="d-flex align-items-center"><span class="sonar-legend-dot dental-alert me-2"></span> เด็กฟันตกกระวิกฤต (&gt;10%)</div>
-                                        </div>
+                                    <div class="card-body p-0 position-relative flex-grow-1" style="min-height: 580px; height: 580px;">
+                                        <div id="homeMap" style="width: 100%; height: 100%; min-height: 580px;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -963,8 +956,8 @@
         </div>
     </div>
 
-    <script src="{{ BASE_URL }}/static/js/district_centers.js?v=3.11"></script>
-    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.11"></script>
+    <script src="{{ BASE_URL }}/static/js/district_centers.js?v=3.13"></script>
+    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.13"></script>
 
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">

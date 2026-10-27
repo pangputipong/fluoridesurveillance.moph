@@ -1028,23 +1028,46 @@ $(document).ready(function() {
     }
 
     function drillToProvince(provName, isHome) {
-        if (map) map.closePopup();
-        if (homeMap) homeMap.closePopup();
+        if (window.map) window.map.closePopup();
+        if (window.homeMap) window.homeMap.closePopup();
+        let p = normalizeProv(provName);
         $('#filter-district, #filter-subdistrict').prop('disabled', false);
-        setFilterOption('#filter-province', provName);
+        setFilterOption('#filter-province', p);
         $('#filter-district, #filter-subdistrict').val('ทั้งหมด');
         $('#filter-province').trigger('change');
     }
+    window.drillToProvince = drillToProvince;
 
     function drillToDistrict(provName, distName, isHome) {
-        if (map) map.closePopup();
-        if (homeMap) homeMap.closePopup();
+        if (window.map) window.map.closePopup();
+        if (window.homeMap) window.homeMap.closePopup();
+        let p = normalizeProv(provName);
+        let d = normalizeDist(distName);
         $('#filter-district, #filter-subdistrict').prop('disabled', false);
-        setFilterOption('#filter-province', provName);
-        setFilterOption('#filter-district', distName);
+        setFilterOption('#filter-province', p);
+        setFilterOption('#filter-district', d);
         $('#filter-subdistrict').val('ทั้งหมด');
         $('#filter-district').trigger('change');
     }
+    window.drillToDistrict = drillToDistrict;
+
+    function drillBackToOverview() {
+        if (window.map) window.map.closePopup();
+        if (window.homeMap) window.homeMap.closePopup();
+        $('#filter-province, #filter-district, #filter-subdistrict').val('ทั้งหมด');
+        $('#filter-district, #filter-subdistrict').prop('disabled', true);
+        $('#filter-province').trigger('change');
+    }
+    window.drillBackToOverview = drillBackToOverview;
+
+    function drillBackToDistrict() {
+        if (window.map) window.map.closePopup();
+        if (window.homeMap) window.homeMap.closePopup();
+        $('#filter-district, #filter-subdistrict').val('ทั้งหมด');
+        $('#filter-subdistrict').prop('disabled', true);
+        $('#filter-district').trigger('change');
+    }
+    window.drillBackToDistrict = drillBackToDistrict;
 
     function getFluorideTierColor(val) {
         if (val === null || val === undefined || isNaN(val) || val <= 0) return '#94a3b8';
@@ -1144,14 +1167,14 @@ $(document).ready(function() {
                     <b>จำนวนแหล่งน้ำ:</b> ${count} แห่ง<br>
                     <b>สถานการณ์:</b> ${getFluorideTierLabel(maxVal)}
                 </div>
-                <button class="btn btn-sm btn-primary w-100 py-1 ${btnClass}" data-prov="${provName}" style="font-size: 0.75rem; border-radius: 6px;">
+                <button class="btn btn-sm btn-primary w-100 py-1 ${btnClass}" data-prov="${provName}" onclick="event.stopPropagation(); window.drillToProvince('${provName}', ${isHome});" style="font-size: 0.75rem; border-radius: 6px;">
                     <i class="fas fa-search-plus me-1"></i> เจาะลึกรายอำเภอ (${provName})
                 </button>
             </div>
         `;
 
         let m = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
-        m.on('dblclick', function(e) { if (e && e.originalEvent) L.DomEvent.stopPropagation(e); drillToProvince(provName, isHome); });
+        m.on('dblclick', function(e) { if (e && e.originalEvent) L.DomEvent.stopPropagation(e); window.drillToProvince(provName, isHome); });
         return m;
     }
 
@@ -1185,14 +1208,14 @@ $(document).ready(function() {
                     <b>จำนวนแหล่งน้ำ:</b> ${count} แห่ง<br>
                     <b>สถานการณ์:</b> ${getFluorideTierLabel(maxVal)}
                 </div>
-                <button class="btn btn-sm btn-success w-100 py-1 ${btnClass}" data-prov="${provName}" data-dist="${distName}" style="font-size: 0.75rem; border-radius: 6px;">
+                <button class="btn btn-sm btn-success w-100 py-1 ${btnClass}" data-prov="${provName}" data-dist="${distName}" onclick="event.stopPropagation(); window.drillToDistrict('${provName}', '${distName}', ${isHome});" style="font-size: 0.75rem; border-radius: 6px;">
                     <i class="fas fa-tint me-1"></i> ดูจุดแหล่งน้ำในอำเภอนี้
                 </button>
             </div>
         `;
 
         let m = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
-        m.on('dblclick', function(e) { if (e && e.originalEvent) L.DomEvent.stopPropagation(e); drillToDistrict(provName, distName, isHome); });
+        m.on('dblclick', function(e) { if (e && e.originalEvent) L.DomEvent.stopPropagation(e); window.drillToDistrict(provName, distName, isHome); });
         return m;
     }
 
@@ -1206,6 +1229,15 @@ $(document).ready(function() {
     };
     let reportBreadcrumbAdded = false;
 
+    let homeBreadcrumbControl = L.control({ position: 'topleft' });
+    homeBreadcrumbControl.onAdd = function() {
+        let div = L.DomUtil.create('div', 'map-breadcrumb-bar');
+        div.id = 'homeMapBreadcrumb';
+        div.innerHTML = '';
+        return div;
+    };
+    let homeBreadcrumbAdded = false;
+
     function updateReportBreadcrumb(level, provOrLabel, dist, tagLabel) {
         let container = document.getElementById('reportMapBreadcrumb');
         if (!container) return;
@@ -1215,14 +1247,14 @@ $(document).ready(function() {
         } else if (level === 2) {
             container.innerHTML = `
                 <div class="btn-group shadow-sm">
-                    <button class="btn btn-sm btn-light border btn-back-to-77"><i class="fas fa-arrow-left me-1"></i> ย้อนกลับ</button>
+                    <button class="btn btn-sm btn-light border btn-back-to-77" onclick="event.stopPropagation(); window.drillBackToOverview();"><i class="fas fa-arrow-left me-1"></i> ย้อนกลับ</button>
                     <span class="btn btn-sm btn-primary active fw-bold">จ.${provOrLabel} (รายอำเภอ)</span>
                 </div>`;
         } else if (level === 3) {
             container.innerHTML = `
                 <div class="btn-group shadow-sm">
-                    <button class="btn btn-sm btn-light border btn-back-to-77">ทั้งหมด</button>
-                    <button class="btn btn-sm btn-light border btn-back-to-dist">จ.${provOrLabel}</button>
+                    <button class="btn btn-sm btn-light border btn-back-to-77" onclick="event.stopPropagation(); window.drillBackToOverview();">ทั้งหมด</button>
+                    <button class="btn btn-sm btn-light border btn-back-to-dist" onclick="event.stopPropagation(); window.drillBackToDistrict();">จ.${provOrLabel}</button>
                     <span class="btn btn-sm btn-success active fw-bold">อ.${dist} (${suffix})</span>
                 </div>`;
         }
@@ -1236,14 +1268,14 @@ $(document).ready(function() {
         } else if (level === 2) {
             container.innerHTML = `
                 <div class="btn-group shadow-sm">
-                    <button class="btn btn-sm btn-light border btn-home-back-77"><i class="fas fa-arrow-left me-1"></i> ย้อนกลับ</button>
+                    <button class="btn btn-sm btn-light border btn-home-back-77" onclick="event.stopPropagation(); window.drillBackToOverview();"><i class="fas fa-arrow-left me-1"></i> ย้อนกลับ</button>
                     <span class="btn btn-sm btn-primary active fw-bold">จ.${provOrLabel} (รายอำเภอ)</span>
                 </div>`;
         } else if (level === 3) {
             container.innerHTML = `
                 <div class="btn-group shadow-sm">
-                    <button class="btn btn-sm btn-light border btn-home-back-77">ทั้งหมด</button>
-                    <button class="btn btn-sm btn-light border btn-home-back-dist">จ.${provOrLabel}</button>
+                    <button class="btn btn-sm btn-light border btn-home-back-77" onclick="event.stopPropagation(); window.drillBackToOverview();">ทั้งหมด</button>
+                    <button class="btn btn-sm btn-light border btn-home-back-dist" onclick="event.stopPropagation(); window.drillBackToDistrict();">จ.${provOrLabel}</button>
                     <span class="btn btn-sm btn-success active fw-bold">อ.${dist} (แหล่งน้ำ)</span>
                 </div>`;
         }
@@ -1420,8 +1452,8 @@ $(document).ready(function() {
                 ค่าเฉลี่ย ${mapCol}: <br><span style="font-size:15px; font-weight:700; color: ${getPolygonColor(avg)};">${avgText}</span>
             </div>
             ${actualGeoLevel !== 'subdistrict' ? `<div style="text-align:center; margin-top:6px; font-size:11px; color:#64748b;">(ดับเบิลคลิกหรือกดปุ่มด้านล่างเพื่อเจาะลึก)</div>` : ''}
-            ${actualGeoLevel === 'province' ? `<button class="btn btn-xs btn-primary w-100 mt-2 py-1 btn-choropleth-drill" data-type="prov" data-name="${areaName}" style="font-size:0.75rem;"><i class="fas fa-search-plus me-1"></i> เจาะลึกรายอำเภอ (${areaName})</button>` : ''}
-            ${actualGeoLevel === 'district' ? `<button class="btn btn-xs btn-success w-100 mt-2 py-1 btn-choropleth-drill" data-type="dist" data-name="${areaName}" style="font-size:0.75rem;"><i class="fas fa-search-plus me-1"></i> เจาะลึกรายตำบล (${areaName})</button>` : ''}
+            ${actualGeoLevel === 'province' ? `<button class="btn btn-xs btn-primary w-100 mt-2 py-1 btn-choropleth-drill" data-type="prov" data-name="${areaName}" onclick="event.stopPropagation(); window.drillToProvince('${areaName}', false);" style="font-size:0.75rem;"><i class="fas fa-search-plus me-1"></i> เจาะลึกรายอำเภอ (${areaName})</button>` : ''}
+            ${actualGeoLevel === 'district' ? `<button class="btn btn-xs btn-success w-100 mt-2 py-1 btn-choropleth-drill" data-type="dist" data-name="${areaName}" onclick="event.stopPropagation(); window.drillToDistrict('${$('#filter-province').val()}', '${areaName}', false);" style="font-size:0.75rem;"><i class="fas fa-search-plus me-1"></i> เจาะลึกรายตำบล (${areaName})</button>` : ''}
         </div>`;
         layer.bindPopup(popupContent);
         let lastAreaClick = 0;
@@ -1572,6 +1604,8 @@ $(document).ready(function() {
     }
 
     function updateMapDisplay() {
+        window.map = map;
+        window.updateMapDisplay = updateMapDisplay;
         if (choroplethLayer) { map.removeLayer(choroplethLayer); choroplethLayer = null; }
         markersGroup.clearLayers(); let bounds = [];
         let counts = {};
@@ -2221,6 +2255,8 @@ $(document).ready(function() {
             };
             homeLegend.addTo(homeMap);
         }
+        window.homeMap = homeMap;
+        window.renderHomeMap = renderHomeMap;
         
         if (homeMap) homeMap.closePopup();
         homeMarkersGroup.clearLayers();
@@ -2426,7 +2462,12 @@ $(document).ready(function() {
             }
         }
         
-        setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 300);
+        if (homeMap) {
+            homeMap.invalidateSize();
+            setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 150);
+            setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 400);
+            setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 800);
+        }
     }
     
     // Timeline fetch logic
@@ -3986,6 +4027,55 @@ $(document).ready(function() {
         }, 300);
     }
 
+    // ==========================================
+    // 🔘 Drilldown & Navigation Click Handlers
+    // ==========================================
+    $(document).on('click', '.btn-back-to-77, .btn-home-back-77', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        drillBackToOverview();
+    });
+
+    $(document).on('click', '.btn-back-to-dist, .btn-home-back-dist', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        drillBackToDistrict();
+    });
+
+    $(document).on('click', '.btn-drill-prov, .btn-home-drill-prov', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let prov = $(this).data('prov') || $(this).attr('data-prov');
+        let isHome = $(this).hasClass('btn-home-drill-prov');
+        if (prov) {
+            drillToProvince(prov, isHome);
+        }
+    });
+
+    $(document).on('click', '.btn-drill-dist, .btn-home-drill-dist', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let prov = $(this).data('prov') || $(this).attr('data-prov') || $('#filter-province').val();
+        let dist = $(this).data('dist') || $(this).attr('data-dist');
+        let isHome = $(this).hasClass('btn-home-drill-dist');
+        if (dist) {
+            drillToDistrict(prov, dist, isHome);
+        }
+    });
+
+    $(document).on('click', '.btn-choropleth-drill', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let type = $(this).data('type') || $(this).attr('data-type');
+        let name = $(this).data('name') || $(this).attr('data-name');
+        if (type === 'prov') {
+            drillToProvince(name, false);
+        } else if (type === 'dist') {
+            let p = $('#filter-province').val();
+            drillToDistrict(p, name, false);
+        }
+    });
+
     // Initial load
     fetchSchemas()
         .catch(err => console.warn('fetchSchemas error:', err))
@@ -4194,55 +4284,4 @@ window.changeUserStatus = function(id, action) {
 }
 
 
-    // ==========================================
-    // 🔘 Drilldown & Navigation Click Handlers
-    // ==========================================
-    $(document).on('click', '.btn-back-to-77, .btn-home-back-77', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (map) map.closePopup();
-        if (homeMap) homeMap.closePopup();
-        $('#filter-province').val('ทั้งหมด').trigger('change');
-    });
 
-    $(document).on('click', '.btn-back-to-dist, .btn-home-back-dist', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (map) map.closePopup();
-        if (homeMap) homeMap.closePopup();
-        $('#filter-district').val('ทั้งหมด').trigger('change');
-    });
-
-    $(document).on('click', '.btn-drill-prov, .btn-home-drill-prov', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let prov = $(this).data('prov');
-        let isHome = $(this).hasClass('btn-home-drill-prov');
-        if (prov) {
-            drillToProvince(prov, isHome);
-        }
-    });
-
-    $(document).on('click', '.btn-drill-dist, .btn-home-drill-dist', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let prov = $(this).data('prov') || $('#filter-province').val();
-        let dist = $(this).data('dist');
-        let isHome = $(this).hasClass('btn-home-drill-dist');
-        if (dist) {
-            drillToDistrict(prov, dist, isHome);
-        }
-    });
-
-    $(document).on('click', '.btn-choropleth-drill', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        let type = $(this).data('type');
-        let name = $(this).data('name');
-        if (type === 'prov') {
-            drillToProvince(name, false);
-        } else if (type === 'dist') {
-            let p = $('#filter-province').val();
-            drillToDistrict(p, name, false);
-        }
-    });
