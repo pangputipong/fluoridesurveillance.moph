@@ -823,7 +823,7 @@ $(document).ready(function() {
     let currentType = 'ทั้งหมด'; let isDental = false; let globalData = []; let activeChartConfig = {};
     let map = L.map('leafletMap', { maxBounds: [[5.0, 97.0], [21.0, 106.0]], maxBoundsViscosity: 1.0, minZoom: 5 }).setView([15.0, 100.0], 6); 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { crossOrigin: true }).addTo(map); 
-    let markersGroup = L.markerClusterGroup({ disableClusteringAtZoom: 12 }); 
+    let markersGroup = L.featureGroup(); 
     map.addLayer(markersGroup);
     
     let homeMap = null;
@@ -966,8 +966,10 @@ $(document).ready(function() {
     function createTierProvinceMarker(provName, maxVal, count, lat, lng, isHome) {
         let color = getFluorideTierColor(maxVal);
         let valText = count > 0 ? maxVal.toFixed(2) : '-';
+        let isRed = (maxVal > 4.00);
+        let pulseClass = isRed ? 'pulse-red-tier' : '';
         let iconHtml = `
-            <div class="drilldown-marker-pin" style="background-color: ${color};" title="จ.${provName}: สูงสุด ${valText} mg/L">
+            <div class="drilldown-marker-pin ${pulseClass}" style="background-color: ${color};" title="จ.${provName}: สูงสุด ${valText} mg/L">
                 <span>${valText}</span>
             </div>
             <div class="drilldown-pin-label">${provName}</div>
@@ -1002,8 +1004,10 @@ $(document).ready(function() {
     function createTierDistrictMarker(provName, distName, maxVal, count, lat, lng, isHome) {
         let color = getFluorideTierColor(maxVal);
         let valText = count > 0 ? maxVal.toFixed(2) : '-';
+        let isRed = (maxVal > 4.00);
+        let pulseClass = isRed ? 'pulse-red-tier' : '';
         let iconHtml = `
-            <div class="drilldown-marker-pin district-pin" style="background-color: ${color};" title="อ.${distName}: สูงสุด ${valText} mg/L">
+            <div class="drilldown-marker-pin district-pin ${pulseClass}" style="background-color: ${color};" title="อ.${distName}: สูงสุด ${valText} mg/L">
                 <span>${valText}</span>
             </div>
             <div class="drilldown-pin-label">อ.${distName}</div>
@@ -1131,12 +1135,10 @@ $(document).ready(function() {
 
         // Criteria
         if (isWaterCategory) {
-            html += `<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> 0 – 0.70 mg/L (ปกติ)</div>`;
-            html += `<div style="margin-bottom:3px;"><i style="background:#eab308; border-radius:50%;"></i> 0.71 – 1.50 mg/L (เฝ้าระวัง)</div>`;
-            html += `<div style="margin-bottom:3px;"><i style="background:#f97316; border-radius:50%;"></i> 1.51 – 4.00 mg/L (เสี่ยงสูง)</div>`;
-            html += `<div style="margin-bottom:3px;"><i style="background:#ef4444; border-radius:50%;"></i> มากกว่า 4.00 mg/L (วิกฤต)</div>`;
-            html += `<hr style="margin:4px 0;">`;
-            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>0.7 mg/L)</div>`;
+            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert" style="animation: sonar-ripple 1.8s infinite ease-out;"></span> <b style="color:#ef4444;">วิกฤต (> 4.00 mg/L)</b> <span class="badge bg-danger ms-1" style="font-size:9px;">กระพริบ</span></div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#f97316; border-radius:50%; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle;"></i> เสี่ยงสูง (1.51 – 4.00 mg/L)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#eab308; border-radius:50%; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle;"></i> เฝ้าระวัง (0.71 – 1.50 mg/L)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle;"></i> ปกติ (0 – 0.70 mg/L)</div>`;
             return html;
         } else {
             let waterThreshold = 0.7;
@@ -1272,48 +1274,52 @@ $(document).ready(function() {
     }
 
     function createMarker(p, isWaterCategory, statusVal, lat, lon) {
-        let isBlinking = shouldBlink(p, isWaterCategory);
-        let iconHtml = '';
+        let isWater = isWaterCategory;
+        let fVal = NaN;
+        let mapCol = activeChartConfig.map;
+        if (mapCol && p[mapCol] !== undefined) {
+            fVal = parseFloat(p[mapCol]);
+        } else {
+            fVal = isWater 
+                ? parseFloat(p['ปริมาณฟลูออไรด์'] || p['fluoride_level'] || p['ปริมาณฟลูออไรด์ (mg/L)'] || 0)
+                : parseFloat(p['ร้อยละเด็กฟันตกกระ'] || p['pct_fluorosis'] || 0);
+        }
+        
+        let isRed = isWater ? (fVal > 4.00) : shouldBlink(p, isWaterCategory);
+        let color = isWater ? getFluorideTierColor(fVal) : (isRed ? '#ef4444' : '#10b981');
         
         // Use custom map colors if configured for Spatial Map
-        let customColor = null;
         if(activeChartConfig && activeChartConfig.map_colors && activeChartConfig.map_colors.length > 0) {
-            let mapCol = activeChartConfig.map;
             let val = parseFloat(p[mapCol]);
             if(!isNaN(val)) {
                 for(let r of activeChartConfig.map_colors) {
                     let minOK = (r.min === null) || (val >= r.min);
                     let maxOK = (r.max === null) || (val <= r.max);
                     if(minOK && maxOK) {
-                        customColor = r.color;
+                        color = r.color;
                         break;
                     }
                 }
             }
         }
         
-        if (isBlinking) {
-            iconHtml = isWaterCategory
-                ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
+        let iconHtml = '';
+        if (isRed) {
+            iconHtml = isWater
+                ? `<div class="alert-sonar-marker" style="background-color: #ef4444;"><i class="fas fa-tint"></i></div>`
                 : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
         } else {
-            if(customColor) {
-                iconHtml = `<div class="custom-marker no-default-ripple"><div class="marker-dot" style="background-color: ${customColor};"></div></div>`;
-            } else {
-                let statusClass = statusVal.includes('เกิน') || statusVal.includes('ไม่ผ่าน') ? 'marker-red' : (statusVal.includes('ปกติ') || statusVal.includes('ผ่าน') ? 'marker-green' : 'marker-blue');
-                iconHtml = `<div class="custom-marker ${statusClass}"><div class="marker-dot"></div></div>`;
-            }
+            iconHtml = `<div class="custom-marker no-default-ripple"><div class="marker-dot" style="background-color: ${color};"></div></div>`;
         }
         
         let customIcon = L.divIcon({
             className: '',
             html: iconHtml,
-            iconSize: (isBlinking) ? [20, 20] : [14, 14],
-            iconAnchor: (isBlinking) ? [10, 10] : [7, 7]
+            iconSize: (isRed) ? [20, 20] : [14, 14],
+            iconAnchor: (isRed) ? [10, 10] : [7, 7]
         });
         
         let name = p.สถานที่ || p.สถานที่เก็บ || p.ชื่อหน่วยบริการ || 'จุดตรวจ';
-        let mapCol = activeChartConfig.map;
         let valForDrawer = NaN;
         if (mapCol && p[mapCol] !== undefined) {
             valForDrawer = p[mapCol];
@@ -1905,18 +1911,20 @@ $(document).ready(function() {
                 crossOrigin: true,
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(homeMap);
-            homeMarkersGroup = L.markerClusterGroup({ disableClusteringAtZoom: 12 });
+            homeMarkersGroup = L.featureGroup();
             homeMap.addLayer(homeMarkersGroup);
 
             // Add surveillance legend to home map
             let homeLegend = L.control({position: 'bottomright'});
             homeLegend.onAdd = function() {
                 let div = L.DomUtil.create('div', 'info legend marker-legend-box');
-                div.innerHTML = '<b style="display:block; margin-bottom:6px; font-size:13px;"><i class="fas fa-eye me-1"></i> สัญลักษณ์เฝ้าระวัง</b>'
-                    + '<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>0.7 mg/L)</div>'
-                    + '<div style="margin-bottom:3px;"><span class="sonar-legend-dot dental-alert"></span> เด็กฟันตกกระวิกฤต (>10%)</div>'
-                    + '<div style="margin-bottom:3px;"><i style="background:#3b82f6; border-radius:50%;"></i> แหล่งน้ำปกติ</div>'
-                    + '<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> สุขภาพช่องปากปกติ</div>';
+                div.innerHTML = '<b style="display:block; margin-bottom:6px; font-size:13px;"><i class="fas fa-layer-group me-1"></i> เกณฑ์ระดับฟลูออไรด์</b>'
+                    + '<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert" style="animation: sonar-ripple 1.8s infinite ease-out;"></span> <b style="color:#ef4444;">วิกฤต (> 4.00 mg/L)</b> <span class="badge bg-danger ms-1" style="font-size:9px;">กระพริบ</span></div>'
+                    + '<div style="margin-bottom:3px;"><i style="background:#f97316; border-radius:50%; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle;"></i> เสี่ยงสูง (1.51 – 4.00 mg/L)</div>'
+                    + '<div style="margin-bottom:3px;"><i style="background:#eab308; border-radius:50%; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle;"></i> เฝ้าระวัง (0.71 – 1.50 mg/L)</div>'
+                    + '<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%; display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:middle;"></i> ปกติ (0 – 0.70 mg/L)</div>'
+                    + '<hr style="margin:4px 0;">'
+                    + '<div style="margin-bottom:3px;"><span class="sonar-legend-dot dental-alert"></span> เด็กฟันตกกระวิกฤต (>10%)</div>';
                 return div;
             };
             homeLegend.addTo(homeMap);
@@ -2041,31 +2049,24 @@ $(document).ready(function() {
                     let lng = parseFloat(p.lng);
                     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
                         let isWater = p.type === 'water';
-                        let isCritical = false;
-                        if(isWater) {
-                            if(p.category === 'แหล่งน้ำดิบ') isCritical = p.val > critRaw;
-                            else if(p.category === 'แหล่งน้ำบริโภค') isCritical = p.val > critCons;
-                            else if(p.category === 'แหล่งน้ำประปา') isCritical = p.val > critTap;
-                            else isCritical = p.val > 0.7;
-                        } else {
-                            isCritical = p.val > critDental;
-                        }
+                        let fVal = parseFloat(p.val || 0);
+                        let isRed = isWater ? (fVal > 4.00) : (fVal > critDental);
+                        let color = isWater ? getFluorideTierColor(fVal) : (isRed ? '#ef4444' : '#10b981');
                         
                         let iconHtml = '';
-                        if(isCritical) {
+                        if(isRed) {
                             iconHtml = isWater
-                                ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
+                                ? `<div class="alert-sonar-marker" style="background-color: #ef4444;"><i class="fas fa-tint"></i></div>`
                                 : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
                         } else {
-                            let colorClass = isWater ? 'marker-blue' : 'marker-green';
-                            iconHtml = `<div class="custom-marker ${colorClass}"><div class="marker-dot"></div></div>`;
+                            iconHtml = `<div class="custom-marker no-default-ripple"><div class="marker-dot" style="background-color: ${color};"></div></div>`;
                         }
                             
                         let customIcon = L.divIcon({
                             className: '',
                             html: iconHtml,
-                            iconSize: isCritical ? [20, 20] : [14, 14],
-                            iconAnchor: isCritical ? [10, 10] : [7, 7]
+                            iconSize: isRed ? [20, 20] : [14, 14],
+                            iconAnchor: isRed ? [10, 10] : [7, 7]
                         });
                         
                         let popupContent = `
@@ -3905,29 +3906,37 @@ window.changeUserStatus = function(id, action) {
 
     $(document).on('click', '.btn-home-back-77', function(e) {
         e.preventDefault();
+        e.stopPropagation();
+        if (homeMap) homeMap.closePopup();
         window.homeDrillProv = '';
         window.homeDrillDist = '';
-        renderHomeMap();
+        setTimeout(renderHomeMap, 30);
     });
     $(document).on('click', '.btn-home-back-dist', function(e) {
         e.preventDefault();
+        e.stopPropagation();
+        if (homeMap) homeMap.closePopup();
         window.homeDrillDist = '';
-        renderHomeMap();
+        setTimeout(renderHomeMap, 30);
     });
     $(document).on('click', '.btn-home-drill-prov', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         let prov = $(this).data('prov');
         if (prov) {
+            if (homeMap) homeMap.closePopup();
             window.homeDrillProv = prov;
             window.homeDrillDist = '';
-            renderHomeMap();
+            setTimeout(renderHomeMap, 30);
         }
     });
     $(document).on('click', '.btn-home-drill-dist', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         let dist = $(this).data('dist');
         if (dist) {
+            if (homeMap) homeMap.closePopup();
             window.homeDrillDist = dist;
-            renderHomeMap();
+            setTimeout(renderHomeMap, 30);
         }
     });

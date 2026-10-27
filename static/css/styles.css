@@ -1284,3 +1284,24 @@ body.dark .form-control:focus, body.dark .form-select:focus {
     border-radius: 8px;
     overflow: hidden;
 }
+
+/* Blinking Radar Wave for Red Tier (> 4.00 mg/L) at All Levels */
+@keyframes pulse-red-tier {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.95), 0 3px 8px rgba(0, 0, 0, 0.35);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 16px rgba(239, 68, 68, 0), 0 3px 8px rgba(0, 0, 0, 0.35);
+        transform: scale(1.1);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 3px 8px rgba(0, 0, 0, 0.35);
+        transform: scale(1);
+    }
+}
+
+.drilldown-marker-pin.pulse-red-tier {
+    animation: pulse-red-tier 1.5s infinite ease-out !important;
+    border-color: #ffe4e6 !important;
+}
