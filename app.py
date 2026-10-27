@@ -2207,10 +2207,16 @@ def admin_data_list():
             filtered_records = conn.execute(text(filtered_sql), params).scalar() or 0
             
             # Data
-            sql = f"SELECT * FROM `{table_name}` {where_clause} ORDER BY id DESC LIMIT :limit OFFSET :offset"
-            params['limit'] = length
-            params['offset'] = start
-            res = conn.execute(text(sql), params).fetchall()
+            start = max(0, start)
+            if length <= 0 or length > 50000:
+                # Handle -1 (all) or very large limits safely for MySQL
+                sql = f"SELECT * FROM `{table_name}` {where_clause} ORDER BY id DESC LIMIT 50000"
+                res = conn.execute(text(sql), params).fetchall()
+            else:
+                sql = f"SELECT * FROM `{table_name}` {where_clause} ORDER BY id DESC LIMIT :limit OFFSET :offset"
+                params['limit'] = length
+                params['offset'] = start
+                res = conn.execute(text(sql), params).fetchall()
             
             data = []
             for r in res:

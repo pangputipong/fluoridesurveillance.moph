@@ -776,32 +776,70 @@
                                                 <script>
                                                     for(let i=1; i<=4; i++) {
                                                         document.write(`
-                                                        <div class="row g-2 mb-2 p-3 bg-white border rounded">
-                                                            <div class="col-md-3">
-                                                                <label class="small text-muted fw-bold">ชื่อ KPI ${i}</label>
-                                                                <input type="text" class="form-control form-control-sm kpi-label-input" id="kpi${i}_label" placeholder="เช่น จำนวนรวม">
+                                                        <div class="card mb-3 p-3 bg-white border rounded-3 shadow-sm kpi-card-config" id="kpi_card_config_${i}">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                                                <span class="badge bg-light text-primary border fw-bold"><i class="fas fa-tachometer-alt me-1"></i> กล่อง KPI ที่ ${i}</span>
+                                                                <span class="small text-muted fst-italic kpi-hint-text" id="kpi${i}_hint">กำหนดชื่อ ประเภท และเงื่อนไขการคำนวณ</span>
                                                             </div>
-                                                            <div class="col-md-3">
-                                                                <label class="small text-muted fw-bold">ประเภทคำนวณ</label>
-                                                                <select class="form-select form-select-sm kpi-type-input" id="kpi${i}_type">
-                                                                    <option value="count">นับจำนวนรายการ (Count)</option>
-                                                                    <option value="sum">ผลรวมตัวเลข (Sum)</option>
-                                                                    <option value="avg">หาค่าเฉลี่ย (Average)</option>
-                                                                </select>
+                                                            <div class="row g-2">
+                                                                <div class="col-md-3">
+                                                                    <label class="small text-muted fw-bold">ชื่อ KPI ${i}</label>
+                                                                    <input type="text" class="form-control form-control-sm kpi-label-input" id="kpi${i}_label" placeholder="เช่น แหล่งน้ำเกินมาตรฐาน">
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label class="small text-muted fw-bold">ประเภทคำนวณ</label>
+                                                                    <select class="form-select form-select-sm kpi-type-input" id="kpi${i}_type" data-idx="${i}">
+                                                                        <option value="count">นับจำนวนรายการ (Count)</option>
+                                                                        <option value="sum">ผลรวมตัวเลข (Sum)</option>
+                                                                        <option value="avg">หาค่าเฉลี่ย (Average)</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label class="small text-muted fw-bold">คอลัมน์อ้างอิง</label>
+                                                                    <select class="form-select form-select-sm kpi-col-input chart-config-dropdown" id="kpi${i}_col"><option value="">-- ไม่ใช้ / ทั้งหมด --</option></select>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label class="small text-muted fw-bold">สีสัญลักษณ์</label>
+                                                                    <select class="form-select form-select-sm kpi-color-input" id="kpi${i}_color">
+                                                                        <option value="main">สีดำ (ทั่วไป)</option>
+                                                                        <option value="theme">สีหลัก (ฟ้า/ม่วง)</option>
+                                                                        <option value="danger">สีแดง (เตือนภัย)</option>
+                                                                        <option value="success">สีเขียว (ปลอดภัย)</option>
+                                                                        <option value="warning">สีส้ม (เฝ้าระวัง)</option>
+                                                                    </select>
+                                                                </div>
                                                             </div>
-                                                            <div class="col-md-3">
-                                                                <label class="small text-muted fw-bold">คอลัมน์อ้างอิง</label>
-                                                                <select class="form-select form-select-sm kpi-col-input chart-config-dropdown" id="kpi${i}_col"><option value="">-- ไม่ใช้ --</option></select>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <label class="small text-muted fw-bold">สีสัญลักษณ์</label>
-                                                                <select class="form-select form-select-sm kpi-color-input" id="kpi${i}_color">
-                                                                    <option value="main">สีดำ (ทั่วไป)</option>
-                                                                    <option value="theme">สีหลัก (ฟ้า/ม่วง)</option>
-                                                                    <option value="danger">สีแดง (เตือนภัย)</option>
-                                                                    <option value="success">สีเขียว (ปลอดภัย)</option>
-                                                                    <option value="warning">สีส้ม (เฝ้าระวัง)</option>
-                                                                </select>
+
+                                                            <!-- เงื่อนไขสูตรคำนวณ (Condition & Formula Details) -->
+                                                            <div class="mt-2 pt-2 border-top bg-light p-2 rounded-2 kpi-condition-row" id="kpi${i}_condition_container">
+                                                                <div class="row g-2 align-items-center">
+                                                                    <div class="col-md-4">
+                                                                        <label class="small text-muted fw-bold"><i class="fas fa-filter text-primary me-1"></i> เงื่อนไข / ตัวดำเนินการ</label>
+                                                                        <select class="form-select form-select-sm kpi-op-input" id="kpi${i}_op" data-idx="${i}">
+                                                                            <option value="all">ทั้งหมด (ไม่มีเงื่อนไข / All)</option>
+                                                                            <option value=">">มากกว่า (> ค่าที่ระบุ)</option>
+                                                                            <option value=">=">มากกว่าหรือเท่ากับ (>= ค่าที่ระบุ)</option>
+                                                                            <option value="<">น้อยกว่า (< ค่าที่ระบุ)</option>
+                                                                            <option value="<=">น้อยกว่าหรือเท่ากับ (<= ค่าที่ระบุ)</option>
+                                                                            <option value="=">เท่ากับ (= ค่าที่ระบุ)</option>
+                                                                            <option value="!=">ไม่เท่ากับ (!= ค่าที่ระบุ)</option>
+                                                                            <option value="contains">มีคำว่า / ข้อความ (Contains)</option>
+                                                                            <option value="between">อยู่ในช่วง (Between ค่าที่ 1 ถึง 2)</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="col-md-3" id="kpi${i}_val_wrap">
+                                                                        <label class="small text-muted fw-bold"><i class="fas fa-calculator text-primary me-1"></i> ค่าเปรียบเทียบ / สูตร</label>
+                                                                        <input type="text" class="form-control form-control-sm kpi-val-input" id="kpi${i}_val" placeholder="เช่น 0.7 หรือ เกินมาตรฐาน">
+                                                                    </div>
+                                                                    <div class="col-md-2" id="kpi${i}_val2_wrap" style="display: none;">
+                                                                        <label class="small text-muted fw-bold">ถึงค่าที่ 2</label>
+                                                                        <input type="text" class="form-control form-control-sm kpi-val2-input" id="kpi${i}_val2" placeholder="เช่น 1.5">
+                                                                    </div>
+                                                                    <div class="col-md-3">
+                                                                        <label class="small text-muted fw-bold"><i class="fas fa-tag text-primary me-1"></i> หน่วยแสดงผล (ถ้ามี)</label>
+                                                                        <input type="text" class="form-control form-control-sm kpi-unit-input" id="kpi${i}_unit" placeholder="เช่น แห่ง, คน, %, mg/L">
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>`);
                                                     }

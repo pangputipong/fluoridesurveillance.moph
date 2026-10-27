@@ -1,5 +1,14 @@
 /* E-Fluoride Pro Frontend Application Logic */
 
+    $(document).on('change', '.kpi-op-input', function() {
+        let idx = $(this).data('idx');
+        if ($(this).val() === 'between') {
+            $(`#kpi${idx}_val2_wrap`).show();
+        } else {
+            $(`#kpi${idx}_val2_wrap`).hide();
+        }
+    });
+
 $(document).ready(function() {
     // ----------------------------------------------------
     // 1. Dark Mode Toggle & Sidebar Control
@@ -397,13 +406,32 @@ $(document).ready(function() {
         if(conf.kpis && conf.kpis.length === 4) {
             conf.kpis.forEach((kpi, idx) => {
                 let i = idx + 1;
-                $(`#kpi${i}_label`).val(kpi.label);
-                $(`#kpi${i}_type`).val(kpi.type);
-                $(`#kpi${i}_col`).val(kpi.col||'');
-                $(`#kpi${i}_color`).val(kpi.color);
+                $(`#kpi${i}_label`).val(kpi.label || '');
+                $(`#kpi${i}_type`).val(kpi.type || 'count');
+                $(`#kpi${i}_col`).val(kpi.col || '');
+                $(`#kpi${i}_color`).val(kpi.color || 'main');
+                $(`#kpi${i}_op`).val(kpi.op || 'all');
+                $(`#kpi${i}_val`).val(kpi.val !== undefined && kpi.val !== null ? kpi.val : '');
+                $(`#kpi${i}_val2`).val(kpi.val2 !== undefined && kpi.val2 !== null ? kpi.val2 : '');
+                $(`#kpi${i}_unit`).val(kpi.unit || '');
+                if (kpi.op === 'between') {
+                    $(`#kpi${i}_val2_wrap`).show();
+                } else {
+                    $(`#kpi${i}_val2_wrap`).hide();
+                }
             });
         } else {
-            for(let i=1; i<=4; i++) { $(`#kpi${i}_label`).val(''); $(`#kpi${i}_type`).val('count'); $(`#kpi${i}_col`).val(''); $(`#kpi${i}_color`).val('main'); }
+            for(let i=1; i<=4; i++) {
+                $(`#kpi${i}_label`).val('');
+                $(`#kpi${i}_type`).val('count');
+                $(`#kpi${i}_col`).val('');
+                $(`#kpi${i}_color`).val('main');
+                $(`#kpi${i}_op`).val('all');
+                $(`#kpi${i}_val`).val('');
+                $(`#kpi${i}_val2`).val('');
+                $(`#kpi${i}_unit`).val('');
+                $(`#kpi${i}_val2_wrap`).hide();
+            }
         }
 
         $('#groupRulesContainer').empty();
@@ -428,7 +456,17 @@ $(document).ready(function() {
         $('#chartPropCol, #chartDrillCol, #chartMapCol').html('<option value="">-- ไม่ใช้ / ค่าเริ่มต้น --</option>');
         $('#enableGrouping').prop('checked', false); $('#groupingBuilder').hide(); $('#groupRulesContainer').empty();
         $('#mapAlertThreshold').val('');
-        for(let i=1; i<=4; i++) { $(`#kpi${i}_label`).val(''); $(`#kpi${i}_type`).val('count'); $(`#kpi${i}_col`).html('<option value="">-- ไม่ใช้ --</option>'); $(`#kpi${i}_color`).val('main'); }
+        for(let i=1; i<=4; i++) {
+            $(`#kpi${i}_label`).val('');
+            $(`#kpi${i}_type`).val('count');
+            $(`#kpi${i}_col`).html('<option value="">-- ไม่ใช้ / ทั้งหมด --</option>');
+            $(`#kpi${i}_color`).val('main');
+            $(`#kpi${i}_op`).val('all');
+            $(`#kpi${i}_val`).val('');
+            $(`#kpi${i}_val2`).val('');
+            $(`#kpi${i}_unit`).val('');
+            $(`#kpi${i}_val2_wrap`).hide();
+        }
         $('#colorRangesContainer').empty(); addColorRangeRow('', '', '#ef4444');
     });
 
@@ -468,7 +506,16 @@ $(document).ready(function() {
 
         let kpiData = [];
         for(let i=1; i<=4; i++) {
-            kpiData.push({ label: $(`#kpi${i}_label`).val() || `KPI ${i}`, type: $(`#kpi${i}_type`).val(), col: $(`#kpi${i}_col`).val(), color: $(`#kpi${i}_color`).val() });
+            kpiData.push({
+                label: $(`#kpi${i}_label`).val() || `KPI ${i}`,
+                type: $(`#kpi${i}_type`).val(),
+                col: $(`#kpi${i}_col`).val(),
+                color: $(`#kpi${i}_color`).val(),
+                op: $(`#kpi${i}_op`).val() || 'all',
+                val: $(`#kpi${i}_val`).val() || '',
+                val2: $(`#kpi${i}_val2`).val() || '',
+                unit: $(`#kpi${i}_unit`).val() || ''
+            });
         }
         
         let alertVal = $('#mapAlertThreshold').val();
@@ -1329,12 +1376,74 @@ $(document).ready(function() {
             let kpiConf = activeChartConfig.kpis || [];
             if(kpiConf.length === 4) {
                 kpiConf.forEach((kpi, idx) => {
-                    let i = idx + 1; $(`#kpi-label-${i}`).text(kpi.label || `KPI ${i}`); let val = 0;
-                    if(kpi.type === 'count') { val = globalData.length; } 
-                    else if(kpi.type === 'sum' || kpi.type === 'avg') { let sum = 0, cnt = 0; globalData.forEach(r => { let num = parseFloat(r[kpi.col]); if(!isNaN(num)) { sum+=num; cnt++; } }); val = kpi.type === 'sum' ? sum : (cnt > 0 ? sum/cnt : 0); }
-                    let displayVal = val.toLocaleString('en-US', {maximumFractionDigits:2});
-                    let colorClass = 'text-main'; if(kpi.color === 'theme') colorClass = 'text-theme'; if(kpi.color === 'danger') colorClass = 'text-danger'; if(kpi.color === 'success') colorClass = 'text-success'; if(kpi.color === 'warning') colorClass = 'text-warning';
-                    $(`#kpi-val-${i}`).html(`<span class="${colorClass}">${displayVal}</span>`);
+                    let i = idx + 1;
+                    $(`#kpi-label-${i}`).text(kpi.label || `KPI ${i}`);
+                    let val = 0;
+                    let op = kpi.op || 'all';
+                    let targetVal = kpi.val !== undefined && kpi.val !== null ? String(kpi.val).trim() : '';
+                    let targetNum = parseFloat(targetVal);
+                    let targetVal2 = kpi.val2 !== undefined && kpi.val2 !== null ? String(kpi.val2).trim() : '';
+                    let targetNum2 = parseFloat(targetVal2);
+
+                    function checkCondition(rowVal) {
+                        if (op === 'all' || targetVal === '') return true;
+                        if (rowVal === undefined || rowVal === null) return false;
+                        let rowNum = parseFloat(rowVal);
+                        let rowStr = String(rowVal).trim();
+
+                        if (op === '>') return !isNaN(rowNum) && !isNaN(targetNum) && rowNum > targetNum;
+                        if (op === '>=') return !isNaN(rowNum) && !isNaN(targetNum) && rowNum >= targetNum;
+                        if (op === '<') return !isNaN(rowNum) && !isNaN(targetNum) && rowNum < targetNum;
+                        if (op === '<=') return !isNaN(rowNum) && !isNaN(targetNum) && rowNum <= targetNum;
+                        if (op === '=' || op === '==') {
+                            if (!isNaN(rowNum) && !isNaN(targetNum)) return rowNum === targetNum;
+                            return rowStr.toLowerCase() === targetVal.toLowerCase();
+                        }
+                        if (op === '!=' || op === '<>') {
+                            if (!isNaN(rowNum) && !isNaN(targetNum)) return rowNum !== targetNum;
+                            return rowStr.toLowerCase() !== targetVal.toLowerCase();
+                        }
+                        if (op === 'contains') {
+                            return rowStr.toLowerCase().includes(targetVal.toLowerCase());
+                        }
+                        if (op === 'between') {
+                            return !isNaN(rowNum) && !isNaN(targetNum) && !isNaN(targetNum2) && rowNum >= targetNum && rowNum <= targetNum2;
+                        }
+                        return true;
+                    }
+
+                    if (kpi.type === 'count') {
+                        if (op === 'all' || !kpi.col) {
+                            val = globalData.length;
+                        } else {
+                            let count = 0;
+                            globalData.forEach(r => {
+                                if (checkCondition(r[kpi.col])) count++;
+                            });
+                            val = count;
+                        }
+                    } else if (kpi.type === 'sum' || kpi.type === 'avg') {
+                        let sum = 0, cnt = 0;
+                        globalData.forEach(r => {
+                            if (checkCondition(r[kpi.col])) {
+                                let num = parseFloat(r[kpi.col]);
+                                if (!isNaN(num)) {
+                                    sum += num;
+                                    cnt++;
+                                }
+                            }
+                        });
+                        val = kpi.type === 'sum' ? sum : (cnt > 0 ? sum / cnt : 0);
+                    }
+
+                    let displayVal = val.toLocaleString('en-US', {maximumFractionDigits: 2});
+                    let unitHtml = kpi.unit ? ` <span style="font-size: 0.75rem; font-weight: normal; color: #64748b;">${kpi.unit}</span>` : '';
+                    let colorClass = 'text-main';
+                    if(kpi.color === 'theme') colorClass = 'text-theme';
+                    if(kpi.color === 'danger') colorClass = 'text-danger';
+                    if(kpi.color === 'success') colorClass = 'text-success';
+                    if(kpi.color === 'warning') colorClass = 'text-warning';
+                    $(`#kpi-val-${i}`).html(`<span class="${colorClass}">${displayVal}</span>${unitHtml}`);
                 });
             } else {
                 $('#kpi-label-1').text('จำนวนรายการตรวจ'); $('#kpi-val-1').text(globalData.length);
