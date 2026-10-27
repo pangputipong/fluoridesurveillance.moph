@@ -20,11 +20,49 @@ import hashlib
 import math
 import numpy as np
 
+import mimetypes
+
+mimetypes.add_type('application/json', '.geojson')
+
 def isFinite(val):
     try:
         return math.isfinite(val)
     except:
         return False
+
+def safe_float(val, default=0.0):
+    try:
+        if val is None or pd.isna(val):
+            return default
+        f = float(val)
+        return default if math.isnan(f) or math.isinf(f) else round(f, 2)
+    except:
+        return default
+
+def sanitize_for_json(obj):
+    if obj is None:
+        return None
+    if isinstance(obj, (int, bool, str)):
+        return obj
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return 0.0
+        return obj
+    if isinstance(obj, dict):
+        return {str(k): sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [sanitize_for_json(v) for v in obj]
+    if hasattr(obj, 'item'):
+        return sanitize_for_json(obj.item())
+    if pd.isna(obj):
+        return None
+    return str(obj)
+
+def safe_jsonify(data, status_code=200):
+    clean_data = sanitize_for_json(data)
+    json_str = json.dumps(clean_data, ensure_ascii=False, default=str)
+    return app.response_class(response=json_str, status=status_code, mimetype='application/json; charset=utf-8')
+
 
 REGION_PROVINCES = {
     'กรุงเทพมหานคร': ['กรุงเทพมหานคร', 'กรุงเทพฯ', 'กทม', 'กทม.'],
@@ -987,6 +1025,21 @@ def location_history():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/geojson/<level>')
+def api_get_geojson(level):
+    file_map = {
+        'province': 'provinces.geojson',
+        'district': 'districts.geojson',
+        'subdistrict': 'subdistricts.geojson'
+    }
+    filename = file_map.get(level)
+    if not filename:
+        return safe_jsonify({'error': 'Invalid geojson level'}, 404)
+    file_path = os.path.join(app.root_path, 'static', filename)
+    if not os.path.exists(file_path):
+        return safe_jsonify({'error': 'GeoJSON file not found'}, 404)
+    return send_file(file_path, mimetype='application/json')
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -1050,15 +1103,23 @@ def get_data():
         bar_data = []; line_data = []
         for z in zones:
             z_w = df_water[df_water['เขตสุขภาพ'] == str(z)]
-            bar_data.append(round(z_w['ปริมาณฟลูออไรด์'].mean(), 2) if not z_w.empty else 0)
+            mean_val = z_w['ปริมาณฟลูออไรด์'].mean() if not z_w.empty else 0.0
+            bar_data.append(safe_float(mean_val, 0.0))
             z_d = df_dental[df_dental['เขตสุขภาพ'] == str(z)]
             zs = z_d['จำนวนตรวจ'].sum() if not z_d.empty else 0
             zf = z_d['พบฟันตกกระ'].sum() if not z_d.empty else 0
-            line_data.append(round((zf/zs)*100, 1) if zs > 0 else 0)
+            line_data.append(round((zf/zs)*100, 1) if zs > 0 else 0.0)
  
         # ดึง Schema หน้าหลักส่งไปให้ Frontend จัดการ Dynamic KPIs
-        home_schema_res = engine.connect().execute(text("SELECT schema_data FROM report_schemas WHERE report_name = 'หน้าหลัก'")).fetchone()
-        home_config = json.loads(home_schema_res[0])['config'] if home_schema_res else {}
+        home_config = {}
+        try:
+            with engine.connect() as conn:
+                home_schema_res = conn.execute(text("SELECT schema_data FROM report_schemas WHERE report_name = 'หน้าหลัก'")).fetchone()
+                if home_schema_res and home_schema_res[0]:
+                    s_data = json.loads(home_schema_res[0]) if isinstance(home_schema_res[0], str) else home_schema_res[0]
+                    home_config = s_data.get('config', {}) if isinstance(s_data, dict) else {}
+        except Exception as e:
+            print(f"Error reading home schema: {e}")
         base_vals = {'w_pct': w_pct, 'd_pct': d_pct, 'red_zones': red_zones, 'safe_zones': safe_zones, 'w_tot': w_tot, 'd_scr': d_scr, 'd_flu': d_flu}
         
         home_kpis_dynamic = []
@@ -1071,37 +1132,39 @@ def get_data():
         if not df_water.empty:
             water_valid = df_water[(df_water['ละติจูด'] != 0.0) & (df_water['ลองจิจูด'] != 0.0)]
             for _, r in water_valid.iterrows():
+                f_val = safe_float(r.get('ปริมาณฟลูออไรด์'), 0.0)
                 water_points.append({
-                    'name': str(r['สถานที่เก็บ']),
-                    'lat': float(r['ละติจูด']),
-                    'lng': float(r['ลองจิจูด']),
-                    'val': float(r['ปริมาณฟลูออไรด์']),
+                    'name': str(r.get('สถานที่เก็บ', 'ไม่ระบุ')),
+                    'lat': safe_float(r.get('ละติจูด'), 13.0),
+                    'lng': safe_float(r.get('ลองจิจูด'), 101.5),
+                    'val': f_val,
                     'type': 'water',
                     'water_type': str(r.get('ชนิดน้ำ', 'ไม่ระบุ')),
                     'check_date': str(r.get('วันที่ตรวจ', '-')),
                     'category': str(r.get('กลุ่มแหล่งน้ำ', 'ไม่ระบุ')),
-                    'prov': str(r['จังหวัด']),
-                    'dist': str(r['อำเภอ']),
-                    'subdist': str(r['ตำบล']),
-                    'status': str(r['สถานการณ์']),
-                    'detail': f"ปริมาณฟลูออไรด์ {r['ปริมาณฟลูออไรด์']} mg/L"
+                    'prov': str(r.get('จังหวัด', '')),
+                    'dist': str(r.get('อำเภอ', '')),
+                    'subdist': str(r.get('ตำบล', '')),
+                    'status': str(r.get('สถานการณ์', 'ไม่ระบุ')),
+                    'detail': f"ปริมาณฟลูออไรด์ {f_val} mg/L"
                 })
         dental_points = []
         if not df_dental.empty:
             dental_valid = df_dental[(df_dental['ร้อยละเด็กฟันตกกระ'].notnull()) & (df_dental['ละติจูด'] != 0.0) & (df_dental['ลองจิจูด'] != 0.0)]
             for _, r in dental_valid.iterrows():
+                d_val = safe_float(r.get('ร้อยละเด็กฟันตกกระ'), 0.0)
                 dental_points.append({
-                    'name': str(r['ชื่อหน่วยบริการ']),
-                    'lat': float(r['ละติจูด']),
-                    'lng': float(r['ลองจิจูด']),
-                    'val': float(r['ร้อยละเด็กฟันตกกระ']),
+                    'name': str(r.get('ชื่อหน่วยบริการ', 'ไม่ระบุ')),
+                    'lat': safe_float(r.get('ละติจูด'), 13.0),
+                    'lng': safe_float(r.get('ลองจิจูด'), 101.5),
+                    'val': d_val,
                     'type': 'dental',
                     'category': 'dental',
-                    'prov': str(r['จังหวัด']),
-                    'dist': str(r['อำเภอ']),
-                    'subdist': str(r['ตำบล']),
-                    'status': str(r['สถานการณ์']),
-                    'detail': f"ฟันตกกระ {r['ร้อยละเด็กฟันตกกระ']}%"
+                    'prov': str(r.get('จังหวัด', '')),
+                    'dist': str(r.get('อำเภอ', '')),
+                    'subdist': str(r.get('ตำบล', '')),
+                    'status': str(r.get('สถานการณ์', 'ไม่ระบุ')),
+                    'detail': f"ฟันตกกระ {d_val}%"
                 })
  
         # Cascading dropdown logic for home summary
@@ -1152,7 +1215,7 @@ def get_data():
             'subdistricts': ['ทั้งหมด'] + subdistricts_list
         }
 
-        return jsonify({
+        return safe_jsonify({
             'success': True,
             'home_kpis_dynamic': home_kpis_dynamic,
             'home_charts': {
@@ -1176,7 +1239,7 @@ def get_data():
     df_filtered = df_dental.copy() if is_dental else df_water.copy()
  
     if df_filtered.empty: 
-        return jsonify({'dropdowns': {'years': ['ทั้งหมด'], 'regions': ['ทั้งหมด'], 'zones': ['ทั้งหมด'], 'provinces': ['ทั้งหมด'], 'districts': ['ทั้งหมด'], 'subdistricts': ['ทั้งหมด']}, 'table_data': []})
+        return safe_jsonify({'dropdowns': {'years': ['ทั้งหมด'], 'regions': ['ทั้งหมด'], 'zones': ['ทั้งหมด'], 'provinces': ['ทั้งหมด'], 'districts': ['ทั้งหมด'], 'subdistricts': ['ทั้งหมด']}, 'table_data': []})
  
     if not is_dental and req_type != 'ทั้งหมด':
         search_term = ""
@@ -1257,7 +1320,7 @@ def get_data():
     cols_to_keep = list(set([c for c in needed_cols if c in df_filtered.columns]))
     df_projected = df_filtered[cols_to_keep]
  
-    return jsonify({'dropdowns': dropdowns, 'table_data': df_projected.fillna("").to_dict('records')})
+    return safe_jsonify({'dropdowns': dropdowns, 'table_data': df_projected.fillna("").to_dict('records')})
 
 @app.route('/api/download_template/<cat>')
 def download_template(cat):

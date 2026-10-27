@@ -915,6 +915,76 @@ $(document).ready(function() {
 
     const DEFAULT_PROV_CENTERS = {"พะเยา": {"lat": 19.254362, "lng": 100.218854, "code": "56"}, "เชียงราย": {"lat": 19.815651, "lng": 99.801999, "code": "57"}, "แพร่": {"lat": 18.18034, "lng": 100.026111, "code": "54"}, "น่าน": {"lat": 18.860644, "lng": 100.801075, "code": "55"}, "ตาก": {"lat": 16.82174, "lng": 98.66448, "code": "63"}, "สุโขทัย": {"lat": 17.263062, "lng": 99.743914, "code": "64"}, "อุทัยธานี": {"lat": 15.328086, "lng": 99.520556, "code": "61"}, "กำแพงเพชร": {"lat": 16.361374, "lng": 99.493228, "code": "62"}, "นครสวรรค์": {"lat": 15.699464, "lng": 100.021484, "code": "60"}, "เพชรบูรณ์": {"lat": 16.327173, "lng": 101.197603, "code": "67"}, "พิษณุโลก": {"lat": 16.989924, "lng": 100.540959, "code": "65"}, "พิจิตร": {"lat": 16.260346, "lng": 100.371616, "code": "66"}, "นครราชสีมา": {"lat": 15.049753, "lng": 102.217287, "code": "30"}, "บุรีรัมย์": {"lat": 15.061463, "lng": 103.034463, "code": "31"}, "สมุทรสาคร": {"lat": 13.581863, "lng": 100.360849, "code": "74"}, "สมุทรสงคราม": {"lat": 13.386631, "lng": 99.947256, "code": "75"}, "สุพรรณบุรี": {"lat": 14.657006, "lng": 99.857128, "code": "72"}, "นครปฐม": {"lat": 13.816994, "lng": 100.205712, "code": "73"}, "ราชบุรี": {"lat": 13.561025, "lng": 99.63767, "code": "70"}, "บึงกาฬ": {"lat": 18.048655, "lng": 103.656396, "code": "38"}, "กาญจนบุรี": {"lat": 14.665458, "lng": 99.019942, "code": "71"}, "หนองบัวลำภู": {"lat": 17.1612, "lng": 102.243575, "code": "39"}, "ลพบุรี": {"lat": 15.119342, "lng": 100.90318, "code": "16"}, "ชัยภูมิ": {"lat": 16.121803, "lng": 101.913492, "code": "36"}, "สิงห์บุรี": {"lat": 14.897131, "lng": 100.339467, "code": "17"}, "พระนครศรีอยุธยา": {"lat": 14.402835, "lng": 100.540805, "code": "14"}, "อำนาจเจริญ": {"lat": 15.830604, "lng": 104.692406, "code": "37"}, "อ่างทอง": {"lat": 14.613151, "lng": 100.35599, "code": "15"}, "อุบลราชธานี": {"lat": 15.150301, "lng": 105.049631, "code": "34"}, "ยโสธร": {"lat": 15.860717, "lng": 104.346093, "code": "35"}, "นนทบุรี": {"lat": 13.902207, "lng": 100.467122, "code": "12"}, "สุรินทร์": {"lat": 15.042601, "lng": 103.614488, "code": "32"}, "ปทุมธานี": {"lat": 14.044164, "lng": 100.641714, "code": "13"}, "กรุงเทพมหานคร": {"lat": 13.663124, "lng": 100.462308, "code": "10"}, "ศรีสะเกษ": {"lat": 14.940708, "lng": 104.322537, "code": "33"}, "สมุทรปราการ": {"lat": 13.640764, "lng": 100.598791, "code": "11"}, "เพชรบุรี": {"lat": 12.984825, "lng": 99.54526, "code": "76"}, "ประจวบคีรีขันธ์": {"lat": 11.796586, "lng": 99.571626, "code": "77"}, "อุดรธานี": {"lat": 17.483855, "lng": 102.942058, "code": "41"}, "เลย": {"lat": 17.377487, "lng": 101.5897, "code": "42"}, "ชลบุรี": {"lat": 12.99964, "lng": 101.073666, "code": "20"}, "ขอนแก่น": {"lat": 16.441997, "lng": 102.498326, "code": "40"}, "ระนอง": {"lat": 9.88619, "lng": 98.608891, "code": "85"}, "ชุมพร": {"lat": 10.367934, "lng": 99.14741, "code": "86"}, "ภูเก็ต": {"lat": 7.900846, "lng": 98.366893, "code": "83"}, "สุราษฎร์ธานี": {"lat": 9.324611, "lng": 99.470987, "code": "84"}, "กระบี่": {"lat": 7.894205, "lng": 99.013176, "code": "81"}, "มุกดาหาร": {"lat": 16.582287, "lng": 104.487898, "code": "49"}, "พังงา": {"lat": 8.698312, "lng": 98.284315, "code": "82"}, "สระแก้ว": {"lat": 13.783972, "lng": 102.330755, "code": "27"}, "สกลนคร": {"lat": 17.503812, "lng": 103.799102, "code": "47"}, "นครศรีธรรมราช": {"lat": 8.475692, "lng": 99.702248, "code": "80"}, "นครพนม": {"lat": 17.334964, "lng": 104.298245, "code": "48"}, "ปราจีนบุรี": {"lat": 14.020141, "lng": 101.576405, "code": "25"}, "ร้อยเอ็ด": {"lat": 15.904701, "lng": 103.832394, "code": "45"}, "นครนายก": {"lat": 14.249245, "lng": 101.21751, "code": "26"}, "กาฬสินธุ์": {"lat": 16.625361, "lng": 103.625496, "code": "46"}, "ตราด": {"lat": 12.067796, "lng": 102.510427, "code": "23"}, "หนองคาย": {"lat": 17.934328, "lng": 102.863019, "code": "43"}, "ฉะเชิงเทรา": {"lat": 13.610719, "lng": 101.362643, "code": "24"}, "มหาสารคาม": {"lat": 15.988314, "lng": 103.166623, "code": "44"}, "ระยอง": {"lat": 12.843944, "lng": 101.442738, "code": "21"}, "จันทบุรี": {"lat": 12.820737, "lng": 102.1161, "code": "22"}, "ชัยนาท": {"lat": 15.148053, "lng": 100.060024, "code": "18"}, "สระบุรี": {"lat": 14.63577, "lng": 101.012449, "code": "19"}, "ลำปาง": {"lat": 18.238869, "lng": 99.462562, "code": "52"}, "อุตรดิตถ์": {"lat": 17.739948, "lng": 100.47269, "code": "53"}, "เชียงใหม่": {"lat": 18.733383, "lng": 98.705709, "code": "50"}, "ลำพูน": {"lat": 18.065749, "lng": 98.944955, "code": "51"}, "นราธิวาส": {"lat": 6.132375, "lng": 101.688208, "code": "96"}, "ปัตตานี": {"lat": 6.728153, "lng": 101.353026, "code": "94"}, "ยะลา": {"lat": 6.199154, "lng": 101.217952, "code": "95"}, "ตรัง": {"lat": 7.458325, "lng": 99.524767, "code": "92"}, "พัทลุง": {"lat": 7.503238, "lng": 100.03059, "code": "93"}, "สงขลา": {"lat": 6.896958, "lng": 100.533101, "code": "90"}, "แม่ฮ่องสอน": {"lat": 18.720597, "lng": 98.035025, "code": "58"}, "สตูล": {"lat": 6.68793, "lng": 99.715647, "code": "91"}};
     window.provCentersData = DEFAULT_PROV_CENTERS;
+    // 🗺️ Standard 7 Regions & 13 Health Zones Mapping for Thailand
+    const REGION_PROVINCES = {
+        'กรุงเทพมหานคร': ['กรุงเทพมหานคร', 'กรุงเทพฯ', 'กทม', 'กทม.'],
+        'ภาคเหนือ': ['เชียงใหม่', 'เชียงราย', 'ลำพูน', 'ลำปาง', 'แพร่', 'น่าน', 'พะเยา', 'แม่ฮ่องสอน', 'อุตรดิตถ์'],
+        'ภาคตะวันออกเฉียงเหนือ': ['นครราชสีมา', 'ขอนแก่น', 'ชัยภูมิ', 'เลย', 'หนองบัวลำภู', 'อุดรธานี', 'หนองคาย', 'บึงกาฬ', 'สกลนคร', 'นครพนม', 'มุกดาหาร', 'กาฬสินธุ์', 'มหาสารคาม', 'ร้อยเอ็ด', 'ยโสธร', 'อำนาจเจริญ', 'อุบลราชธานี', 'ศรีสะเกษ', 'สุรินทร์', 'บุรีรัมย์'],
+        'ภาคกลาง': ['นนทบุรี', 'ปทุมธานี', 'สมุทรปราการ', 'สมุทรสาคร', 'สมุทรสงคราม', 'นครปฐม', 'พระนครศรีอยุธยา', 'อ่างทอง', 'ลพบุรี', 'สิงห์บุรี', 'ชัยนาท', 'สระบุรี', 'นครสวรรค์', 'อุทัยธานี', 'กำแพงเพชร', 'ตาก', 'สุโขทัย', 'พิษณุโลก', 'พิจิตร', 'เพชรบูรณ์'],
+        'ภาคตะวันออก': ['ชลบุรี', 'ระยอง', 'จันทบุรี', 'ตราด', 'ฉะเชิงเทรา', 'ปราจีนบุรี', 'นครนายก', 'สระแก้ว'],
+        'ภาคตะวันตก': ['ราชบุรี', 'กาญจนบุรี', 'สุพรรณบุรี', 'เพชรบุรี', 'ประจวบคีรีขันธ์'],
+        'ภาคใต้': ['นครศรีธรรมราช', 'กระบี่', 'พังงา', 'ภูเก็ต', 'สุราษฎร์ธานี', 'ระนอง', 'ชุมพร', 'สงขลา', 'สตูล', 'ตรัง', 'พัทลุง', 'ปัตตานี', 'ยะลา', 'นราธิวาส']
+    };
+
+    const ZONE_PROVINCES = {
+        '1': ['เชียงใหม่', 'ลำพูน', 'ลำปาง', 'แพร่', 'น่าน', 'พะเยา', 'เชียงราย', 'แม่ฮ่องสอน'],
+        '2': ['พิษณุโลก', 'เพชรบูรณ์', 'อุตรดิตถ์', 'สุโขทัย', 'ตาก'],
+        '3': ['นครสวรรค์', 'กำแพงเพชร', 'พิจิตร', 'อุทัยธานี', 'ชัยนาท'],
+        '4': ['พระนครศรีอยุธยา', 'ลพบุรี', 'สิงห์บุรี', 'อ่างทอง', 'สระบุรี', 'นนทบุรี', 'ปทุมธานี', 'นครนายก'],
+        '5': ['ราชบุรี', 'กาญจนบุรี', 'สุพรรณบุรี', 'นครปฐม', 'สมุทรสาคร', 'สมุทรสงคราม', 'เพชรบุรี', 'ประจวบคีรีขันธ์'],
+        '6': ['สระแก้ว', 'ปราจีนบุรี', 'ฉะเชิงเทรา', 'ชลบุรี', 'ระยอง', 'จันทบุรี', 'ตราด', 'สมุทรปราการ'],
+        '7': ['ขอนแก่น', 'ร้อยเอ็ด', 'มหาสารคาม', 'กาฬสินธุ์'],
+        '8': ['อุดรธานี', 'สกลนคร', 'นครพนม', 'เลย', 'หนองคาย', 'หนองบัวลำภู', 'บึงกาฬ'],
+        '9': ['นครราชสีมา', 'ชัยภูมิ', 'บุรีรัมย์', 'สุรินทร์'],
+        '10': ['อุบลราชธานี', 'ศรีสะเกษ', 'ยโสธร', 'อำนาจเจริญ', 'มุกดาหาร'],
+        '11': ['สุราษฎร์ธานี', 'นครศรีธรรมราช', 'ชุมพร', 'ระนอง', 'พังงา', 'ภูเก็ต', 'กระบี่'],
+        '12': ['สงขลา', 'สตูล', 'ตรัง', 'พัทลุง', 'ปัตตานี', 'ยะลา', 'นราธิวาส'],
+        '13': ['กรุงเทพมหานคร']
+    };
+
+    function getAllowedProvinces(region, zone) {
+        let provs = null;
+        if (region && region !== 'ทั้งหมด') {
+            provs = REGION_PROVINCES[region] ? [...REGION_PROVINCES[region]] : [];
+        }
+        if (zone && zone !== 'ทั้งหมด') {
+            let zKey = String(zone).replace(/^(เขตสุขภาพที่|เขตสุขภาพ|เขต)/g, '').trim();
+            let zProvs = ZONE_PROVINCES[zKey] || [];
+            if (provs === null) provs = [...zProvs];
+            else provs = provs.filter(p => zProvs.includes(p));
+        }
+        return provs ? provs.map(normalizeProv) : null;
+    }
+
+    function updateDropdownSelect(id, options, currentValue) {
+        let select = $(id);
+        select.empty();
+        let currStr = currentValue !== undefined && currentValue !== null ? String(currentValue).trim() : '';
+        let cleanCurr = cleanName(currStr);
+        let matched = false;
+
+        if (!options || !Array.isArray(options)) options = ['ทั้งหมด'];
+
+        options.forEach(opt => {
+            let optStr = String(opt).trim();
+            let isSelected = false;
+            if (!matched && currStr && currStr !== 'ทั้งหมด' && (optStr === currStr || cleanName(optStr) === cleanCurr)) {
+                isSelected = true;
+                matched = true;
+            } else if (!matched && (!currStr || currStr === 'ทั้งหมด') && optStr === 'ทั้งหมด') {
+                isSelected = true;
+                matched = true;
+            }
+            let selAttr = isSelected ? 'selected' : '';
+            let label = (optStr === 'ทั้งหมด') ? '-- ทั้งหมด --' : optStr;
+            select.append(`<option value="${optStr}" ${selAttr}>${label}</option>`);
+        });
+
+        if (!matched && currStr && currStr !== 'ทั้งหมด') {
+            select.append(`<option value="${currStr}" selected>${currStr}</option>`);
+        }
+    }
+
     window.distCentersData = null;
 
     function loadCentroidsData() {
@@ -960,6 +1030,7 @@ $(document).ready(function() {
     function drillToProvince(provName, isHome) {
         if (map) map.closePopup();
         if (homeMap) homeMap.closePopup();
+        $('#filter-district, #filter-subdistrict').prop('disabled', false);
         setFilterOption('#filter-province', provName);
         $('#filter-district, #filter-subdistrict').val('ทั้งหมด');
         $('#filter-province').trigger('change');
@@ -968,6 +1039,7 @@ $(document).ready(function() {
     function drillToDistrict(provName, distName, isHome) {
         if (map) map.closePopup();
         if (homeMap) homeMap.closePopup();
+        $('#filter-district, #filter-subdistrict').prop('disabled', false);
         setFilterOption('#filter-province', provName);
         setFilterOption('#filter-district', distName);
         $('#filter-subdistrict').val('ทั้งหมด');
@@ -1233,7 +1305,7 @@ $(document).ready(function() {
         if (geoJsonCache[level]) {
             actualGeoLevel = level;
             geoJsonData = geoJsonCache[level];
-            return Promise.resolve();
+            return Promise.resolve(geoJsonData);
         }
 
         let baseUrl = getAppBaseUrl();
@@ -1248,21 +1320,29 @@ $(document).ready(function() {
             });
         };
 
-        return tryFetchGeo(baseUrl + '/static/' + fileName)
+        return tryFetchGeo(baseUrl + '/api/geojson/' + level)
+            .catch(() => tryFetchGeo('/fluoridesurveillance/api/geojson/' + level))
+            .catch(() => tryFetchGeo('./api/geojson/' + level))
+            .catch(() => tryFetchGeo(baseUrl + '/static/' + fileName))
             .catch(() => tryFetchGeo('./static/' + fileName))
             .catch(() => tryFetchGeo('static/' + fileName))
             .catch(() => tryFetchGeo('/fluoridesurveillance/static/' + fileName))
             .then(data => {
-                actualGeoLevel = level;
-                geoJsonCache[level] = data;
-                geoJsonData = data;
+                if (data && data.features) {
+                    actualGeoLevel = level;
+                    geoJsonCache[level] = data;
+                    geoJsonData = data;
+                    return data;
+                }
+                throw new Error('Invalid GeoJSON structure');
             })
             .catch(err => {
-                console.error(`Error loading GeoJSON for level ${level}:`, err);
+                console.warn(`Could not load GeoJSON for level ${level}:`, err);
                 if (geoJsonCache['province']) {
                     actualGeoLevel = 'province';
                     geoJsonData = geoJsonCache['province'];
                 }
+                return null;
             });
     }
 
@@ -1285,11 +1365,14 @@ $(document).ready(function() {
         if (sProv && sProv !== 'ทั้งหมด' && fProv && fProv !== sProv) return false;
         if (sAmp && sAmp !== 'ทั้งหมด' && fAmp && fAmp !== sAmp) return false;
         if ((!sProv || sProv === 'ทั้งหมด') && (sReg !== 'ทั้งหมด' || sZone !== 'ทั้งหมด')) {
-            let allowedProvinces = [];
-            $('#filter-province option').each(function() {
-                let v = $(this).val();
-                if (v && v !== 'ทั้งหมด') allowedProvinces.push(cleanName(v));
-            });
+            let allowedProvinces = getAllowedProvinces(sReg, sZone);
+            if (!allowedProvinces || allowedProvinces.length === 0) {
+                allowedProvinces = [];
+                $('#filter-province option').each(function() {
+                    let v = $(this).val();
+                    if (v && v !== 'ทั้งหมด') allowedProvinces.push(cleanName(v));
+                });
+            }
             if (allowedProvinces.length > 0 && fProv && !allowedProvinces.includes(fProv)) return false;
         }
         return true;
@@ -1341,11 +1424,29 @@ $(document).ready(function() {
             ${actualGeoLevel === 'district' ? `<button class="btn btn-xs btn-success w-100 mt-2 py-1 btn-choropleth-drill" data-type="dist" data-name="${areaName}" style="font-size:0.75rem;"><i class="fas fa-search-plus me-1"></i> เจาะลึกรายตำบล (${areaName})</button>` : ''}
         </div>`;
         layer.bindPopup(popupContent);
+        let lastAreaClick = 0;
         layer.on({ 
             mouseover: function(e){ let tgt = e.target; tgt.setStyle({ weight: 3, color: '#334155', fillOpacity: 0.95 }); tgt.bringToFront(); }, 
-            mouseout: function(e){ choroplethLayer.resetStyle(e.target); },
+            mouseout: function(e){ if (choroplethLayer) choroplethLayer.resetStyle(e.target); },
+            click: function(e) {
+                let now = Date.now();
+                if (now - lastAreaClick < 350) {
+                    if (e && e.originalEvent) L.DomEvent.stopPropagation(e);
+                    if (map) map.closePopup();
+                    if (actualGeoLevel === 'province') {
+                        drillToProvince(areaName, false);
+                        return;
+                    } else if (actualGeoLevel === 'district') {
+                        let p = $('#filter-province').val();
+                        drillToDistrict(p, areaName, false);
+                        return;
+                    }
+                }
+                lastAreaClick = now;
+            },
             dblclick: function(e) {
                 if (e && e.originalEvent) L.DomEvent.stopPropagation(e);
+                if (map) map.closePopup();
                 if (actualGeoLevel === 'province') {
                     drillToProvince(areaName, false);
                 } else if (actualGeoLevel === 'district') {
@@ -1550,8 +1651,8 @@ $(document).ready(function() {
 
                 if (!selProv || selProv === 'ทั้งหมด') {
                     // Level 1: Province Pins
-                    let allowedProvinces = null;
-                    if (selRegion !== 'ทั้งหมด' || selZone !== 'ทั้งหมด') {
+                    let allowedProvinces = getAllowedProvinces(selRegion, selZone);
+                    if (!allowedProvinces && (selRegion !== 'ทั้งหมด' || selZone !== 'ทั้งหมด')) {
                         allowedProvinces = [];
                         $('#filter-province option').each(function() {
                             let v = $(this).val();
@@ -1763,7 +1864,10 @@ $(document).ready(function() {
             $('#homeDashboardView').show(); $('#spatialDashboardView').hide(); $('#aiPredictionView').hide(); $('#investigationReportView').hide(); $('body').addClass('theme-home').removeClass('theme-dental'); 
             setTimeout(() => { if (homeMap) homeMap.invalidateSize(); }, 200); 
             fetch(getAppBaseUrl() + '/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) })
-            .then(res => res.json()).then(data => {
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            }).then(data => {
                 if(data.home_kpis_dynamic && data.home_kpis_dynamic.length > 0) {
                     let kpiHtml = '';
                     data.home_kpis_dynamic.forEach(k => {
@@ -1781,7 +1885,12 @@ $(document).ready(function() {
                     $('#homeKPIsContainer').html('<div class="col-12"><div class="alert alert-warning">ยังไม่ได้ตั้งค่าโครงสร้าง KPI สำหรับหน้าหลัก กรุณาตั้งค่าผ่านเมนูแอดมิน</div></div>');
                 }
 
-                homeCorrelationChart.data.labels = data.home_charts.corr.labels; homeCorrelationChart.data.datasets[0].data = data.home_charts.corr.line; homeCorrelationChart.data.datasets[1].data = data.home_charts.corr.bar; homeCorrelationChart.update();
+                if (homeCorrelationChart && data && data.home_charts && data.home_charts.corr) {
+                    homeCorrelationChart.data.labels = data.home_charts.corr.labels || [];
+                    if (homeCorrelationChart.data.datasets[0]) homeCorrelationChart.data.datasets[0].data = data.home_charts.corr.line || [];
+                    if (homeCorrelationChart.data.datasets[1]) homeCorrelationChart.data.datasets[1].data = data.home_charts.corr.bar || [];
+                    homeCorrelationChart.update();
+                }
                 let alertsHtml = '';
                 data.top_alerts.forEach((alert, i) => {
                     let rankStyle = i < 3 
@@ -1822,21 +1931,12 @@ $(document).ready(function() {
                 if(alertsHtml === '') alertsHtml = '<div class="p-3 text-center text-muted">ไม่มีข้อมูลเฝ้าระวัง</div>'; $('#topAlertsContainer').html(alertsHtml);
                 
                 if (data.dropdowns) {
-                    function updateSelect(id, options, currentValue) { 
-                        let select = $(id); 
-                        select.empty(); 
-                        let currStr = String(currentValue); 
-                        options.forEach(opt => { 
-                            let isSelected = (String(opt) === currStr) ? 'selected' : ''; 
-                            select.append(`<option value="${opt}" ${isSelected}>${opt === 'ทั้งหมด' ? '-- ทั้งหมด --' : opt}</option>`); 
-                        }); 
-                    }
-                    updateSelect('#filter-year', data.dropdowns.years, $('#filter-year').val());
-                    updateSelect('#filter-region', data.dropdowns.regions, $('#filter-region').val());
-                    updateSelect('#filter-zone', data.dropdowns.zones, $('#filter-zone').val());
-                    updateSelect('#filter-province', data.dropdowns.provinces, $('#filter-province').val());
-                    updateSelect('#filter-district', data.dropdowns.districts, $('#filter-district').val());
-                    updateSelect('#filter-subdistrict', data.dropdowns.subdistricts, $('#filter-subdistrict').val());
+                    updateDropdownSelect('#filter-year', data.dropdowns.years, $('#filter-year').val());
+                    updateDropdownSelect('#filter-region', data.dropdowns.regions, $('#filter-region').val());
+                    updateDropdownSelect('#filter-zone', data.dropdowns.zones, $('#filter-zone').val());
+                    updateDropdownSelect('#filter-province', data.dropdowns.provinces, $('#filter-province').val());
+                    updateDropdownSelect('#filter-district', data.dropdowns.districts, $('#filter-district').val());
+                    updateDropdownSelect('#filter-subdistrict', data.dropdowns.subdistricts, $('#filter-subdistrict').val());
                     let p = $('#filter-province').val(); 
                     let d = $('#filter-district').val();
                     $('#filter-district').prop('disabled', p === 'ทั้งหมด'); 
@@ -1845,6 +1945,9 @@ $(document).ready(function() {
 
                 window.currentWaterPoints = data.water_points || []; 
                 window.currentDentalPoints = data.dental_points || []; 
+                renderHomeMap();
+            }).catch(err => {
+                console.error('Home data load error:', err);
                 renderHomeMap();
             }).finally(() => hideLoading()); return; 
         }
@@ -1949,8 +2052,12 @@ $(document).ready(function() {
                 $('#kpi-label-4').text('อัตราความเสี่ยงเฝ้าระวัง'); $('#kpi-val-4').text('0%');
             }
             
-            function updateSelect(id, options, currentValue) { let select = $(id); select.empty(); let currStr = String(currentValue); options.forEach(opt => { let isSelected = (String(opt) === currStr) ? 'selected' : ''; select.append(`<option value="${opt}" ${isSelected}>${opt === 'ทั้งหมด' ? '-- ทั้งหมด --' : opt}</option>`); }); }
-            updateSelect('#filter-year', data.dropdowns.years, $('#filter-year').val()); updateSelect('#filter-region', data.dropdowns.regions, $('#filter-region').val()); updateSelect('#filter-zone', data.dropdowns.zones, $('#filter-zone').val()); updateSelect('#filter-province', data.dropdowns.provinces, $('#filter-province').val()); updateSelect('#filter-district', data.dropdowns.districts, $('#filter-district').val()); updateSelect('#filter-subdistrict', data.dropdowns.subdistricts, $('#filter-subdistrict').val());
+            updateDropdownSelect('#filter-year', data.dropdowns.years, $('#filter-year').val());
+            updateDropdownSelect('#filter-region', data.dropdowns.regions, $('#filter-region').val());
+            updateDropdownSelect('#filter-zone', data.dropdowns.zones, $('#filter-zone').val());
+            updateDropdownSelect('#filter-province', data.dropdowns.provinces, $('#filter-province').val());
+            updateDropdownSelect('#filter-district', data.dropdowns.districts, $('#filter-district').val());
+            updateDropdownSelect('#filter-subdistrict', data.dropdowns.subdistricts, $('#filter-subdistrict').val());
             let p = $('#filter-province').val(); let d = $('#filter-district').val();
             $('#filter-district').prop('disabled', p === 'ทั้งหมด'); $('#filter-subdistrict').prop('disabled', p === 'ทั้งหมด' || d === 'ทั้งหมด');
             
@@ -2153,8 +2260,8 @@ $(document).ready(function() {
 
         if (!selProv || selProv === 'ทั้งหมด') {
             // Level 1: Province Pins
-            let allowedProvinces = null;
-            if (selRegion !== 'ทั้งหมด' || selZone !== 'ทั้งหมด') {
+            let allowedProvinces = getAllowedProvinces(selRegion, selZone);
+            if (!allowedProvinces && (selRegion !== 'ทั้งหมด' || selZone !== 'ทั้งหมด')) {
                 allowedProvinces = [];
                 $('#filter-province option').each(function() {
                     let v = $(this).val();
@@ -3373,21 +3480,12 @@ $(document).ready(function() {
                 updateAIMap(data.predictions);
                 
                 if (data.dropdowns) {
-                    function updateSelect(id, options, currentValue) { 
-                        let select = $(id); 
-                        select.empty(); 
-                        let currStr = String(currentValue); 
-                        options.forEach(opt => { 
-                            let isSelected = (String(opt) === currStr) ? 'selected' : ''; 
-                            select.append(`<option value="${opt}" ${isSelected}>${opt === 'ทั้งหมด' ? '-- ทั้งหมด --' : opt}</option>`); 
-                        }); 
-                    }
-                    updateSelect('#filter-year', data.dropdowns.years, $('#filter-year').val());
-                    updateSelect('#filter-region', data.dropdowns.regions, $('#filter-region').val());
-                    updateSelect('#filter-zone', data.dropdowns.zones, $('#filter-zone').val());
-                    updateSelect('#filter-province', data.dropdowns.provinces, $('#filter-province').val());
-                    updateSelect('#filter-district', data.dropdowns.districts, $('#filter-district').val());
-                    updateSelect('#filter-subdistrict', data.dropdowns.subdistricts, $('#filter-subdistrict').val());
+                    updateDropdownSelect('#filter-year', data.dropdowns.years, $('#filter-year').val());
+                    updateDropdownSelect('#filter-region', data.dropdowns.regions, $('#filter-region').val());
+                    updateDropdownSelect('#filter-zone', data.dropdowns.zones, $('#filter-zone').val());
+                    updateDropdownSelect('#filter-province', data.dropdowns.provinces, $('#filter-province').val());
+                    updateDropdownSelect('#filter-district', data.dropdowns.districts, $('#filter-district').val());
+                    updateDropdownSelect('#filter-subdistrict', data.dropdowns.subdistricts, $('#filter-subdistrict').val());
                     let p = $('#filter-province').val(); 
                     let d = $('#filter-district').val();
                     $('#filter-district').prop('disabled', p === 'ทั้งหมด'); 
@@ -3889,11 +3987,13 @@ $(document).ready(function() {
     }
 
     // Initial load
-    fetchSchemas().then(() => {
-        fetch(getAppBaseUrl() + '/static/provinces.geojson').catch(() => console.log("Loading Map GeoJSON..."));
-        logVisit(currentType, 'VIEW');
-        loadData();
-    });
+    fetchSchemas()
+        .catch(err => console.warn('fetchSchemas error:', err))
+        .finally(() => {
+            fetch(getAppBaseUrl() + '/static/provinces.geojson').catch(() => {});
+            logVisit(currentType, 'VIEW');
+            loadData();
+        });
 });
 
 
