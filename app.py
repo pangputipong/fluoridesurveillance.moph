@@ -26,21 +26,22 @@ def isFinite(val):
     except:
         return False
 
+REGION_PROVINCES = {
+    'กรุงเทพมหานคร': ['กรุงเทพมหานคร', 'กรุงเทพฯ', 'กทม', 'กทม.'],
+    'ภาคเหนือ': ['เชียงใหม่', 'เชียงราย', 'ลำพูน', 'ลำปาง', 'แพร่', 'น่าน', 'พะเยา', 'แม่ฮ่องสอน', 'อุตรดิตถ์'],
+    'ภาคตะวันออกเฉียงเหนือ': ['นครราชสีมา', 'ขอนแก่น', 'ชัยภูมิ', 'เลย', 'หนองบัวลำภู', 'อุดรธานี', 'หนองคาย', 'บึงกาฬ', 'สกลนคร', 'นครพนม', 'มุกดาหาร', 'กาฬสินธุ์', 'มหาสารคาม', 'ร้อยเอ็ด', 'ยโสธร', 'อำนาจเจริญ', 'อุบลราชธานี', 'ศรีสะเกษ', 'สุรินทร์', 'บุรีรัมย์'],
+    'ภาคกลาง': ['นนทบุรี', 'ปทุมธานี', 'สมุทรปราการ', 'สมุทรสาคร', 'สมุทรสงคราม', 'นครปฐม', 'พระนครศรีอยุธยา', 'อ่างทอง', 'ลพบุรี', 'สิงห์บุรี', 'ชัยนาท', 'สระบุรี', 'นครสวรรค์', 'อุทัยธานี', 'กำแพงเพชร', 'ตาก', 'สุโขทัย', 'พิษณุโลก', 'พิจิตร', 'เพชรบูรณ์'],
+    'ภาคตะวันออก': ['ชลบุรี', 'ระยอง', 'จันทบุรี', 'ตราด', 'ฉะเชิงเทรา', 'ปราจีนบุรี', 'นครนายก', 'สระแก้ว'],
+    'ภาคตะวันตก': ['ราชบุรี', 'กาญจนบุรี', 'สุพรรณบุรี', 'เพชรบุรี', 'ประจวบคีรีขันธ์'],
+    'ภาคใต้': ['นครศรีธรรมราช', 'กระบี่', 'พังงา', 'ภูเก็ต', 'สุราษฎร์ธานี', 'ระนอง', 'ชุมพร', 'สงขลา', 'สตูล', 'ตรัง', 'พัทลุง', 'ปัตตานี', 'ยะลา', 'นราธิวาส']
+}
+
 def get_region_by_province(province):
     p = str(province).strip()
-    north = ["เชียงใหม่", "เชียงราย", "ลำพูน", "ลำปาง", "แพร่", "น่าน", "พะเยา", "แม่ฮ่องสอน", "อุตรดิตถ์"]
-    northeast = ["นครราชสีมา", "ขอนแก่น", "ชัยภูมิ", "เลย", "หนองบัวลำภู", "อุดรธานี", "หนองคาย", "บึงกาฬ", "สกลนคร", "นครพนม", "มุกดาหาร", "กาฬสินธุ์", "มหาสารคาม", "ร้อยเอ็ด", "ยโสธร", "อำนาจเจริญ", "อุบลราชธานี", "ศรีสะเกษ", "สุรินทร์", "บุรีรัมย์"]
-    central = ["กรุงเทพมหานคร", "กรุงเทพฯ", "นนทบุรี", "ปทุมธานี", "สมุทรปราการ", "สมุทรสาคร", "สมุทรสงคราม", "นครปฐม", "พระนครศรีอยุธยา", "อ่างทอง", "ลพบุรี", "สิงห์บุรี", "ชัยนาท", "สระบุรี", "นครสวรรค์", "อุทัยธานี", "กำแพงเพชร", "ตาก", "สุโขทัย", "พิษณุโลก", "พิจิตร", "เพชรบูรณ์"]
-    east = ["ชลบุรี", "ระยอง", "จันทบุรี", "ตราด", "ฉะเชิงเทรา", "ปราจีนบุรี", "นครนายก", "สระแก้ว"]
-    west = ["ราชบุรี", "กาญจนบุรี", "สุพรรณบุรี", "นครปฐม", "เพชรบุรี", "ประจวบคีรีขันธ์"]
-    south = ["นครศรีธรรมราช", "กระบี่", "พังงา", "ภูเก็ต", "สุราษฎร์ธานี", "ระนอง", "ชุมพร", "สงขลา", "สตูล", "ตรัง", "พัทลุง", "ปัตตานี", "ยะลา", "นราธิวาส"]
-    if p in north: return "ภาคเหนือ"
-    if p in northeast: return "ภาคตะวันออกเฉียงเหนือ"
-    if p in central: return "ภาคกลาง"
-    if p in east: return "ภาคตะวันออก"
-    if p in west: return "ภาคตะวันตก"
-    if p in south: return "ภาคใต้"
-    return "ไม่ระบุ"
+    for reg, provs in REGION_PROVINCES.items():
+        if p in provs:
+            return reg
+    return 'ไม่ระบุ'
 
 load_dotenv()
 app = Flask(__name__)
@@ -402,7 +403,8 @@ def init_database_tables():
 
             conn.execute(text("""
                 INSERT INTO `report_schemas` (`report_name`, `category`, `schema_data`) VALUES
-                ('สภาวะฟันตกกระ (เด็ก)', 'health', '{"fields": [{"name": "รหัสหน่วยบริการ", "type": "DB_Column", "db_ref": "hospcode", "formula": ""}, {"name": "ชื่อหน่วยบริการ", "type": "DB_Column", "db_ref": "hosp_name", "formula": ""}, {"name": "ปีงบประมาณ", "type": "DB_Column", "db_ref": "fiscal_year", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "จำนวนตรวจ", "type": "DB_Column", "db_ref": "screened_kids", "formula": ""}, {"name": "พบฟันตกกระ", "type": "DB_Column", "db_ref": "fluorosis_cases", "formula": ""}, {"name": "ร้อยละตกกระ (%)", "type": "Formula", "db_ref": "", "formula": "([พบฟันตกกระ]/[จำนวนตรวจ])*100"}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ร้อยละตกกระ (%)", "map": "ร้อยละตกกระ (%)", "kpis": [{"label":"จำนวนเด็กทั้งหมด", "type":"sum", "col":"จำนวนเด็กทั้งหมด", "color":"main"}, {"label":"ได้รับการตรวจ", "type":"sum", "col":"จำนวนตรวจ", "color":"theme"}, {"label":"พบฟันตกกระ", "type":"sum", "col":"พบฟันตกกระ", "color":"danger"}, {"label":"ค่าเฉลี่ยตกกระ", "type":"avg", "col":"ร้อยละตกกระ (%)", "color":"warning"}]}}'),
+                ('รายงานจำนวนเด็ก 6-12 ปี มีสภาวะฟันตกกระ', 'health', '{"fields": [{"name": "รหัสหน่วยบริการ", "type": "DB_Column", "db_ref": "hospcode", "formula": ""}, {"name": "ชื่อหน่วยบริการ", "type": "DB_Column", "db_ref": "hosp_name", "formula": ""}, {"name": "ปีงบประมาณ", "type": "DB_Column", "db_ref": "fiscal_year", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "จำนวนเด็กทั้งหมด", "type": "DB_Column", "db_ref": "total_kids", "formula": ""}, {"name": "จำนวนตรวจ", "type": "DB_Column", "db_ref": "screened_kids", "formula": ""}, {"name": "พบฟันตกกระ", "type": "DB_Column", "db_ref": "fluorosis_cases", "formula": ""}, {"name": "เด็กฟันตกกระรุนแรง", "type": "DB_Column", "db_ref": "severe_cases", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "เขตสุขภาพ", "proportion_rules": [], "drilldown": "พบฟันตกกระ", "map": "พบฟันตกกระ", "kpis": [{"label":"จำนวนเด็กทั้งหมด", "type":"sum", "col":"จำนวนเด็กทั้งหมด", "color":"main", "op":"all", "val":"", "unit":"คน"}, {"label":"จำนวนเด็กที่ตรวจ", "type":"sum", "col":"จำนวนตรวจ", "color":"theme", "op":"all", "val":"", "unit":"คน"}, {"label":"พบฟันตกกระ", "type":"sum", "col":"พบฟันตกกระ", "color":"danger", "op":"all", "val":"", "unit":"คน"}, {"label":"เด็กฟันตกกระรุนแรง", "type":"sum", "col":"เด็กฟันตกกระรุนแรง", "color":"warning", "op":"all", "val":"", "unit":"คน"}]}}'),
+                ('ความชุกของเด็ก 6-12 ปี มีสภาวะฟันตกกระ', 'health', '{"fields": [{"name": "รหัสหน่วยบริการ", "type": "DB_Column", "db_ref": "hospcode", "formula": ""}, {"name": "ชื่อหน่วยบริการ", "type": "DB_Column", "db_ref": "hosp_name", "formula": ""}, {"name": "ปีงบประมาณ", "type": "DB_Column", "db_ref": "fiscal_year", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "จำนวนตรวจ", "type": "DB_Column", "db_ref": "screened_kids", "formula": ""}, {"name": "พบฟันตกกระ", "type": "DB_Column", "db_ref": "fluorosis_cases", "formula": ""}, {"name": "ร้อยละตกกระ (%)", "type": "Formula", "db_ref": "", "formula": "([พบฟันตกกระ]/[จำนวนตรวจ])*100"}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ร้อยละตกกระ (%)", "map": "ร้อยละตกกระ (%)", "alert_threshold": 10.0, "kpis": [{"label":"จำนวนเด็กที่ตรวจ", "type":"sum", "col":"จำนวนตรวจ", "color":"main", "op":"all", "val":"", "unit":"คน"}, {"label":"พบฟันตกกระรวม", "type":"sum", "col":"พบฟันตกกระ", "color":"theme", "op":"all", "val":"", "unit":"คน"}, {"label":"ความชุกเฉลี่ย", "type":"avg", "col":"ร้อยละตกกระ (%)", "color":"danger", "op":"all", "val":"", "unit":"%"}, {"label":"พื้นที่เสี่ยงวิกฤต", "type":"count", "col":"ร้อยละตกกระ (%)", "color":"warning", "op":">=", "val":"10", "unit":"แห่ง"}]}}'),
                 
                 ('แหล่งน้ำดิบ', 'env', '{"fields": [{"name": "ชนิดน้ำ", "type": "DB_Column", "db_ref": "water_type", "formula": ""}, {"name": "สถานที่เก็บ", "type": "DB_Column", "db_ref": "location_name", "formula": ""}, {"name": "ปริมาณฟลูออไรด์", "type": "DB_Column", "db_ref": "fluoride_level", "formula": ""}, {"name": "ว/ด/ป ที่เก็บ", "type": "DB_Column", "db_ref": "check_date", "formula": ""}, {"name": "บ้านเลขที่", "type": "DB_Column", "db_ref": "house_no", "formula": ""}, {"name": "หมู่ที่", "type": "DB_Column", "db_ref": "moo", "formula": ""}, {"name": "ตำบล", "type": "DB_Column", "db_ref": "subdistrict", "formula": ""}, {"name": "อำเภอ", "type": "DB_Column", "db_ref": "district", "formula": ""}, {"name": "จังหวัด", "type": "DB_Column", "db_ref": "province", "formula": ""}, {"name": "เขตสุขภาพ", "type": "DB_Column", "db_ref": "health_zone", "formula": ""}, {"name": "ภาค", "type": "DB_Column", "db_ref": "region", "formula": ""}, {"name": "ละติจูด", "type": "DB_Column", "db_ref": "latitude", "formula": ""}, {"name": "ลองจิจูด", "type": "DB_Column", "db_ref": "longitude", "formula": ""}, {"name": "หมายเหตุ", "type": "DB_Column", "db_ref": "remark", "formula": ""}, {"name": "แหล่งข้อมูล", "type": "DB_Column", "db_ref": "data_source", "formula": ""}, {"name": "สถานการณ์", "type": "DB_Column", "db_ref": "status", "formula": ""}], "config": {"proportion": "สถานการณ์", "proportion_rules": [], "drilldown": "ปริมาณฟลูออไรด์", "map": "ปริมาณฟลูออไรด์", "kpis": [{"label":"จำนวนจุดตรวจ", "type":"count", "col":"", "color":"main"}, {"label":"ค่าเฉลี่ยฟลูออไรด์", "type":"avg", "col":"ปริมาณฟลูออไรด์", "color":"theme"}, {"label":"สัดส่วนเกินเกณฑ์", "type":"count", "col":"", "color":"danger"}, {"label":"จุดที่ปลอดภัย", "type":"count", "col":"", "color":"success"}]}}'),
                 
@@ -602,7 +604,7 @@ def seed_health_facilities_master():
 # Mapping หัวตารางภาษาไทย สำหรับ Excel Upsert
 COLUMN_MAP_REV = {
     'รหัสหน่วยบริการ': 'hospcode', 'รหัส 5 หลัก': 'hospcode', 'ชื่อหน่วยบริการ': 'hosp_name', 'ปีงบประมาณ': 'fiscal_year',
-    'ภาค': 'region', 'เขตสุขภาพ': 'health_zone', 'จังหวัด': 'province', 'อำเภอ': 'district', 'ตำบล': 'subdistrict',
+    # 'ภาค': 'region', 'เขตสุขภาพ': 'health_zone', 'จังหวัด': 'province', 'อำเภอ': 'district', 'ตำบล': 'subdistrict',
     'จำนวนเด็กทั้งหมด': 'total_kids', 'จำนวนตรวจ': 'screened_kids', 'พบฟันตกกระ': 'fluorosis_cases',
     'ร้อยละเด็กฟันตกกระ': 'pct_fluorosis', 'severe_cases': 'severe_cases', 'สถานการณ์': 'status',
     
@@ -714,7 +716,7 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
     filters = filters or {}
     
     water_filter_map = {
-        'ภาค': 'region',
+        # 'ภาค': 'region',
         'เขตสุขภาพ': 'health_zone',
         'จังหวัด': 'province',
         'อำเภอ': 'district',
@@ -723,7 +725,7 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
     
     dental_filter_map = {
         'ปี': 'fiscal_year',
-        'ภาค': 'region',
+        # 'ภาค': 'region',
         'เขตสุขภาพ': 'health_zone',
         'จังหวัด': 'province',
         'อำเภอ': 'district',
@@ -769,9 +771,9 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                 ce_years = dates.dt.strftime('%Y').fillna('')
                 df_w['ปี'] = ce_years.apply(to_be) # สำหรับ Filter
                 
-                df_w['ภาค'] = safe_extract(w_raw, 'region', 'ไม่ระบุ')
                 df_w['เขตสุขภาพ'] = safe_extract(w_raw, 'health_zone', 'ไม่ระบุ')
                 df_w['จังหวัด'] = safe_extract(w_raw, 'province', 'ไม่ระบุ')
+                df_w['ภาค'] = df_w['จังหวัด'].apply(get_region_by_province)
                 df_w['อำเภอ'] = safe_extract(w_raw, 'district', 'ไม่ระบุ')
                 df_w['ตำบล'] = safe_extract(w_raw, 'subdistrict', 'ไม่ระบุ')
                 df_w['สถานที่เก็บ'] = safe_extract(w_raw, 'location_name', 'ไม่ระบุ')
@@ -832,9 +834,9 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                     return str(y_int + 543) if y_int < 2500 else str(y_int)
                 df_d['ปี'] = df_d['ปีงบประมาณ'].apply(to_be_d)
                 df_d['ปีงบประมาณ'] = df_d['ปี']
-                df_d['ภาค'] = safe_extract(d_raw, 'region', 'ไม่ระบุ')
                 df_d['เขตสุขภาพ'] = safe_extract(d_raw, 'health_zone', 'ไม่ระบุ')
                 df_d['จังหวัด'] = safe_extract(d_raw, 'province', 'ไม่ระบุ')
+                df_d['ภาค'] = df_d['จังหวัด'].apply(get_region_by_province)
                 df_d['อำเภอ'] = safe_extract(d_raw, 'district', 'ไม่ระบุ')
                 df_d['ตำบล'] = safe_extract(d_raw, 'subdistrict', 'ไม่ระบุ')
                 df_d['รหัสหน่วยบริการ'] = safe_extract(d_raw, 'hospcode', 'ไม่ระบุ')
@@ -867,6 +869,14 @@ def load_data_from_db(load_water=True, load_dental=True, filters=None):
                 df_d['ลองจิจูด'] = lngs
         except Exception as e: print(f"️ Dental DB Error: {e}")
         
+        # Apply ภาค filter in pandas
+    r_val = filters.get('ภาค')
+    if r_val and r_val != 'ทั้งหมด':
+        if not df_w.empty and 'ภาค' in df_w.columns:
+            df_w = df_w[df_w['ภาค'] == str(r_val).strip()]
+        if not df_d.empty and 'ภาค' in df_d.columns:
+            df_d = df_d[df_d['ภาค'] == str(r_val).strip()]
+
     return df_w, df_d
 
 def get_cat(name):
@@ -1489,13 +1499,22 @@ def get_table_data():
         
     filter_keys = {
         'ปี': 'fiscal_year' if is_dental else 'YEAR(STR_TO_DATE(check_date, "%Y-%m-%d"))',
-        'ภาค': 'region',
+        # 'ภาค': 'region',
         'เขตสุขภาพ': 'health_zone',
         'จังหวัด': 'province',
         'อำเภอ': 'district',
         'ตำบล': 'subdistrict'
     }
     
+    r_val = req.get('ภาค')
+    if r_val and r_val != 'ทั้งหมด':
+        prov_list = REGION_PROVINCES.get(r_val.strip(), [])
+        if prov_list:
+            clause = ', '.join([f':rp_{i}' for i in range(len(prov_list))])
+            sql_base += f' AND province IN ({clause})'
+            for i, p in enumerate(prov_list):
+                params[f'rp_{i}'] = p
+
     for key, col in filter_keys.items():
         val = req.get(key)
         if val and val != 'ทั้งหมด':

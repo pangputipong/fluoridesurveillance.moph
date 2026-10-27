@@ -302,10 +302,12 @@ $(document).ready(function() {
                 let envMenuHtml = ''; let healthMenuHtml = ''; let tabsHtml = '<li class="nav-item"><a class="nav-link active menu-trigger" data-type="ทั้งหมด"><i class="fas fa-chart-pie"></i> หน้าหลัก (ภาพรวม)</a></li>';
 
                 let preferredOrder = [
-                    'คุณภาพแหล่งน้ำ', 
-                    'คุณภาพน้ำประปา', 
-                    'คุณภาพน้ำบาดาล', 
-                    'โรงงานผลิตน้ำ', 
+                    'รายงานแหล่งน้ำดิบ', 
+                    'รายงานแหล่งน้ำประปา', 
+                    'รายงานแหล่งน้ำบริโภค', 
+                    'รายงานแหล่งน้ำรวม', 
+                    'รายงานจำนวนเด็ก 6-12 ปี มีสภาวะฟันตกกระ',
+                    'ความชุกของเด็ก 6-12 ปี มีสภาวะฟันตกกระ',
                     'สภาวะฟันตกกระ (เด็ก)'
                 ];
 
@@ -899,6 +901,206 @@ $(document).ready(function() {
 
     let legendAdded = false; let geoJsonData = null; let currentGeoLevel = 'province'; let actualGeoLevel = 'province'; let currentGeoUrl = ''; let geoJsonCache = {}; let choroplethLayer = null;
 
+    // ==========================================
+    // 🌐 3-Tier Drilldown Data & Helper Functions
+    // ==========================================
+    window.provCentersData = null;
+    window.distCentersData = null;
+
+    function loadCentroidsData() {
+        if (window.provCentersData && window.distCentersData) return Promise.resolve();
+        let p1 = fetch(BASE_URL + '/static/province_centers.json').then(r => r.json()).then(d => { window.provCentersData = d; });
+        let p2 = fetch(BASE_URL + '/static/district_centers.json').then(r => r.json()).then(d => { window.distCentersData = d; });
+        return Promise.all([p1, p2]).catch(err => console.log('Error loading centroids:', err));
+    }
+    loadCentroidsData();
+
+    function getFluorideTierColor(val) {
+        if (val === null || val === undefined || isNaN(val) || val <= 0) return '#94a3b8';
+        if (val <= 0.70) return '#10b981'; // 0 - 0.70 สีเขียว
+        if (val <= 1.50) return '#eab308'; // 0.71 - 1.50 สีเหลือง
+        if (val <= 4.00) return '#f97316'; // 1.51 - 4.00 สีส้ม
+        return '#ef4444'; // มากกว่า 4.00 สีแดง
+    }
+
+    function getFluorideTierLabel(val) {
+        if (val === null || val === undefined || isNaN(val) || val <= 0) return 'ไม่มีข้อมูล';
+        if (val <= 0.70) return 'ปกติ (0 – 0.70 mg/L)';
+        if (val <= 1.50) return 'เฝ้าระวัง (0.71 – 1.50 mg/L)';
+        if (val <= 4.00) return 'เสี่ยงสูง (1.51 – 4.00 mg/L)';
+        return 'วิกฤต (> 4.00 mg/L)';
+    }
+
+    function normalizeProv(name) {
+        if(!name) return '';
+        let n = String(name).trim().replace(/^(จังหวัด|จ\.)/g, '').trim();
+        if(n === 'กรุงเทพฯ' || n === 'กทม' || n === 'กทม.') return 'กรุงเทพมหานคร';
+        return n;
+    }
+
+    function normalizeDist(name) {
+        if(!name) return '';
+        return String(name).trim().replace(/^(อำเภอ|อ\.)/g, '').trim();
+    }
+
+    function findDistrictCenter(prov, dist) {
+        let p = normalizeProv(prov);
+        let d = normalizeDist(dist);
+        if (!window.distCentersData) return null;
+        let key1 = `${p}:${d}`;
+        if (window.distCentersData[key1]) return window.distCentersData[key1];
+        let key2 = `${p}:เมือง${p}`;
+        if (d === 'เมือง' && window.distCentersData[key2]) return window.distCentersData[key2];
+        let key3 = `${p}:${d.replace('เมือง', '')}`;
+        if (window.distCentersData[key3]) return window.distCentersData[key3];
+        let provPrefix = `${p}:`;
+        for (let k in window.distCentersData) {
+            if (k.startsWith(provPrefix)) {
+                let ampName = k.split(':')[1];
+                if (ampName.includes(d) || d.includes(ampName)) return window.distCentersData[k];
+            }
+        }
+        return null;
+    }
+
+    function createTierProvinceMarker(provName, maxVal, count, lat, lng, isHome) {
+        let color = getFluorideTierColor(maxVal);
+        let valText = count > 0 ? maxVal.toFixed(2) : '-';
+        let iconHtml = `
+            <div class="drilldown-marker-pin" style="background-color: ${color};" title="จ.${provName}: สูงสุด ${valText} mg/L">
+                <span>${valText}</span>
+            </div>
+            <div class="drilldown-pin-label">${provName}</div>
+        `;
+        let customIcon = L.divIcon({
+            className: 'drilldown-marker-container',
+            html: iconHtml,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+        });
+
+        let btnClass = isHome ? 'btn-home-drill-prov' : 'btn-drill-prov';
+        let popupContent = `
+            <div style="font-family:'Prompt', sans-serif; min-width: 190px; text-align:center; padding: 4px;">
+                <h6 class="fw-bold mb-1 text-slate-800">จ.${provName}</h6>
+                <div class="badge mb-2" style="background-color: ${color}; font-size: 0.8rem; color: #fff;">
+                    ฟลูออไรด์สูงสุด: ${valText} mg/L
+                </div>
+                <div class="small text-muted mb-2">
+                    <b>จำนวนแหล่งน้ำ:</b> ${count} แห่ง<br>
+                    <b>สถานการณ์:</b> ${getFluorideTierLabel(maxVal)}
+                </div>
+                <button class="btn btn-sm btn-primary w-100 py-1 ${btnClass}" data-prov="${provName}" style="font-size: 0.75rem; border-radius: 6px;">
+                    <i class="fas fa-search-plus me-1"></i> เจาะลึกรายอำเภอ (${provName})
+                </button>
+            </div>
+        `;
+
+        return L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+    }
+
+    function createTierDistrictMarker(provName, distName, maxVal, count, lat, lng, isHome) {
+        let color = getFluorideTierColor(maxVal);
+        let valText = count > 0 ? maxVal.toFixed(2) : '-';
+        let iconHtml = `
+            <div class="drilldown-marker-pin district-pin" style="background-color: ${color};" title="อ.${distName}: สูงสุด ${valText} mg/L">
+                <span>${valText}</span>
+            </div>
+            <div class="drilldown-pin-label">อ.${distName}</div>
+        `;
+        let customIcon = L.divIcon({
+            className: 'drilldown-marker-container',
+            html: iconHtml,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        let btnClass = isHome ? 'btn-home-drill-dist' : 'btn-drill-dist';
+        let popupContent = `
+            <div style="font-family:'Prompt', sans-serif; min-width: 190px; text-align:center; padding: 4px;">
+                <h6 class="fw-bold mb-1 text-slate-800">อ.${distName}</h6>
+                <div class="small text-muted mb-1">จ.${provName}</div>
+                <div class="badge mb-2" style="background-color: ${color}; font-size: 0.8rem; color: #fff;">
+                    ฟลูออไรด์สูงสุด: ${valText} mg/L
+                </div>
+                <div class="small text-muted mb-2">
+                    <b>จำนวนแหล่งน้ำ:</b> ${count} แห่ง<br>
+                    <b>สถานการณ์:</b> ${getFluorideTierLabel(maxVal)}
+                </div>
+                <button class="btn btn-sm btn-success w-100 py-1 ${btnClass}" data-prov="${provName}" data-dist="${distName}" style="font-size: 0.75rem; border-radius: 6px;">
+                    <i class="fas fa-tint me-1"></i> ดูจุดแหล่งน้ำในอำเภอนี้
+                </button>
+            </div>
+        `;
+
+        return L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent);
+    }
+
+    // Breadcrumbs Controls
+    let reportBreadcrumbControl = L.control({ position: 'topleft' });
+    reportBreadcrumbControl.onAdd = function() {
+        let div = L.DomUtil.create('div', 'map-breadcrumb-bar');
+        div.id = 'reportMapBreadcrumb';
+        div.innerHTML = '';
+        return div;
+    };
+    let reportBreadcrumbAdded = false;
+
+    function updateReportBreadcrumb(level, prov, dist) {
+        let container = document.getElementById('reportMapBreadcrumb');
+        if (!container) return;
+        if (level === 1) {
+            container.innerHTML = `<span class="badge bg-white text-dark shadow-sm border p-2" style="font-size:0.8rem;"><i class="fas fa-thumbtack text-primary me-1"></i> <b>ภาพรวม 77 จังหวัด</b> (คลิกจุดเพื่อเจาะลึก)</span>`;
+        } else if (level === 2) {
+            container.innerHTML = `
+                <div class="btn-group shadow-sm">
+                    <button class="btn btn-sm btn-light border btn-back-to-77"><i class="fas fa-arrow-left me-1"></i> 77 จังหวัด</button>
+                    <span class="btn btn-sm btn-primary active fw-bold">จ.${prov} (รายอำเภอ)</span>
+                </div>`;
+        } else if (level === 3) {
+            container.innerHTML = `
+                <div class="btn-group shadow-sm">
+                    <button class="btn btn-sm btn-light border btn-back-to-77">77 จังหวัด</button>
+                    <button class="btn btn-sm btn-light border btn-back-to-dist" data-prov="${prov}">จ.${prov}</button>
+                    <span class="btn btn-sm btn-success active fw-bold">อ.${dist} (แหล่งน้ำ)</span>
+                </div>`;
+        }
+    }
+
+    let homeBreadcrumbControl = L.control({ position: 'topleft' });
+    homeBreadcrumbControl.onAdd = function() {
+        let div = L.DomUtil.create('div', 'map-breadcrumb-bar');
+        div.id = 'homeMapBreadcrumb';
+        div.innerHTML = '';
+        return div;
+    };
+    let homeBreadcrumbAdded = false;
+
+    window.homeDrillProv = '';
+    window.homeDrillDist = '';
+
+    function updateHomeBreadcrumb(level, prov, dist) {
+        let container = document.getElementById('homeMapBreadcrumb');
+        if (!container) return;
+        if (level === 1) {
+            container.innerHTML = `<span class="badge bg-white text-dark shadow-sm border p-2" style="font-size:0.8rem;"><i class="fas fa-thumbtack text-primary me-1"></i> <b>ภาพรวม 77 จังหวัด</b> (คลิกจุดเพื่อเจาะลึก)</span>`;
+        } else if (level === 2) {
+            container.innerHTML = `
+                <div class="btn-group shadow-sm">
+                    <button class="btn btn-sm btn-light border btn-home-back-77"><i class="fas fa-arrow-left me-1"></i> 77 จังหวัด</button>
+                    <span class="btn btn-sm btn-primary active fw-bold">จ.${prov} (รายอำเภอ)</span>
+                </div>`;
+        } else if (level === 3) {
+            container.innerHTML = `
+                <div class="btn-group shadow-sm">
+                    <button class="btn btn-sm btn-light border btn-home-back-77">77 จังหวัด</button>
+                    <button class="btn btn-sm btn-light border btn-home-back-dist" data-prov="${prov}">จ.${prov}</button>
+                    <span class="btn btn-sm btn-success active fw-bold">อ.${dist} (แหล่งน้ำ)</span>
+                </div>`;
+        }
+    }
+
+
     // --- Marker Legend Control (สัญลักษณ์เฝ้าระวัง) ---
     let markerLegendControl = L.control({position: 'bottomright'});
     markerLegendControl.onAdd = function () {
@@ -927,11 +1129,15 @@ $(document).ready(function() {
             html += '<hr style="margin:6px 0; border-color:#e2e8f0;">';
         }
 
-        // Alert (blinking) criteria
+        // Criteria
         if (isWaterCategory) {
-            let thresholdVal = (!isNaN(parseFloat(threshold))) ? parseFloat(threshold) : 0.7;
-            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>${thresholdVal} mg/L)</div>`;
-            html += `<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> ผ่านเกณฑ์ / ปกติ</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#10b981; border-radius:50%;"></i> 0 – 0.70 mg/L (ปกติ)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#eab308; border-radius:50%;"></i> 0.71 – 1.50 mg/L (เฝ้าระวัง)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#f97316; border-radius:50%;"></i> 1.51 – 4.00 mg/L (เสี่ยงสูง)</div>`;
+            html += `<div style="margin-bottom:3px;"><i style="background:#ef4444; border-radius:50%;"></i> มากกว่า 4.00 mg/L (วิกฤต)</div>`;
+            html += `<hr style="margin:4px 0;">`;
+            html += `<div style="margin-bottom:3px;"><span class="sonar-legend-dot water-alert"></span> แหล่งน้ำเกินมาตรฐาน (>0.7 mg/L)</div>`;
+            return html;
         } else {
             let waterThreshold = 0.7;
             let dentalThreshold = (!isNaN(parseFloat(threshold))) ? parseFloat(threshold) : 10;
@@ -1185,17 +1391,125 @@ $(document).ready(function() {
             let legendBox = document.getElementById('marker-legend-box');
             if(legendBox) { legendBox.innerHTML = buildMarkerLegendHtml(isWaterCategory); }
 
-            globalData.forEach(p => {
-                let statusVal = p['_chart_group_label'];
-                if(checkedStatuses.includes(statusVal)) {
-                    let lat = parseFloat(p['ละติจูด']); let lon = parseFloat(p['ลองจิจูด']);
-                    if (!isNaN(lat) && !isNaN(lon) && lat !== 0) {
-                        let marker = createMarker(p, isWaterCategory, statusVal, lat, lon);
-                        markersGroup.addLayer(marker); bounds.push([lat, lon]);
-                    }
+            if (isWaterCategory) {
+                // 3-Tier Drilldown for Water Reports
+                if (!reportBreadcrumbAdded) {
+                    reportBreadcrumbControl.addTo(map);
+                    reportBreadcrumbAdded = true;
                 }
-            });
-            if (isFiltered && bounds.length > 0) map.flyToBounds(bounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
+
+                let selProv = $('#filter-province').val();
+                let selDist = $('#filter-district').val();
+
+                if (selProv === 'ทั้งหมด') {
+                    // Level 1: 77 Provinces
+                    updateReportBreadcrumb(1, '', '');
+                    let provMap = {};
+                    globalData.forEach(p => {
+                        let prov = normalizeProv(p['จังหวัด'] || p.prov || '');
+                        let val = parseFloat(p['ปริมาณฟลูออไรด์'] || p['fluoride_level'] || 0);
+                        if (prov && !isNaN(val)) {
+                            if (!provMap[prov]) provMap[prov] = { maxVal: val, count: 1 };
+                            else {
+                                if (val > provMap[prov].maxVal) provMap[prov].maxVal = val;
+                                provMap[prov].count++;
+                            }
+                        }
+                    });
+
+                    if (window.provCentersData) {
+                        for (let provName in window.provCentersData) {
+                            let center = window.provCentersData[provName];
+                            let stats = provMap[provName] || { maxVal: 0, count: 0 };
+                            let marker = createTierProvinceMarker(provName, stats.maxVal, stats.count, center.lat, center.lng, false);
+                            markersGroup.addLayer(marker);
+                            bounds.push([center.lat, center.lng]);
+                        }
+                    }
+                    map.flyTo([13.5, 101.0], 6);
+
+                } else if (selDist === 'ทั้งหมด') {
+                    // Level 2: Districts in selProv
+                    let normProv = normalizeProv(selProv);
+                    updateReportBreadcrumb(2, normProv, '');
+                    let distMap = {};
+                    globalData.forEach(p => {
+                        let pProv = normalizeProv(p['จังหวัด'] || p.prov || '');
+                        let dist = normalizeDist(p['อำเภอ'] || p.dist || '');
+                        let val = parseFloat(p['ปริมาณฟลูออไรด์'] || p['fluoride_level'] || 0);
+                        if (pProv === normProv && dist && !isNaN(val)) {
+                            if (!distMap[dist]) distMap[dist] = { maxVal: val, count: 1 };
+                            else {
+                                if (val > distMap[dist].maxVal) distMap[dist].maxVal = val;
+                                distMap[dist].count++;
+                            }
+                        }
+                    });
+
+                    if (window.distCentersData) {
+                        let prefix = normProv + ':';
+                        for (let key in window.distCentersData) {
+                            if (key.startsWith(prefix)) {
+                                let distName = key.split(':')[1];
+                                let center = window.distCentersData[key];
+                                let stats = distMap[distName] || { maxVal: 0, count: 0 };
+                                let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, false);
+                                markersGroup.addLayer(marker);
+                                bounds.push([center.lat, center.lng]);
+                            }
+                        }
+                    }
+
+                    // Fallback for districts in data but missing in centers json
+                    for (let distName in distMap) {
+                        let center = findDistrictCenter(normProv, distName);
+                        if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
+                            let stats = distMap[distName];
+                            let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, false);
+                            markersGroup.addLayer(marker);
+                            bounds.push([center.lat, center.lng]);
+                        }
+                    }
+
+                    if (bounds.length > 0) map.flyToBounds(bounds, { padding: [40, 40] });
+
+                } else {
+                    // Level 3: Individual water points in selDist
+                    let normProv = normalizeProv(selProv);
+                    let normDist = normalizeDist(selDist);
+                    updateReportBreadcrumb(3, normProv, normDist);
+
+                    globalData.forEach(p => {
+                        let statusVal = p['_chart_group_label'];
+                        if (checkedStatuses.includes(statusVal)) {
+                            let lat = parseFloat(p['ละติจูด']); let lon = parseFloat(p['ลองจิจูด']);
+                            if (!isNaN(lat) && !isNaN(lon) && lat !== 0) {
+                                let marker = createMarker(p, isWaterCategory, statusVal, lat, lon);
+                                markersGroup.addLayer(marker); bounds.push([lat, lon]);
+                            }
+                        }
+                    });
+                    if (bounds.length > 0) map.flyToBounds(bounds, { padding: [40, 40] });
+                }
+
+            } else {
+                // Dental or other categories: individual point markers as normal
+                if (reportBreadcrumbAdded) {
+                    map.removeControl(reportBreadcrumbControl);
+                    reportBreadcrumbAdded = false;
+                }
+                globalData.forEach(p => {
+                    let statusVal = p['_chart_group_label'];
+                    if(checkedStatuses.includes(statusVal)) {
+                        let lat = parseFloat(p['ละติจูด']); let lon = parseFloat(p['ลองจิจูด']);
+                        if (!isNaN(lat) && !isNaN(lon) && lat !== 0) {
+                            let marker = createMarker(p, isWaterCategory, statusVal, lat, lon);
+                            markersGroup.addLayer(marker); bounds.push([lat, lon]);
+                        }
+                    }
+                });
+                if (isFiltered && bounds.length > 0) map.flyToBounds(bounds, {padding: [30, 30]}); else map.flyTo([13.0, 101.5], 6);
+            }
         }
     }
 
@@ -1636,70 +1950,152 @@ $(document).ready(function() {
             window.currentDentalPoints.forEach(p => allPoints.push(p));
         }
         
-        if (allPoints.length > 0) {
+        // 3-Tier Drilldown for Home Map
+        if (!homeBreadcrumbAdded) {
+            homeBreadcrumbControl.addTo(homeMap);
+            homeBreadcrumbAdded = true;
+        }
+
+        if (!window.homeDrillProv) {
+            // Level 1: 77 Provinces
+            updateHomeBreadcrumb(1, '', '');
+            let provMap = {};
             allPoints.forEach(p => {
-                let lat = parseFloat(p.lat);
-                let lng = parseFloat(p.lng);
-                if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-                    let isWater = p.type === 'water';
-                    
-                    // Determine if it is critical based on category
-                    let isCritical = false;
-                    if(isWater) {
-                        if(p.category === 'แหล่งน้ำดิบ') isCritical = p.val > critRaw;
-                        else if(p.category === 'แหล่งน้ำบริโภค') isCritical = p.val > critCons;
-                        else if(p.category === 'แหล่งน้ำประปา') isCritical = p.val > critTap;
-                        else isCritical = p.val > 0.7;
-                    } else {
-                        isCritical = p.val > critDental;
+                let prov = normalizeProv(p.prov || '');
+                let val = parseFloat(p.val || 0);
+                if (prov && !isNaN(val)) {
+                    if (!provMap[prov]) provMap[prov] = { maxVal: val, count: 1 };
+                    else {
+                        if (val > provMap[prov].maxVal) provMap[prov].maxVal = val;
+                        provMap[prov].count++;
                     }
-                    
-                    let iconHtml = '';
-                    if(isCritical) {
-                        iconHtml = isWater
-                            ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
-                            : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
-                    } else {
-                        let colorClass = isWater ? 'marker-blue' : 'marker-green';
-                        iconHtml = `<div class="custom-marker ${colorClass}"><div class="marker-dot"></div></div>`;
-                    }
-                        
-                    let customIcon = L.divIcon({
-                        className: '',
-                        html: iconHtml,
-                        iconSize: isCritical ? [20, 20] : [14, 14],
-                        iconAnchor: isCritical ? [10, 10] : [7, 7]
-                    });
-                    
-                    let popupContent = `
-                        <div class="p-1 map-popup-content" style="font-family: 'Prompt', sans-serif; min-width: 250px;" id="popup-content-${lat.toString().replace('.','_')}-${lng.toString().replace('.','_')}">
-                            <h6 class="fw-bold m-0 text-slate-800" style="font-size: 1rem;">${p.name}</h6>
-                            <span class="badge ${isCritical ? 'bg-danger' : 'bg-secondary'} mb-2 mt-1" style="font-size: 0.75rem;">
-                                ${isWater ? (isCritical ? 'แหล่งน้ำเกินเกณฑ์วิกฤต' : p.category) : (isCritical ? 'เด็กฟันตกกระวิกฤต' : 'เฝ้าระวังฟันตกกระ')}
-                            </span>
-                            <div class="small text-muted mb-1" style="line-height: 1.4;">
-                                ${isWater ? `<div><b>ชนิดน้ำ:</b> ${p.water_type || '-'}</div>` : ''}
-                                ${isWater ? `<div><b>วันที่เก็บล่าสุด:</b> ${p.check_date || '-'}</div>` : ''}
-                                <div><b>ที่ตั้ง:</b> ต.${p.subdist} อ.${p.dist} จ.${p.prov}</div>
-                                <div><b>พิกัด:</b> ${p.lat}, ${p.lng}</div>
-                            </div>
-                            <div class="small text-theme mb-2 fw-bold"><b>ค่าล่าสุด:</b> ${p.detail}</div>
-                            ${isWater ? `
-                            <button class="btn btn-sm btn-outline-primary w-100 btn-timeline" data-lat="${p.lat}" data-lng="${p.lng}" data-name="${p.name}" style="font-size:0.75rem; border-radius: 6px;">
-                                <i class="fas fa-history"></i> ดูไทม์ไลน์ย้อนหลัง
-                            </button>` : ''}
-                        </div>
-                    `;
-                    
-                    let marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent, { maxWidth: 300 });
-                    homeMarkersGroup.addLayer(marker);
-                    bounds.push([lat, lng]);
                 }
             });
-            
-            if (bounds.length > 0) {
-                homeMap.fitBounds(bounds, { padding: [40, 40] });
+
+            if (window.provCentersData) {
+                for (let provName in window.provCentersData) {
+                    let center = window.provCentersData[provName];
+                    let stats = provMap[provName] || { maxVal: 0, count: 0 };
+                    let marker = createTierProvinceMarker(provName, stats.maxVal, stats.count, center.lat, center.lng, true);
+                    homeMarkersGroup.addLayer(marker);
+                    bounds.push([center.lat, center.lng]);
+                }
             }
+            homeMap.setView([13.5, 101.0], 6);
+
+        } else if (!window.homeDrillDist) {
+            // Level 2: Districts in window.homeDrillProv
+            let normProv = normalizeProv(window.homeDrillProv);
+            updateHomeBreadcrumb(2, normProv, '');
+            let distMap = {};
+            allPoints.forEach(p => {
+                let pProv = normalizeProv(p.prov || '');
+                let dist = normalizeDist(p.dist || '');
+                let val = parseFloat(p.val || 0);
+                if (pProv === normProv && dist && !isNaN(val)) {
+                    if (!distMap[dist]) distMap[dist] = { maxVal: val, count: 1 };
+                    else {
+                        if (val > distMap[dist].maxVal) distMap[dist].maxVal = val;
+                        distMap[dist].count++;
+                    }
+                }
+            });
+
+            if (window.distCentersData) {
+                let prefix = normProv + ':';
+                for (let key in window.distCentersData) {
+                    if (key.startsWith(prefix)) {
+                        let distName = key.split(':')[1];
+                        let center = window.distCentersData[key];
+                        let stats = distMap[distName] || { maxVal: 0, count: 0 };
+                        let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, true);
+                        homeMarkersGroup.addLayer(marker);
+                        bounds.push([center.lat, center.lng]);
+                    }
+                }
+            }
+
+            for (let distName in distMap) {
+                let center = findDistrictCenter(normProv, distName);
+                if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
+                    let stats = distMap[distName];
+                    let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, true);
+                    homeMarkersGroup.addLayer(marker);
+                    bounds.push([center.lat, center.lng]);
+                }
+            }
+
+            if (bounds.length > 0) homeMap.fitBounds(bounds, { padding: [40, 40] });
+
+        } else {
+            // Level 3: Individual points in window.homeDrillDist
+            let normProv = normalizeProv(window.homeDrillProv);
+            let normDist = normalizeDist(window.homeDrillDist);
+            updateHomeBreadcrumb(3, normProv, normDist);
+
+            allPoints.forEach(p => {
+                let pProv = normalizeProv(p.prov || '');
+                let pDist = normalizeDist(p.dist || '');
+                if (pProv === normProv && (pDist === normDist || pDist.includes(normDist) || normDist.includes(pDist))) {
+                    let lat = parseFloat(p.lat);
+                    let lng = parseFloat(p.lng);
+                    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                        let isWater = p.type === 'water';
+                        let isCritical = false;
+                        if(isWater) {
+                            if(p.category === 'แหล่งน้ำดิบ') isCritical = p.val > critRaw;
+                            else if(p.category === 'แหล่งน้ำบริโภค') isCritical = p.val > critCons;
+                            else if(p.category === 'แหล่งน้ำประปา') isCritical = p.val > critTap;
+                            else isCritical = p.val > 0.7;
+                        } else {
+                            isCritical = p.val > critDental;
+                        }
+                        
+                        let iconHtml = '';
+                        if(isCritical) {
+                            iconHtml = isWater
+                                ? `<div class="alert-sonar-marker"><i class="fas fa-tint"></i></div>`
+                                : `<div class="alert-sonar-marker sonar-dental"><i class="fas fa-tooth"></i></div>`;
+                        } else {
+                            let colorClass = isWater ? 'marker-blue' : 'marker-green';
+                            iconHtml = `<div class="custom-marker ${colorClass}"><div class="marker-dot"></div></div>`;
+                        }
+                            
+                        let customIcon = L.divIcon({
+                            className: '',
+                            html: iconHtml,
+                            iconSize: isCritical ? [20, 20] : [14, 14],
+                            iconAnchor: isCritical ? [10, 10] : [7, 7]
+                        });
+                        
+                        let popupContent = `
+                            <div class="p-1 map-popup-content" style="font-family: 'Prompt', sans-serif; min-width: 250px;" id="popup-content-${lat.toString().replace('.','_')}-${lng.toString().replace('.','_')}">
+                                <h6 class="fw-bold m-0 text-slate-800" style="font-size: 1rem;">${p.name}</h6>
+                                <span class="badge ${isCritical ? 'bg-danger' : 'bg-secondary'} mb-2 mt-1" style="font-size: 0.75rem;">
+                                    ${isWater ? (isCritical ? 'แหล่งน้ำเกินเกณฑ์วิกฤต' : p.category) : (isCritical ? 'เด็กฟันตกกระวิกฤต' : 'เฝ้าระวังฟันตกกระ')}
+                                </span>
+                                <div class="small text-muted mb-1" style="line-height: 1.4;">
+                                    ${isWater ? `<div><b>ชนิดน้ำ:</b> ${p.water_type || '-'}</div>` : ''}
+                                    ${isWater ? `<div><b>วันที่เก็บล่าสุด:</b> ${p.check_date || '-'}</div>` : ''}
+                                    <div><b>ที่ตั้ง:</b> ต.${p.subdist} อ.${p.dist} จ.${p.prov}</div>
+                                    <div><b>พิกัด:</b> ${p.lat}, ${p.lng}</div>
+                                </div>
+                                <div class="small text-theme mb-2 fw-bold"><b>ค่าล่าสุด:</b> ${p.detail}</div>
+                                ${isWater ? `
+                                <button class="btn btn-sm btn-outline-primary w-100 btn-timeline" data-lat="${p.lat}" data-lng="${p.lng}" data-name="${p.name}" style="font-size:0.75rem; border-radius: 6px;">
+                                    <i class="fas fa-history"></i> ดูไทม์ไลน์ย้อนหลัง
+                                </button>` : ''}
+                            </div>
+                        `;
+                        
+                        let marker = L.marker([lat, lng], { icon: customIcon }).bindPopup(popupContent, { maxWidth: 300 });
+                        homeMarkersGroup.addLayer(marker);
+                        bounds.push([lat, lng]);
+                    }
+                }
+            });
+
+            if (bounds.length > 0) homeMap.fitBounds(bounds, { padding: [40, 40] });
         }
         
         setTimeout(() => { homeMap.invalidateSize(); }, 300);
@@ -3475,3 +3871,63 @@ window.changeUserStatus = function(id, action) {
         });
     }
 }
+
+
+    // ==========================================
+    // 🔘 Drilldown & Navigation Click Handlers
+    // ==========================================
+    $(document).on('click', '.btn-back-to-77', function(e) {
+        e.preventDefault();
+        $('#filter-province').val('ทั้งหมด').trigger('change');
+    });
+    $(document).on('click', '.btn-back-to-dist', function(e) {
+        e.preventDefault();
+        $('#filter-district').val('ทั้งหมด').trigger('change');
+    });
+    $(document).on('click', '.btn-drill-prov', function(e) {
+        e.preventDefault();
+        let prov = $(this).data('prov');
+        if (prov) {
+            let opt = $('#filter-province option').filter(function() { return $(this).val() === prov || $(this).text().trim() === prov; });
+            if (opt.length) $('#filter-province').val(opt.val()).trigger('change');
+            else $('#filter-province').val(prov).trigger('change');
+        }
+    });
+    $(document).on('click', '.btn-drill-dist', function(e) {
+        e.preventDefault();
+        let dist = $(this).data('dist');
+        if (dist) {
+            let opt = $('#filter-district option').filter(function() { return $(this).val() === dist || $(this).text().trim() === dist; });
+            if (opt.length) $('#filter-district').val(opt.val()).trigger('change');
+            else $('#filter-district').val(dist).trigger('change');
+        }
+    });
+
+    $(document).on('click', '.btn-home-back-77', function(e) {
+        e.preventDefault();
+        window.homeDrillProv = '';
+        window.homeDrillDist = '';
+        renderHomeMap();
+    });
+    $(document).on('click', '.btn-home-back-dist', function(e) {
+        e.preventDefault();
+        window.homeDrillDist = '';
+        renderHomeMap();
+    });
+    $(document).on('click', '.btn-home-drill-prov', function(e) {
+        e.preventDefault();
+        let prov = $(this).data('prov');
+        if (prov) {
+            window.homeDrillProv = prov;
+            window.homeDrillDist = '';
+            renderHomeMap();
+        }
+    });
+    $(document).on('click', '.btn-home-drill-dist', function(e) {
+        e.preventDefault();
+        let dist = $(this).data('dist');
+        if (dist) {
+            window.homeDrillDist = dist;
+            renderHomeMap();
+        }
+    });

@@ -1221,3 +1221,66 @@ body.dark .form-control:focus, body.dark .form-select:focus {
     opacity: 0.5;
     pointer-events: none;
 }
+
+
+/* 3-Tier Drilldown Marker Styles */
+.drilldown-marker-container {
+    background: transparent !important;
+    border: none !important;
+}
+.drilldown-marker-pin {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 11px;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    font-family: 'Prompt', sans-serif;
+}
+.drilldown-marker-pin:hover {
+    transform: scale(1.18);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+}
+.drilldown-marker-pin.district-pin {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+    border: 2px solid #ffffff;
+}
+.drilldown-pin-label {
+    position: absolute;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.88);
+    color: #ffffff;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    font-family: 'Prompt', sans-serif;
+}
+.district-pin + .drilldown-pin-label {
+    top: 32px;
+    font-size: 9px;
+}
+.map-breadcrumb-bar {
+    z-index: 999;
+    pointer-events: auto;
+    font-family: 'Prompt', sans-serif;
+}
+.map-breadcrumb-bar .btn-group {
+    border-radius: 8px;
+    overflow: hidden;
+}
