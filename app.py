@@ -419,6 +419,7 @@ def init_database_tables():
                   `id` INT AUTO_INCREMENT PRIMARY KEY,
                   `hospcode` VARCHAR(50) NOT NULL,
                   `hosp_name` VARCHAR(255) DEFAULT NULL,
+                  `form_type` VARCHAR(150) DEFAULT 'แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ',
                   `investigation_date` VARCHAR(50) NOT NULL,
                   `patient_gender` VARCHAR(20) DEFAULT NULL,
                   `patient_age` INT DEFAULT 0,
@@ -428,10 +429,23 @@ def init_database_tables():
                   `investigator_name` VARCHAR(255) DEFAULT NULL,
                   `investigator_phone` VARCHAR(100) DEFAULT NULL,
                   `details` TEXT DEFAULT NULL,
+                  `file_name` VARCHAR(255) DEFAULT NULL,
+                  `file_path` VARCHAR(255) DEFAULT NULL,
                   `status` VARCHAR(50) DEFAULT 'Pending',
                   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             """))
+
+            # Auto-upgrade fluorosis_investigations columns
+            for col_name, col_sql in [
+                ('form_type', "VARCHAR(150) DEFAULT 'แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ'"),
+                ('file_name', "VARCHAR(255) DEFAULT NULL"),
+                ('file_path', "VARCHAR(255) DEFAULT NULL")
+            ]:
+                try:
+                    conn.execute(text(f"ALTER TABLE `fluorosis_investigations` ADD COLUMN `{col_name}` {col_sql}"))
+                except Exception:
+                    pass
 
             # Auto-seed fluorosis_investigations if empty
             inv_count = conn.execute(text("SELECT COUNT(*) FROM `fluorosis_investigations`")).fetchone()[0]
@@ -2155,64 +2169,134 @@ def predict_risk():
 
 @app.route('/api/investigation/submit', methods=['POST'])
 def submit_investigation():
-    data = request.json or {}
+    if request.is_json:
+        data = request.json or {}
+    else:
+        data = request.form.to_dict()
+        
     hospcode = data.get('hospcode', '').strip()
     investigation_date = data.get('investigation_date', '').strip()
     severity_level = data.get('severity_level', '').strip()
+    form_type = data.get('form_type', 'แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ').strip()
     
     if not hospcode or not investigation_date or not severity_level:
         return jsonify({'success': False, 'message': 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (รหัสสถานบริการ, วันที่สอบสวนโรค, และระดับความรุนแรง)'}), 400
         
     try:
+        # Handle file upload if present
+        saved_filename = None
+        saved_filepath = None
+        upload_file = request.files.get('file') or request.files.get('investigation_file')
+        if upload_file and upload_file.filename:
+            from werkzeug.utils import secure_filename
+            import time
+            raw_name = upload_file.filename
+            ext = os.path.splitext(raw_name)[1].lower()
+            if ext in ['.docx', '.doc', '.pdf', '.xlsx', '.xls', '.jpg', '.jpeg', '.png']:
+                upload_dir = os.path.join(app.root_path, 'static', 'uploads', 'investigations')
+                os.makedirs(upload_dir, exist_ok=True)
+                timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                safe_base = secure_filename(os.path.splitext(raw_name)[0]) or f"doc_{int(time.time())}"
+                saved_filename = f"{timestamp_str}_{safe_base}{ext}"
+                upload_file.save(os.path.join(upload_dir, saved_filename))
+                saved_filepath = f"/static/uploads/investigations/{saved_filename}"
+
         # Lookup hosp_name from health_facilities_master
-        hosp_name = "ไม่ระบุ"
-        with engine.connect() as conn:
-            facility = conn.execute(
-                text("SELECT hosp_name FROM `health_facilities_master` WHERE hospcode = :h"),
-                {"h": hospcode}
-            ).fetchone()
-            if facility:
-                hosp_name = facility[0]
+        hosp_name = data.get('hosp_name', '').strip()
+        if not hosp_name or hosp_name == 'ไม่ระบุ':
+            try:
+                with engine.connect() as conn:
+                    facility = conn.execute(
+                        text("SELECT hosp_name FROM `health_facilities_master` WHERE hospcode = :h"),
+                        {"h": hospcode}
+                    ).fetchone()
+                    if facility:
+                        hosp_name = facility[0]
+            except Exception:
+                pass
+        if not hosp_name:
+            hosp_name = "ไม่ระบุ"
                 
         # Insert into fluorosis_investigations
         with engine.begin() as conn:
-            conn.execute(text("""
-                INSERT INTO `fluorosis_investigations` 
-                (hospcode, hosp_name, investigation_date, patient_gender, patient_age, severity_level, drinking_water_source, exposure_years, investigator_name, investigator_phone, details, status)
-                VALUES (:hospcode, :hosp_name, :investigation_date, :patient_gender, :patient_age, :severity_level, :drinking_water_source, :exposure_years, :investigator_name, :investigator_phone, :details, 'Pending')
-            """), {
-                "hospcode": hospcode,
-                "hosp_name": hosp_name,
-                "investigation_date": investigation_date,
-                "patient_gender": data.get('patient_gender', '-'),
-                "patient_age": int(data.get('patient_age', 0) or 0),
-                "severity_level": severity_level,
-                "drinking_water_source": data.get('drinking_water_source', '-'),
-                "exposure_years": int(data.get('exposure_years', 0) or 0),
-                "investigator_name": data.get('investigator_name', '-'),
-                "investigator_phone": data.get('investigator_phone', '-'),
-                "details": data.get('details', '-'),
-            })
+            cols = [c[0] for c in conn.execute(text("DESCRIBE `fluorosis_investigations`")).fetchall()]
+            has_form_type = 'form_type' in cols
+            has_file = 'file_name' in cols and 'file_path' in cols
+
+            if has_form_type and has_file:
+                conn.execute(text("""
+                    INSERT INTO `fluorosis_investigations` 
+                    (hospcode, hosp_name, form_type, investigation_date, patient_gender, patient_age, severity_level, drinking_water_source, exposure_years, investigator_name, investigator_phone, details, file_name, file_path, status)
+                    VALUES (:hospcode, :hosp_name, :form_type, :investigation_date, :patient_gender, :patient_age, :severity_level, :drinking_water_source, :exposure_years, :investigator_name, :investigator_phone, :details, :file_name, :file_path, 'Pending')
+                """), {
+                    "hospcode": hospcode,
+                    "hosp_name": hosp_name,
+                    "form_type": form_type,
+                    "investigation_date": investigation_date,
+                    "patient_gender": data.get('patient_gender', '-'),
+                    "patient_age": int(data.get('patient_age', 0) or 0),
+                    "severity_level": severity_level,
+                    "drinking_water_source": data.get('drinking_water_source', '-'),
+                    "exposure_years": int(data.get('exposure_years', 0) or 0),
+                    "investigator_name": data.get('investigator_name', '-'),
+                    "investigator_phone": data.get('investigator_phone', '-'),
+                    "details": data.get('details', '-'),
+                    "file_name": saved_filename,
+                    "file_path": saved_filepath
+                })
+            else:
+                conn.execute(text("""
+                    INSERT INTO `fluorosis_investigations` 
+                    (hospcode, hosp_name, investigation_date, patient_gender, patient_age, severity_level, drinking_water_source, exposure_years, investigator_name, investigator_phone, details, status)
+                    VALUES (:hospcode, :hosp_name, :investigation_date, :patient_gender, :patient_age, :severity_level, :drinking_water_source, :exposure_years, :investigator_name, :investigator_phone, :details, 'Pending')
+                """), {
+                    "hospcode": hospcode,
+                    "hosp_name": hosp_name,
+                    "investigation_date": investigation_date,
+                    "patient_gender": data.get('patient_gender', '-'),
+                    "patient_age": int(data.get('patient_age', 0) or 0),
+                    "severity_level": severity_level,
+                    "drinking_water_source": data.get('drinking_water_source', '-'),
+                    "exposure_years": int(data.get('exposure_years', 0) or 0),
+                    "investigator_name": data.get('investigator_name', '-'),
+                    "investigator_phone": data.get('investigator_phone', '-'),
+                    "details": data.get('details', '-'),
+                })
             
-        return jsonify({'success': True, 'message': 'ส่งรายงานสอบสวนโรคสำเร็จ!'})
+        return jsonify({'success': True, 'message': 'บันทึกรายงานการสอบสวนโรคและไฟล์แนบเรียบร้อยแล้ว!'})
     except Exception as e:
         return jsonify({'success': False, 'message': f'เกิดข้อผิดพลาดในการบันทึกข้อมูล: {str(e)}'}), 500
 
-@app.route('/api/investigation/list', methods=['POST'])
-@require_admin
+@app.route('/api/investigation/list', methods=['GET', 'POST'])
 def list_investigations():
     try:
         with engine.connect() as conn:
-            rows = conn.execute(text("""
+            cols = [c[0] for c in conn.execute(text("DESCRIBE `fluorosis_investigations`")).fetchall()]
+            has_form_type = 'form_type' in cols
+            has_file = 'file_name' in cols and 'file_path' in cols
+
+            sql = """
                 SELECT id, hospcode, hosp_name, investigation_date, patient_gender, patient_age, 
                        severity_level, drinking_water_source, exposure_years, investigator_name, 
-                       investigator_phone, details, status, created_at 
-                FROM `fluorosis_investigations`
-                ORDER BY created_at DESC
-            """)).fetchall()
+                       investigator_phone, details, status, created_at
+            """
+            if has_form_type:
+                sql += ", form_type"
+            if has_file:
+                sql += ", file_name, file_path"
+            sql += " FROM `fluorosis_investigations` ORDER BY created_at DESC LIMIT 100"
+
+            rows = conn.execute(text(sql)).fetchall()
             
         investigations = []
         for r in rows:
+            idx = 14
+            ftype = r[idx] if has_form_type and len(r) > idx else 'แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ'
+            if has_form_type: idx += 1
+            fname = r[idx] if has_file and len(r) > idx else None
+            if has_file: idx += 1
+            fpath = r[idx] if has_file and len(r) > idx else None
+
             investigations.append({
                 'id': r[0],
                 'hospcode': r[1],
@@ -2227,7 +2311,10 @@ def list_investigations():
                 'investigator_phone': r[10],
                 'details': r[11],
                 'status': r[12],
-                'created_at': r[13].strftime('%Y-%m-%d %H:%M:%S') if r[13] else '-'
+                'created_at': r[13].strftime('%Y-%m-%d %H:%M:%S') if r[13] else '-',
+                'form_type': ftype or 'แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ',
+                'file_name': fname,
+                'file_path': fpath
             })
             
         return jsonify({'success': True, 'data': investigations})

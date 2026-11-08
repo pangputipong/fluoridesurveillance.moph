@@ -1871,24 +1871,11 @@ $(document).ready(function() {
             $('#investigationReportView').show();
             $('body').removeClass('theme-home theme-dental');
             
-            let mailtoUrl = "mailto:efluoride.project@moph.go.th" +
-                "?subject=" + encodeURIComponent("[รายงานสอบสวนโรค] พบเคสฟันตกกระ K00.3") +
-                "&body=" + encodeURIComponent(
-                    "เรียน โครงการเฝ้าระวังฟันตกกระ (efluoride.project@moph.go.th)\n\n" +
-                    "เรื่อง: นำส่งรายงานสอบสวนโรคฟันตกกระ\n\n" +
-                    "ข้าพเจ้า (ชื่อ-นามสกุล/ตำแหน่ง): ........................................\n" +
-                    "หน่วยบริการ: ........................................\n" +
-                    "เบอร์โทรศัพท์: ........................................\n\n" +
-                    "ขอรายงานสรุปเคสโรคฟันตกกระ (K00.3) ดังต่อไปนี้:\n" +
-                    "1. วันที่พบเคส/สอบสวนโรค: ........................................\n" +
-                    "2. ข้อมูลผู้ป่วย: เพศ [  ] ชาย  [  ] หญิง  อายุ ............ ปี\n" +
-                    "3. ระดับความรุนแรงของฟันตกกระ (Dean's Index/ระดับ): ........................................\n" +
-                    "4. แหล่งน้ำบริโภคหลักของครัวเรือน: ........................................\n" +
-                    "5. ระยะเวลาที่บริโภคน้ำจากแหล่งนี้ (ปี): ........................................\n" +
-                    "6. รายละเอียดเพิ่มเติม: ................................................................................\n\n" +
-                    "จึงเรียนมาเพื่อทราบและดำเนินการในระบบต่อไป"
-                );
-            $('#btnSendInvestigationMainEmail').attr('href', mailtoUrl);
+            if (!$('#invDate').val()) {
+                let today = new Date().toISOString().split('T')[0];
+                $('#invDate').val(today);
+            }
+            loadInvestigations();
             
             hideLoading();
             return;
@@ -2897,7 +2884,9 @@ $(document).ready(function() {
     let investigationsCache = {};
 
     function loadInvestigations() {
-        $('#investigationsTableBody').html('<tr><td colspan="8" class="text-center text-muted py-3">กำลังโหลดรายงานสอบสวนโรค...</td></tr>');
+        let loadingRow = '<tr><td colspan="8" class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>กำลังโหลดรายงานสอบสวนโรค...</td></tr>';
+        $('#investigationsTableBody').html(loadingRow);
+        $('#investigationsMainTableBody').html(loadingRow);
         
         fetch(getAppBaseUrl() + '/api/investigation/list', {
             method: 'POST',
@@ -2911,54 +2900,211 @@ $(document).ready(function() {
             if (data.success) {
                 let html = '';
                 investigationsCache = {};
-                if (data.data.length === 0) {
-                    html = '<tr><td colspan="8" class="text-center text-muted py-3">ไม่พบประวัติรายงานสอบสวนโรคในระบบ</td></tr>';
+                if (!data.data || data.data.length === 0) {
+                    html = '<tr><td colspan="8" class="text-center text-muted py-4"><i class="fas fa-info-circle me-1"></i> ยังไม่มีประวัติการส่งรายงานสอบสวนโรคในระบบ</td></tr>';
                 } else {
                     data.data.forEach(item => {
                         investigationsCache[item.id] = item;
                         
                         let statusBadge = '';
                         if (item.status === 'Pending') {
-                            statusBadge = '<span class="badge bg-warning text-dark">Pending</span>';
+                            statusBadge = '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>รอตรวจสอบ</span>';
                         } else if (item.status === 'Investigating') {
-                            statusBadge = '<span class="badge bg-primary">Investigating</span>';
+                            statusBadge = '<span class="badge bg-primary"><i class="fas fa-spinner me-1"></i>กำลังสอบสวน</span>';
                         } else {
-                            statusBadge = '<span class="badge bg-success">Resolved</span>';
+                            statusBadge = '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>เสร็จสิ้น</span>';
                         }
+
+                        let isForm1 = (item.form_type && item.form_type.includes('แบบฟอร์ม 1'));
+                        let formBadge = isForm1
+                            ? '<span class="badge" style="background:#0284c7; font-weight:500;"><i class="fas fa-faucet-drip me-1"></i>แบบฟอร์ม 1 (แหล่งน้ำ)</span>'
+                            : '<span class="badge" style="background:#059669; font-weight:500;"><i class="fas fa-tooth me-1"></i>แบบฟอร์ม 2 (รายบุคคล)</span>';
+
+                        let personOrArea = isForm1
+                            ? `<span class="small text-slate-700">จุดเก็บน้ำ: <b>${item.drinking_water_source || 'ไม่ระบุ'}</b></span>`
+                            : `<span class="small text-slate-700">เพศ ${item.patient_gender || '-'} / อายุ ${item.patient_age || '0'} ปี</span>`;
+
+                        let fileLink = item.file_path
+                            ? `<a href="${getAppBaseUrl() + item.file_path}" class="btn btn-xs btn-outline-primary py-0 px-2" download style="font-size:0.75rem;"><i class="fas fa-paperclip me-1"></i>${item.file_name ? item.file_name.substring(0, 15) + '...' : 'โหลดไฟล์'}</a>`
+                            : '<span class="text-muted small">-</span>';
 
                         html += `
                             <tr>
-                                <td class="ps-3">${item.investigation_date}</td>
-                                <td>${item.hospcode}</td>
-                                <td>${item.hosp_name}</td>
-                                <td>เพศ ${item.patient_gender} / อายุ ${item.patient_age} ปี</td>
-                                <td class="fw-bold text-danger">${item.severity_level}</td>
-                                <td>${item.drinking_water_source}</td>
+                                <td class="ps-3 fw-bold text-slate-700">${item.investigation_date}</td>
+                                <td>${formBadge}</td>
+                                <td><span class="fw-bold">${item.hosp_name || 'ไม่ระบุ'}</span> <span class="text-muted small">(${item.hospcode})</span></td>
+                                <td>${personOrArea}</td>
+                                <td class="fw-bold ${item.severity_level.includes('รุนแรง') || item.severity_level.includes('วิกฤต') ? 'text-danger' : 'text-slate-800'}">${item.severity_level}</td>
+                                <td>${fileLink}</td>
                                 <td>${statusBadge}</td>
-                                <td class="text-center">
-                                    <button class="btn btn-xs btn-primary-modern btn-view-investigation py-0 px-2" style="font-size: 0.75rem;" data-id="${item.id}"><i class="fas fa-eye me-1"></i> ดูรายละเอียด</button>
+                                <td class="text-center pe-3">
+                                    <button class="btn btn-xs btn-primary-modern btn-view-investigation py-1 px-2" style="font-size: 0.75rem;" data-id="${item.id}">
+                                        <i class="fas fa-eye me-1"></i> ดูรายละเอียด
+                                    </button>
                                 </td>
                             </tr>
                         `;
                     });
                 }
                 $('#investigationsTableBody').html(html);
+                $('#investigationsMainTableBody').html(html);
             } else {
-                $('#investigationsTableBody').html(`<tr><td colspan="8" class="text-center text-danger py-3">เกิดข้อผิดพลาด: ${data.message || 'ปฏิเสธการเข้าถึง'}</td></tr>`);
+                let errHtml = `<tr><td colspan="8" class="text-center text-danger py-4">เกิดข้อผิดพลาด: ${data.message || 'ปฏิเสธการเข้าถึง'}</td></tr>`;
+                $('#investigationsTableBody').html(errHtml);
+                $('#investigationsMainTableBody').html(errHtml);
             }
         })
         .catch(err => {
             console.error('Error loading investigations:', err);
-            $('#investigationsTableBody').html('<tr><td colspan="8" class="text-center text-danger py-3">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+            let errHtml = '<tr><td colspan="8" class="text-center text-danger py-4">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>';
+            $('#investigationsTableBody').html(errHtml);
+            $('#investigationsMainTableBody').html(errHtml);
         });
     }
 
+    // Toggle Form fields based on Form Type (Form 1 vs Form 2)
+    $(document).on('change', '#invFormType', function() {
+        let fType = $(this).val();
+        if (fType.includes('แบบฟอร์ม 1')) {
+            $('.form-2-field').hide();
+            $('#lblInvSeverity').text('ระดับฟลูออไรด์ / สถานการณ์แหล่งน้ำ *');
+            $('#lblInvWaterSource').text('แหล่งน้ำต้นเหตุ / จุดเก็บน้ำเฝ้าระวัง');
+            $('#invSeverity').html(`
+                <option value="วิกฤต (> 4.00 ppm)" selected>วิกฤต (> 4.00 ppm)</option>
+                <option value="เสี่ยงสูง (1.51-4.00 ppm)">เสี่ยงสูง (1.51 - 4.00 ppm)</option>
+                <option value="เฝ้าระวัง (0.71-1.50 ppm)">เฝ้าระวัง (0.71 - 1.50 ppm)</option>
+                <option value="ปลอดภัย (≤ 0.70 ppm)">ปลอดภัย (≤ 0.70 ppm)</option>
+            `);
+            $('#invWaterSource').attr('placeholder', 'เช่น น้ำประปาหมู่บ้าน หมู่ 4, น้ำบาดาลโรงเรียน');
+        } else {
+            $('.form-2-field').show();
+            $('#lblInvSeverity').text('ระดับความรุนแรง / การวินิจฉัย (Dean\'s Index) *');
+            $('#lblInvWaterSource').text('แหล่งน้ำบริโภคหลักของครัวเรือน');
+            $('#invSeverity').html(`
+                <option value="ระดับรุนแรง (Severe - Dean's Index 5)" selected>ระดับรุนแรง (Severe - Dean's Index 5)</option>
+                <option value="ระดับปานกลาง (Moderate - Dean's Index 4)">ระดับปานกลาง (Moderate - Dean's Index 4)</option>
+                <option value="ระดับเล็กน้อย (Mild - Dean's Index 3)">ระดับเล็กน้อย (Mild - Dean's Index 3)</option>
+                <option value="ระดับน้อยมาก (Very Mild - Dean's Index 2)">ระดับน้อยมาก (Very Mild - Dean's Index 2)</option>
+                <option value="ระดับสงสัย (Questionable - Dean's Index 1)">ระดับสงสัย (Questionable - Dean's Index 1)</option>
+            `);
+            $('#invWaterSource').attr('placeholder', 'เช่น น้ำประปา, น้ำบาดาล, น้ำฝน, น้ำดื่มบรรจุขวด');
+        }
+    });
+
+    // Submit Investigation Report with File Attachment
+    $(document).on('submit', '#formSubmitInvestigation', function(e) {
+        e.preventDefault();
+        let btn = $('#btnSubmitInv');
+        let origText = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> กำลังบันทึก...');
+
+        let formData = new FormData(this);
+
+        fetch(getAppBaseUrl() + '/api/investigation/submit', {
+            method: 'POST',
+            headers: {
+                'Authorization': sessionStorage.getItem('adminToken') || ''
+            },
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'บันทึกรายงานการสอบสวนโรคและไฟล์แนบเรียบร้อยแล้ว!');
+                let modalEl = document.getElementById('submitInvestigationModal');
+                let modalObj = bootstrap.Modal.getInstance(modalEl);
+                if (modalObj) modalObj.hide();
+                $('#formSubmitInvestigation')[0].reset();
+                if (!$('#invDate').val()) {
+                    $('#invDate').val(new Date().toISOString().split('T')[0]);
+                }
+                loadInvestigations();
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + (data.message || 'ไม่สามารถบันทึกข้อมูลได้'));
+            }
+        })
+        .catch(err => {
+            console.error('Submit investigation error:', err);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        })
+        .finally(() => {
+            btn.prop('disabled', false).html(origText);
+        });
+    });
+
+    // Refresh Investigations Table Button
+    $(document).on('click', '#btnRefreshInvestigations', function(e) {
+        e.preventDefault();
+        loadInvestigations();
+    });
+
+    // Open Mail Dialog
+    $(document).on('click', '#btnOpenMailDialog, #btnSendInvestigationMainEmail', function(e) {
+        e.preventDefault();
+        let modal = new bootstrap.Modal(document.getElementById('emailSelectModal'));
+        modal.show();
+    });
+
+    // Form 1 Email Template Trigger
+    $(document).on('click', '#btnSelectEmailForm1', function() {
+        let modalEl = document.getElementById('emailSelectModal');
+        let modalObj = bootstrap.Modal.getInstance(modalEl);
+        if (modalObj) modalObj.hide();
+
+        let subject = encodeURIComponent("[รายงานสอบสวนโรค] แบบฟอร์ม 1 - การประเมินผลกระทบฟลูออไรด์ในน้ำบริโภคเกินมาตรฐาน");
+        let body = encodeURIComponent(
+            "เรียน โครงการเฝ้าระวังฟันตกกระ (efluoride.project@moph.go.th)\n\n" +
+            "เรื่อง: นำส่งรายงานแบบฟอร์ม 1 (การประเมินผลกระทบฟลูออไรด์ในน้ำบริโภคเกินมาตรฐาน)\n\n" +
+            "ข้าพเจ้า (ชื่อ-นามสกุล/ตำแหน่ง): ........................................\n" +
+            "หน่วยบริการ: ........................................\n" +
+            "เบอร์โทรศัพท์: ........................................\n\n" +
+            "ขอรายงานสรุปผลการประเมินแหล่งน้ำต้นเหตุและกลุ่มเสี่ยง ดังนี้:\n" +
+            "1. วันที่ลงพื้นที่/ประเมิน: ........................................\n" +
+            "2. พื้นที่: ตำบล.................. อำเภอ.................. จังหวัด..................\n" +
+            "3. แหล่งน้ำต้นเหตุ/จุดเฝ้าระวัง: ........................................\n" +
+            "4. ระดับฟลูออไรด์ที่ตรวจพบ: ............ mg/L (ppm)\n" +
+            "5. กลุ่มประชากรเสี่ยงในพื้นที่: เด็ก 0-8 ปี จำนวน ...... คน, หญิงตั้งครรภ์ ...... คน\n" +
+            "6. แนวทางการแก้ไขเบื้องต้น: ........................................\n\n" +
+            "(กรุณาแนบไฟล์ แบบฟอร์ม 1 ที่กรอกข้อมูลแล้วมาพร้อมอีเมลนี้)\n\n" +
+            "จึงเรียนมาเพื่อทราบและดำเนินการต่อไป"
+        );
+        window.location.href = `mailto:efluoride.project@moph.go.th?subject=${subject}&body=${body}`;
+    });
+
+    // Form 2 Email Template Trigger
+    $(document).on('click', '#btnSelectEmailForm2', function() {
+        let modalEl = document.getElementById('emailSelectModal');
+        let modalObj = bootstrap.Modal.getInstance(modalEl);
+        if (modalObj) modalObj.hide();
+
+        let subject = encodeURIComponent("[รายงานสอบสวนโรค] แบบฟอร์ม 2 - พบเคสฟันตกกระ K00.3");
+        let body = encodeURIComponent(
+            "เรียน โครงการเฝ้าระวังฟันตกกระ (efluoride.project@moph.go.th)\n\n" +
+            "เรื่อง: นำส่งรายงานแบบฟอร์ม 2 (การสอบสวนสาเหตุฟันตกกระรายบุคคล)\n\n" +
+            "ข้าพเจ้า (ชื่อ-นามสกุล/ตำแหน่ง): ........................................\n" +
+            "หน่วยบริการ: ........................................\n" +
+            "เบอร์โทรศัพท์: ........................................\n\n" +
+            "ขอรายงานสรุปเคสโรคฟันตกกระ (K00.3) ดังต่อไปนี้:\n" +
+            "1. วันที่พบเคส/สอบสวนโรค: ........................................\n" +
+            "2. ข้อมูลผู้ป่วย: เพศ [  ] ชาย  [  ] หญิง  อายุ ............ ปี\n" +
+            "3. ระดับความรุนแรงของฟันตกกระ (Dean's Index 0-5): ........................................\n" +
+            "4. แหล่งน้ำบริโภคหลักของครัวเรือน: ........................................\n" +
+            "5. ระยะเวลาที่บริโภคน้ำจากแหล่งนี้: ............ ปี\n" +
+            "6. รายละเอียดเพิ่มเติม: ........................................\n\n" +
+            "(กรุณาแนบไฟล์ แบบฟอร์ม 2 ที่กรอกข้อมูลแล้วมาพร้อมอีเมลนี้)\n\n" +
+            "จึงเรียนมาเพื่อทราบและดำเนินการในระบบต่อไป"
+        );
+        window.location.href = `mailto:efluoride.project@moph.go.th?subject=${subject}&body=${body}`;
+    });
+
+    // View Investigation Details in Modal
     $(document).on('click', '.btn-view-investigation', function() {
         let id = $(this).attr('data-id');
         let item = investigationsCache[id];
         if (!item) return;
 
         // Fill data in modal
+        $('#det_form_type').text(item.form_type || 'แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ');
         $('#det_hospcode').text(item.hospcode);
         $('#det_hosp_name').text(item.hosp_name);
         $('#det_investigation_date').text(item.investigation_date);
@@ -2973,24 +3119,33 @@ $(document).ready(function() {
         $('#det_created_at').text(item.created_at);
         $('#det_details').text(item.details || '-');
 
+        // File download link in modal
+        if (item.file_path) {
+            let fUrl = getAppBaseUrl() + item.file_path;
+            let fLabel = item.file_name || 'ดาวน์โหลดไฟล์แนบ';
+            $('#det_file_container').html(`<a href="${fUrl}" class="btn btn-sm btn-outline-primary shadow-sm" download target="_blank"><i class="fas fa-file-download me-1"></i> ${fLabel}</a>`);
+        } else {
+            $('#det_file_container').html('<span class="text-muted">ไม่มีไฟล์แนบ</span>');
+        }
+
         // Create mailto link
         let projectEmail = "efluoride.project@moph.go.th";
-        let subject = `[รายงานสอบสวนโรค] พบเคสฟันตกกระ K00.3 ระดับ ${item.severity_level} - ${item.hosp_name}`;
+        let isForm1 = (item.form_type && item.form_type.includes('แบบฟอร์ม 1'));
+        let subject = isForm1
+            ? `[รายงานสอบสวนโรค] แบบฟอร์ม 1 แหล่งน้ำฟลูออไรด์สูง - ${item.hosp_name}`
+            : `[รายงานสอบสวนโรค] แบบฟอร์ม 2 พบเคสฟันตกกระ K00.3 - ${item.hosp_name}`;
         
-        let body = `เรียน ผู้รับผิดชอบงานระบาดวิทยาและทันตสาธารณสุขจังหวัด
-
-เรื่อง: รายงานการสอบสวนโรคผู้ป่วยฟันตกกระ (Fluorosis - ICD10 K00.3)
-
-จากการลงพื้นที่สอบสวนโรคโดย ${item.investigator_name || '-'} เมื่อวันที่ ${item.investigation_date} มีข้อมูลการเกิดโรคดังนี้:
-- สถานบริการ: ${item.hosp_name} (รหัส 5 หลัก: ${item.hospcode})
-- ข้อมูลผู้ป่วย: เพศ ${item.patient_gender || '-'}, อายุ ${item.patient_age || '0'} ปี
-- ผลการตรวจ (Dean's Index): ${item.severity_level}
-- ข้อมูลแหล่งน้ำความเสี่ยง: ดื่มน้ำจาก ${item.drinking_water_source || '-'} (ระยะเวลาบริโภค ${item.exposure_years || '0'} ปี)
-- รายละเอียดเพิ่มเติม: ${item.details || '-'}
-
-ติดต่อผู้รายงานสอบสวนโรค: โทร ${item.investigator_phone || '-'}
------------------
-ส่งต่อข้อมูลจากระบบ E-Fluoride Pro: http://localhost:5000/`;
+        let body = `เรียน ผู้รับผิดชอบงานระบาดวิทยาและทันตสาธารณสุขจังหวัด\n\n` +
+            `เรื่อง: รายงานการสอบสวนโรค (${item.form_type || 'ฟันตกกระ'})\n\n` +
+            `จากการลงพื้นที่สอบสวนโรคโดย ${item.investigator_name || '-'} เมื่อวันที่ ${item.investigation_date} มีข้อมูลดังนี้:\n` +
+            `- หน่วยบริการ: ${item.hosp_name} (รหัส: ${item.hospcode})\n` +
+            `- ระดับความรุนแรง/สถานการณ์: ${item.severity_level}\n` +
+            (isForm1 ? `- แหล่งน้ำต้นเหตุ/จุดเก็บน้ำ: ${item.drinking_water_source || '-'}\n` : `- ข้อมูลผู้ป่วย: เพศ ${item.patient_gender || '-'}, อายุ ${item.patient_age || '0'} ปี (ดื่มน้ำ ${item.drinking_water_source || '-'} มา ${item.exposure_years || '0'} ปี)\n`) +
+            `- รายละเอียดเพิ่มเติม: ${item.details || '-'}\n` +
+            `- ไฟล์เอกสารแนบ: ${item.file_name ? (getAppBaseUrl() + item.file_path) : 'ไม่มีไฟล์แนบ'}\n\n` +
+            `ติดต่อผู้รายงาน: โทร ${item.investigator_phone || '-'}\n` +
+            `-----------------\n` +
+            `ส่งต่อข้อมูลจากระบบ E-Fluoride Pro`;
 
         let mailtoUrl = `mailto:${projectEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         $('#btnSendInvestigationEmail').attr('href', mailtoUrl);

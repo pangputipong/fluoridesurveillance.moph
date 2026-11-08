@@ -447,41 +447,80 @@
 
 
                 <div id="investigationReportView" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                         <div>
-                            <h4 class="fw-bold m-0" style="color: #0f172a;"><i class="fas fa-file-medical text-theme me-2"></i>รายงานสอบสวนโรคฟันตกกระ</h4>
-                            <span class="text-muted">ดาวน์โหลดแบบฟอร์ม แนวทางปฏิบัติงาน และเครื่องมืออำนวยความสะดวกในการส่งรายงานโรคทางอีเมล</span>
+                            <h4 class="fw-bold m-0" style="color: #0f172a;"><i class="fas fa-file-medical text-theme me-2"></i>รายงานสอบสวนโรคฟันตกกระและประเมินผลกระทบฟลูออไรด์สูง</h4>
+                            <span class="text-muted">ดาวน์โหลดแบบฟอร์มมาตรฐาน (แบบฟอร์ม 1 / แบบฟอร์ม 2), คู่มือระเบียบปฏิบัติ และบันทึกรายงานพร้อมแนบไฟล์ออนไลน์</span>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-primary-modern shadow-sm" data-bs-toggle="modal" data-bs-target="#submitInvestigationModal">
+                                <i class="fas fa-plus-circle me-1"></i> บันทึกรายงาน / แนบไฟล์
+                            </button>
+                            <button class="btn btn-outline-modern shadow-sm" id="btnOpenMailDialog">
+                                <i class="fas fa-envelope me-1"></i> ส่งรายงานทางอีเมล
+                            </button>
                         </div>
                     </div>
                     
+                    <!-- 4 Download & Action Cards -->
                     <div class="row g-4 mb-4">
-                        <!-- Card 1: แบบสอบสวนโรคฟันตกกระ -->
-                        <div class="col-md-4">
-                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px;">
+                        <!-- Card 1: แบบฟอร์ม 1 -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #0284c7 !important;">
                                 <div>
-                                    <div class="icon-circle mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: #0284c7; font-size: 1.5rem;">
-                                        <i class="fas fa-file-word"></i>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 0.75rem;">แหล่งน้ำ / พื้นที่</span>
+                                        <span class="badge bg-light text-muted border"><i class="fas fa-file-word text-primary me-1"></i>.docx</span>
                                     </div>
-                                    <h5 class="fw-bold text-slate-800">แบบสอบสวนโรคฟันตกกระ</h5>
-                                    <p class="text-muted small mb-0">แบบฟอร์มเปล่าสำหรับพิมพ์นำไปกรอกข้อมูลลงพื้นที่ประเมินเบื้องต้น (.docx)</p>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: #0284c7; font-size: 1.5rem;">
+                                        <i class="fas fa-faucet-drip"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800" style="font-size: 1.05rem;">แบบฟอร์ม 1: การประเมินผลกระทบฟลูออไรด์สูง</h5>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">ประเมินความเสี่ยงแหล่งน้ำต้นเหตุ (ฟลูออไรด์ &ge; 4 ppm), กลุ่มประชากรเสี่ยงในพื้นที่ (สพด., โรงเรียน, หญิงตั้งครรภ์) และแนวทางจัดการ</p>
                                 </div>
                                 <div class="mt-4">
-                                    <a href="{{ BASE_URL }}/static/downloads/แบบสอบสวนโรคฟันตกกระ.docx" class="btn btn-primary-modern w-100 justify-content-center" download>
-                                        <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม (.docx)
+                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 1 การประเมินผลกระทบฟลูออไรด์สูง.docx" class="btn btn-primary-modern w-100 justify-content-center" download>
+                                        <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม 1 (.docx)
                                     </a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Card 2: แนวทางการดำเนินงานสอบสวนโรค -->
-                        <div class="col-md-4">
-                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px;">
+                        <!-- Card 2: แบบฟอร์ม 2 -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #059669 !important;">
                                 <div>
-                                    <div class="icon-circle mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #ef4444; font-size: 1.5rem;">
-                                        <i class="fas fa-file-pdf"></i>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">รายบุคคล / ทันตกรรม</span>
+                                        <span class="badge bg-light text-muted border"><i class="fas fa-file-word text-success me-1"></i>.docx</span>
                                     </div>
-                                    <h5 class="fw-bold text-slate-800">คู่มือแนวทางสอบสวนโรค</h5>
-                                    <p class="text-muted small mb-0">เอกสารคู่มือแนะนำระเบียบปฏิบัติปฏิบัติการและแนวทางการดำเนินงานสอบสวนโรค (.pdf)</p>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #059669; font-size: 1.5rem;">
+                                        <i class="fas fa-tooth"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800" style="font-size: 1.05rem;">แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ</h5>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">สอบสวนรายบุคคล, ประวัติการบริโภคน้ำดื่มย้อนหลัง, การตรวจประเมินผิวฟัน และจำแนกระดับความรุนแรงตาม Dean's Index (0-5)</p>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 2 การสอบสวนสาเหตุฟันตกกระ.docx" class="btn w-100 justify-content-center text-white shadow-sm" style="background: #059669; border-radius: 8px; font-weight: 500;" download>
+                                        <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม 2 (.docx)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: คู่มือแนวทางสอบสวนโรค -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #dc2626 !important;">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.75rem;">คู่มือปฏิบัติการ</span>
+                                        <span class="badge bg-light text-muted border"><i class="fas fa-file-pdf text-danger me-1"></i>.pdf</span>
+                                    </div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #dc2626; font-size: 1.5rem;">
+                                        <i class="fas fa-book-medical"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800" style="font-size: 1.05rem;">คู่มือแนวทางสอบสวนโรค</h5>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">เอกสารคู่มือระเบียบปฏิบัติงานระบาดวิทยา ขั้นตอนการสืบสวนหาแหล่งน้ำต้นเหตุ และเกณฑ์มาตรฐานการจำแนก Dean's Index 6 ระดับ</p>
                                 </div>
                                 <div class="mt-4">
                                     <a href="{{ BASE_URL }}/static/downloads/แนวทางการสอบสวนโรคฟันตกกระ.pdf" class="btn btn-outline-modern w-100 justify-content-center" target="_blank" download>
@@ -491,22 +530,58 @@
                             </div>
                         </div>
 
-                        <!-- Card 3: ส่งรายงานสอบสวนโรค -->
-                        <div class="col-md-4">
-                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px;">
+                        <!-- Card 4: ส่งรายงานออนไลน์ / ทางอีเมล -->
+                        <div class="col-xl-3 col-md-6">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #8b5cf6 !important;">
                                 <div>
-                                    <div class="icon-circle mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #16a34a; font-size: 1.5rem;">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge px-2 py-1" style="font-size: 0.75rem; background: #ede9fe; color: #7c3aed;">ระบบส่งรายงาน</span>
+                                        <span class="badge bg-light text-muted border"><i class="fas fa-cloud-arrow-up text-theme me-1"></i>Online</span>
+                                    </div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #ede9fe; color: #7c3aed; font-size: 1.5rem;">
                                         <i class="fas fa-paper-plane"></i>
                                     </div>
-                                    <h5 class="fw-bold text-slate-800">ส่งรายงานทางอีเมล</h5>
-                                    <p class="text-muted small mb-0">ปุ่มคัดลอกร่างข้อความรายงานเคสเพื่อส่งต่อไปยังอีเมลโครงการอย่างสะดวกรวดเร็ว</p>
+                                    <h5 class="fw-bold text-slate-800" style="font-size: 1.05rem;">บันทึกรายงาน &amp; แนบไฟล์</h5>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">บันทึกรายงานผลการสอบสวนโรคพร้อมแนบไฟล์เข้าสู่ฐานข้อมูลส่วนกลาง หรือส่งรายงานผ่านทางอีเมลโครงการอย่างเป็นทางการ</p>
                                 </div>
-                                <div class="mt-4">
-                                    <a href="#" class="btn btn-primary-modern w-100 justify-content-center" id="btnSendInvestigationMainEmail">
-                                        <i class="fas fa-envelope me-2"></i>กดลิงก์ไปยัง Mail
-                                    </a>
+                                <div class="mt-4 d-flex flex-column gap-2">
+                                    <button class="btn btn-primary-modern w-100 justify-content-center" data-bs-toggle="modal" data-bs-target="#submitInvestigationModal">
+                                        <i class="fas fa-edit me-1"></i> บันทึก &amp; แนบไฟล์
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- รายการประวัติการส่งรายงานสอบสวนโรค -->
+                    <div class="card border-0 bg-glass shadow-sm p-4" style="border-radius: 16px;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <h5 class="fw-bold text-slate-800 m-0"><i class="fas fa-list-check text-theme me-2"></i>รายการรายงานการสอบสวนโรคในระบบ</h5>
+                                <span class="small text-muted">แสดงประวัติรายงานสอบสวนโรคและไฟล์แนบที่เจ้าหน้าที่ส่งเข้ามา</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" id="btnRefreshInvestigations"><i class="fas fa-sync-alt me-1"></i> รีเฟรช</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">วันที่สอบสวน</th>
+                                        <th>ประเภทแบบฟอร์ม</th>
+                                        <th>รหัส / หน่วยบริการ</th>
+                                        <th>ผู้ป่วย / พื้นที่</th>
+                                        <th>ระดับความรุนแรง / สถานการณ์</th>
+                                        <th>ไฟล์แนบ</th>
+                                        <th>สถานะ</th>
+                                        <th class="text-center pe-3">การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="investigationsMainTableBody">
+                                    <tr><td colspan="8" class="text-center text-muted py-4">กำลังโหลดข้อมูลรายงานสอบสวนโรค...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -957,7 +1032,7 @@
     </div>
 
     <script src="{{ BASE_URL }}/static/js/district_centers.js?v=3.13"></script>
-    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.13"></script>
+    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.14"></script>
 
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -1008,6 +1083,213 @@
                                 <a href="#" onclick="document.getElementById('registerModal').querySelector('.btn-close').click(); setTimeout(()=>new bootstrap.Modal(document.getElementById('loginModal')).show(), 500);" class="text-decoration-none fw-bold ms-1" style="font-size: 0.9rem; color: #0ea5e9;">Sign in</a>
                             </div>
                         </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal บันทึกรายงานสอบสวนโรคพร้อมแนบไฟล์ -->
+    <div class="modal fade" id="submitInvestigationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-medical text-primary me-2"></i>บันทึกรายงานการสอบสวนโรคฟันตกกระ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formSubmitInvestigation" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <!-- เลือกประเภทแบบฟอร์ม -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-slate-700"><i class="fas fa-layer-group text-theme me-1"></i> ประเภทแบบฟอร์มรายงาน <span class="text-danger">*</span></label>
+                                <select class="form-select" id="invFormType" name="form_type" required>
+                                    <option value="แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ" selected>แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ (รายบุคคล / Dean's Index)</option>
+                                    <option value="แบบฟอร์ม 1: การประเมินผลกระทบฟลูออไรด์สูง">แบบฟอร์ม 1: การประเมินผลกระทบฟลูออไรด์สูง (แหล่งน้ำ / พื้นที่ / ชุมชน)</option>
+                                </select>
+                            </div>
+
+                            <!-- รหัสสถานบริการ & ชื่อสถานบริการ -->
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold text-slate-700">รหัสหน่วยบริการ (5 หลัก) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="invHospcode" name="hospcode" placeholder="เช่น 01234" required maxlength="10">
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label fw-bold text-slate-700">ชื่อหน่วยบริการ / รพ.สต. / โรงพยาบาล</label>
+                                <input type="text" class="form-control" id="invHospName" name="hosp_name" placeholder="ชื่อหน่วยบริการ (ระบุอัตโนมัติหรือกรอกเพิ่ม)">
+                            </div>
+
+                            <!-- วันที่สอบสวนโรค & ระดับความรุนแรง -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-slate-700">วันที่ทำการสอบสวนโรค <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="invDate" name="investigation_date" required>
+                            </div>
+                            <div class="col-md-6" id="wrapInvSeverity">
+                                <label class="form-label fw-bold text-slate-700" id="lblInvSeverity">ระดับความรุนแรง / การวินิจฉัย <span class="text-danger">*</span></label>
+                                <select class="form-select" id="invSeverity" name="severity_level" required>
+                                    <option value="ระดับรุนแรง (Severe)">ระดับรุนแรง (Severe - Dean's Index 5)</option>
+                                    <option value="ระดับปานกลาง (Moderate)">ระดับปานกลาง (Moderate - Dean's Index 4)</option>
+                                    <option value="ระดับเล็กน้อย (Mild)">ระดับเล็กน้อย (Mild - Dean's Index 3)</option>
+                                    <option value="ระดับน้อยมาก (Very Mild)">ระดับน้อยมาก (Very Mild - Dean's Index 2)</option>
+                                    <option value="ระดับสงสัย (Questionable)">ระดับสงสัย (Questionable - Dean's Index 1)</option>
+                                    <option value="วิกฤต (> 4.00 ppm)">แหล่งน้ำวิกฤต (&gt; 4.00 ppm)</option>
+                                    <option value="เสี่ยงสูง (1.51-4.00 ppm)">แหล่งน้ำเสี่ยงสูง (1.51 - 4.00 ppm)</option>
+                                </select>
+                            </div>
+
+                            <!-- ข้อมูลเฉพาะแบบฟอร์ม 2 (ผู้ป่วย) -->
+                            <div class="col-md-4 form-2-field">
+                                <label class="form-label fw-bold text-slate-700">เพศผู้ป่วย</label>
+                                <select class="form-select" id="invGender" name="patient_gender">
+                                    <option value="ชาย">ชาย</option>
+                                    <option value="หญิง">หญิง</option>
+                                    <option value="ไม่ระบุ" selected>ไม่ระบุ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-2-field">
+                                <label class="form-label fw-bold text-slate-700">อายุผู้ป่วย (ปี)</label>
+                                <input type="number" class="form-control" id="invAge" name="patient_age" placeholder="เช่น 12" min="0" max="120">
+                            </div>
+                            <div class="col-md-4 form-2-field">
+                                <label class="form-label fw-bold text-slate-700">ระยะเวลาบริโภคน้ำ (ปี)</label>
+                                <input type="number" class="form-control" id="invExposureYears" name="exposure_years" placeholder="เช่น 5" min="0">
+                            </div>
+
+                            <!-- แหล่งน้ำที่สงสัย / แหล่งน้ำบริโภค -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-slate-700" id="lblInvWaterSource">แหล่งน้ำบริโภคต้นเหตุ / จุดเก็บตัวอย่างน้ำ</label>
+                                <input type="text" class="form-control" id="invWaterSource" name="drinking_water_source" placeholder="เช่น น้ำประปาหมู่บ้าน หมู่ 4, น้ำบาดาลโรงเรียน">
+                            </div>
+
+                            <!-- ผู้รายงาน & เบอร์ติดต่อ -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-slate-700">ชื่อ-นามสกุล ผู้สอบสวนโรค</label>
+                                <input type="text" class="form-control" id="invInvestigatorName" name="investigator_name" placeholder="ชื่อผู้รายงาน/ตำแหน่ง">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-slate-700">เบอร์โทรศัพท์ติดต่อ</label>
+                                <input type="text" class="form-control" id="invInvestigatorPhone" name="investigator_phone" placeholder="เช่น 081-234-5678">
+                            </div>
+
+                            <!-- รายละเอียดสรุป -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-slate-700">ผลการสอบสวน / รายละเอียดเพิ่มเติม</label>
+                                <textarea class="form-control" id="invDetails" name="details" rows="2" placeholder="สรุปข้อค้นพบ ประชากรกลุ่มเสี่ยง หรือแนวทางแก้ไขปัญหาในพื้นที่"></textarea>
+                            </div>
+
+                            <!-- แนบไฟล์รายงาน (รองรับไฟล์ Word, PDF, Excel, รูปภาพ) -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-slate-700">
+                                    <i class="fas fa-paperclip text-theme me-1"></i> แนบไฟล์แบบฟอร์มรายงานที่กรอกแล้ว (รองรับ .docx, .pdf, .xlsx, รูปภาพ)
+                                </label>
+                                <input type="file" class="form-control" id="invFile" name="file" accept=".docx,.doc,.pdf,.xlsx,.xls,.jpg,.jpeg,.png">
+                                <div class="form-text small text-muted"><i class="fas fa-info-circle me-1"></i>สามารถแนบไฟล์แบบฟอร์ม 1 หรือแบบฟอร์ม 2 ที่กรอกข้อมูลเสร็จแล้วเพื่อให้ส่วนกลางดาวน์โหลดไปตรวจสอบได้</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light px-4 py-3 border-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary-modern px-4" id="btnSubmitInv"><i class="fas fa-paper-plane me-1"></i> บันทึกและส่งรายงาน</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ดูรายละเอียดรายงานสอบสวนโรค -->
+    <div class="modal fade" id="investigationDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-medical text-primary me-2"></i>รายละเอียดรายงานการสอบสวนโรค</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">ประเภทแบบฟอร์ม:</div>
+                                <div class="fw-bold text-slate-800" id="det_form_type">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">วันที่สอบสวนโรค:</div>
+                                <div class="fw-bold text-slate-800" id="det_investigation_date">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">สถานพยาบาล / รหัส 5 หลัก:</div>
+                                <div class="fw-bold text-slate-800"><span id="det_hosp_name">-</span> (<span id="det_hospcode">-</span>)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">ระดับความรุนแรง / สถานการณ์:</div>
+                                <div class="fw-bold text-danger" id="det_severity_level">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">ข้อมูลผู้ป่วย / ประชากร:</div>
+                                <div class="fw-bold text-slate-800">เพศ <span id="det_patient_gender">-</span> / อายุ <span id="det_patient_age">-</span> ปี</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">แหล่งน้ำบริโภค / ระยะเวลา:</div>
+                                <div class="fw-bold text-slate-800"><span id="det_drinking_water_source">-</span> (บริโภคมา <span id="det_exposure_years">-</span> ปี)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">ผู้สอบสวนโรค / เบอร์โทร:</div>
+                                <div class="fw-bold text-slate-800"><span id="det_investigator_name">-</span> (โทร: <span id="det_investigator_phone">-</span>)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">ไฟล์เอกสารแนบ:</div>
+                                <div id="det_file_container"><span class="text-muted" id="det_file_link">ไม่มีไฟล์แนบ</span></div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted mb-1">รายละเอียดข้อค้นพบ / แนวทางแก้ไข:</div>
+                                <div class="text-slate-800" id="det_details" style="white-space: pre-wrap;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light px-4 py-3 border-0 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <a href="#" class="btn btn-primary-modern" id="btnSendInvestigationEmail"><i class="fas fa-envelope me-1"></i> ส่งต่อรายงานทางอีเมล</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal เลือกแบบฟอร์มสำหรับส่งอีเมล -->
+    <div class="modal fade" id="emailSelectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-paper-plane text-primary me-2"></i>เลือกแบบฟอร์มเพื่อส่งรายงานทางอีเมล</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="text-muted mb-4">ระบบจะเปิดโปรแกรมอีเมล (Outlook / Mail Client) พร้อมร่างข้อความสรุปเคสที่ตรงกับแบบฟอร์ม เพื่อให้ท่านแนบไฟล์ .docx ส่งต่อได้อย่างสะดวกรวดเร็ว</p>
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-outline-primary text-start p-3 rounded-3" id="btnSelectEmailForm1">
+                            <div class="fw-bold fs-6 mb-1"><i class="fas fa-faucet-drip me-2 text-primary"></i>ส่งรายงาน: แบบฟอร์ม 1 (การประเมินผลกระทบฟลูออไรด์สูง)</div>
+                            <div class="small text-muted">สำหรับแจ้งเตือนแหล่งน้ำเกินมาตรฐาน &ge; 4 ppm, กลุ่มเสี่ยงในชุมชน สพด./โรงเรียน/หญิงตั้งครรภ์</div>
+                        </button>
+                        <button type="button" class="btn btn-outline-success text-start p-3 rounded-3" id="btnSelectEmailForm2">
+                            <div class="fw-bold fs-6 mb-1"><i class="fas fa-tooth me-2 text-success"></i>ส่งรายงาน: แบบฟอร์ม 2 (การสอบสวนสาเหตุฟันตกกระ)</div>
+                            <div class="small text-muted">สำหรับรายงานพบเคสโรคฟันตกกระ K00.3 รายบุคคล, ประวัติการบริโภคน้ำ และผล Dean's Index</div>
+                        </button>
                     </div>
                 </div>
             </div>
