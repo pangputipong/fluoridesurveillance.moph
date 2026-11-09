@@ -1070,7 +1070,7 @@ $(document).ready(function() {
     window.drillBackToDistrict = drillBackToDistrict;
 
     function getFluorideTierColor(val) {
-        if (val === null || val === undefined || isNaN(val) || val <= 0) return '#94a3b8';
+        if (val === null || val === undefined || isNaN(val) || val < 0) return '#94a3b8';
         if (val <= 0.70) return '#10b981'; // 0 - 0.70 สีเขียว
         if (val <= 1.50) return '#eab308'; // 0.71 - 1.50 สีเหลือง
         if (val <= 4.00) return '#f97316'; // 1.51 - 4.00 สีส้ม
@@ -1078,7 +1078,7 @@ $(document).ready(function() {
     }
 
     function getFluorideTierLabel(val) {
-        if (val === null || val === undefined || isNaN(val) || val <= 0) return 'ไม่มีข้อมูล';
+        if (val === null || val === undefined || isNaN(val) || val < 0) return 'ไม่มีข้อมูล';
         if (val <= 0.70) return 'ปกติ (0 – 0.70 mg/L)';
         if (val <= 1.50) return 'เฝ้าระวัง (0.71 – 1.50 mg/L)';
         if (val <= 4.00) return 'เสี่ยงสูง (1.51 – 4.00 mg/L)';
@@ -1139,8 +1139,9 @@ $(document).ready(function() {
     }
 
     function createTierProvinceMarker(provName, maxVal, count, lat, lng, isHome) {
+        if (!count || count <= 0) return null;
         let color = getFluorideTierColor(maxVal);
-        let valText = count > 0 ? maxVal.toFixed(2) : '-';
+        let valText = maxVal.toFixed(2);
         let isRed = (maxVal > 4.00);
         let pulseClass = isRed ? 'pulse-red-tier' : '';
         let iconHtml = `
@@ -1179,8 +1180,9 @@ $(document).ready(function() {
     }
 
     function createTierDistrictMarker(provName, distName, maxVal, count, lat, lng, isHome) {
+        if (!count || count <= 0) return null;
         let color = getFluorideTierColor(maxVal);
-        let valText = count > 0 ? maxVal.toFixed(2) : '-';
+        let valText = maxVal.toFixed(2);
         let isRed = (maxVal > 4.00);
         let pulseClass = isRed ? 'pulse-red-tier' : '';
         let iconHtml = `
@@ -1717,11 +1719,32 @@ $(document).ready(function() {
                             let normP = normalizeProv(provName);
                             if (allowedProvinces && allowedProvinces.length > 0 && !allowedProvinces.includes(normP)) continue;
 
+                            let stats = provMap[normP] || provMap[provName];
+                            if (!stats || !stats.count || stats.count <= 0) continue;
+
                             let center = window.provCentersData[provName];
-                            let stats = provMap[normP] || provMap[provName] || { maxVal: 0, count: 0 };
                             let marker = createTierProvinceMarker(provName, stats.maxVal, stats.count, center.lat, center.lng, false);
-                            markersGroup.addLayer(marker);
-                            bounds.push([center.lat, center.lng]);
+                            if (marker) {
+                                markersGroup.addLayer(marker);
+                                bounds.push([center.lat, center.lng]);
+                            }
+                        }
+                    }
+
+                    // Fallback for provinces in provMap not found above
+                    for (let pName in provMap) {
+                        let stats = provMap[pName];
+                        if (!stats || !stats.count || stats.count <= 0) continue;
+                        let normP = normalizeProv(pName);
+                        if (allowedProvinces && allowedProvinces.length > 0 && !allowedProvinces.includes(normP)) continue;
+
+                        let center = window.provCentersData ? (window.provCentersData[normP] || window.provCentersData[pName]) : null;
+                        if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
+                            let marker = createTierProvinceMarker(pName, stats.maxVal, stats.count, center.lat, center.lng, false);
+                            if (marker) {
+                                markersGroup.addLayer(marker);
+                                bounds.push([center.lat, center.lng]);
+                            }
                         }
                     }
 
@@ -1731,6 +1754,8 @@ $(document).ready(function() {
                         } else {
                             map.flyTo([13.5, 101.0], 6);
                         }
+                    } else {
+                        map.flyTo([13.5, 101.0], 6);
                     }
 
                 } else if (!selDist || selDist === 'ทั้งหมด') {
@@ -1751,36 +1776,64 @@ $(document).ready(function() {
                         }
                     });
 
+                    function getReportDistStats(dName) {
+                        let dNorm = normalizeDist(dName);
+                        let s = distMap[dNorm] || distMap[dName];
+                        if (s) return s;
+                        if (dNorm.startsWith('เมือง')) {
+                            s = distMap['เมือง'] || distMap[dNorm.replace('เมือง', '')];
+                            if (s) return s;
+                        }
+                        if (dNorm === 'เมือง') {
+                            s = distMap['เมือง' + normProv] || distMap['เมือง ' + normProv];
+                            if (s) return s;
+                        }
+                        for (let k in distMap) {
+                            if (k === dNorm || dNorm.includes(k) || k.includes(dNorm)) {
+                                return distMap[k];
+                            }
+                        }
+                        return null;
+                    }
+
                     if (window.distCentersData) {
                         let prefix = normProv + ':';
                         for (let key in window.distCentersData) {
                             if (key.startsWith(prefix)) {
                                 let distName = key.split(':')[1];
+                                let stats = getReportDistStats(distName);
+                                if (!stats || !stats.count || stats.count <= 0) continue;
+
                                 let center = window.distCentersData[key];
-                                let stats = distMap[normalizeDist(distName)] || distMap[distName] || { maxVal: 0, count: 0 };
                                 let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, false);
-                                markersGroup.addLayer(marker);
-                                bounds.push([center.lat, center.lng]);
+                                if (marker) {
+                                    markersGroup.addLayer(marker);
+                                    bounds.push([center.lat, center.lng]);
+                                }
                             }
                         }
                     }
 
                     // Fallback for districts in data but missing in centers json
                     for (let distName in distMap) {
+                        let stats = distMap[distName];
+                        if (!stats || !stats.count || stats.count <= 0) continue;
                         let center = findDistrictCenter(normProv, distName);
                         if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
-                            let stats = distMap[distName];
                             let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, false);
-                            markersGroup.addLayer(marker);
-                            bounds.push([center.lat, center.lng]);
+                            if (marker) {
+                                markersGroup.addLayer(marker);
+                                bounds.push([center.lat, center.lng]);
+                            }
                         }
                     }
 
                     if (bounds.length > 0) {
                         map.flyToBounds(bounds, { padding: [40, 40] });
                     } else {
-                        let pCenter = window.provCentersData ? window.provCentersData[normProv] : null;
+                        let pCenter = window.provCentersData ? (window.provCentersData[normProv] || window.provCentersData[selProv]) : null;
                         if (pCenter) map.flyTo([pCenter.lat, pCenter.lng], 9);
+                        else map.flyTo([13.5, 101.0], 6);
                     }
 
                 } else {
@@ -2315,11 +2368,32 @@ $(document).ready(function() {
                     let normP = normalizeProv(provName);
                     if (allowedProvinces && allowedProvinces.length > 0 && !allowedProvinces.includes(normP)) continue;
 
+                    let stats = provMap[normP] || provMap[provName];
+                    if (!stats || !stats.count || stats.count <= 0) continue;
+
                     let center = window.provCentersData[provName];
-                    let stats = provMap[normP] || provMap[provName] || { maxVal: 0, count: 0 };
                     let marker = createTierProvinceMarker(provName, stats.maxVal, stats.count, center.lat, center.lng, true);
-                    homeMarkersGroup.addLayer(marker);
-                    bounds.push([center.lat, center.lng]);
+                    if (marker) {
+                        homeMarkersGroup.addLayer(marker);
+                        bounds.push([center.lat, center.lng]);
+                    }
+                }
+            }
+
+            // Fallback for provinces in provMap not found above
+            for (let pName in provMap) {
+                let stats = provMap[pName];
+                if (!stats || !stats.count || stats.count <= 0) continue;
+                let normP = normalizeProv(pName);
+                if (allowedProvinces && allowedProvinces.length > 0 && !allowedProvinces.includes(normP)) continue;
+
+                let center = window.provCentersData ? (window.provCentersData[normP] || window.provCentersData[pName]) : null;
+                if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
+                    let marker = createTierProvinceMarker(pName, stats.maxVal, stats.count, center.lat, center.lng, true);
+                    if (marker) {
+                        homeMarkersGroup.addLayer(marker);
+                        bounds.push([center.lat, center.lng]);
+                    }
                 }
             }
 
@@ -2329,6 +2403,8 @@ $(document).ready(function() {
                 } else {
                     homeMap.setView([13.5, 101.0], 6);
                 }
+            } else {
+                homeMap.setView([13.5, 101.0], 6);
             }
 
         } else if (!selDist || selDist === 'ทั้งหมด') {
@@ -2337,9 +2413,9 @@ $(document).ready(function() {
             updateHomeBreadcrumb(2, normProv, '');
             let distMap = {};
             allPoints.forEach(p => {
-                let pProv = normalizeProv(p.prov || '');
-                let dist = normalizeDist(p.dist || '');
-                let val = parseFloat(p.val || 0);
+                let pProv = normalizeProv(p.prov || p['จังหวัด'] || '');
+                let dist = normalizeDist(p.dist || p['อำเภอ'] || '');
+                let val = parseFloat(p.val !== undefined ? p.val : (p['ปริมาณฟลูออไรด์'] || p['fluoride_level'] || 0));
                 if (pProv === normProv && dist && !isNaN(val)) {
                     if (!distMap[dist]) distMap[dist] = { maxVal: val, count: 1 };
                     else {
@@ -2349,35 +2425,64 @@ $(document).ready(function() {
                 }
             });
 
+            function getHomeDistStats(dName) {
+                let dNorm = normalizeDist(dName);
+                let s = distMap[dNorm] || distMap[dName];
+                if (s) return s;
+                if (dNorm.startsWith('เมือง')) {
+                    s = distMap['เมือง'] || distMap[dNorm.replace('เมือง', '')];
+                    if (s) return s;
+                }
+                if (dNorm === 'เมือง') {
+                    s = distMap['เมือง' + normProv] || distMap['เมือง ' + normProv];
+                    if (s) return s;
+                }
+                for (let k in distMap) {
+                    if (k === dNorm || dNorm.includes(k) || k.includes(dNorm)) {
+                        return distMap[k];
+                    }
+                }
+                return null;
+            }
+
             if (window.distCentersData) {
                 let prefix = normProv + ':';
                 for (let key in window.distCentersData) {
                     if (key.startsWith(prefix)) {
                         let distName = key.split(':')[1];
+                        let stats = getHomeDistStats(distName);
+                        if (!stats || !stats.count || stats.count <= 0) continue;
+
                         let center = window.distCentersData[key];
-                        let stats = distMap[normalizeDist(distName)] || distMap[distName] || { maxVal: 0, count: 0 };
                         let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, true);
+                        if (marker) {
+                            homeMarkersGroup.addLayer(marker);
+                            bounds.push([center.lat, center.lng]);
+                        }
+                    }
+                }
+            }
+
+            for (let distName in distMap) {
+                let stats = distMap[distName];
+                if (!stats || !stats.count || stats.count <= 0) continue;
+
+                let center = findDistrictCenter(normProv, distName);
+                if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
+                    let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, true);
+                    if (marker) {
                         homeMarkersGroup.addLayer(marker);
                         bounds.push([center.lat, center.lng]);
                     }
                 }
             }
 
-            for (let distName in distMap) {
-                let center = findDistrictCenter(normProv, distName);
-                if (center && !bounds.some(b => Math.abs(b[0] - center.lat) < 0.001 && Math.abs(b[1] - center.lng) < 0.001)) {
-                    let stats = distMap[distName];
-                    let marker = createTierDistrictMarker(normProv, distName, stats.maxVal, stats.count, center.lat, center.lng, true);
-                    homeMarkersGroup.addLayer(marker);
-                    bounds.push([center.lat, center.lng]);
-                }
-            }
-
             if (bounds.length > 0) {
                 homeMap.flyToBounds(bounds, { padding: [40, 40] });
             } else {
-                let pCenter = window.provCentersData ? window.provCentersData[normProv] : null;
+                let pCenter = window.provCentersData ? (window.provCentersData[normProv] || window.provCentersData[selProv]) : null;
                 if (pCenter) homeMap.setView([pCenter.lat, pCenter.lng], 9);
+                else homeMap.setView([13.5, 101.0], 6);
             }
 
         } else {
