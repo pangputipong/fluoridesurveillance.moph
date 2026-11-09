@@ -39,7 +39,8 @@
             <div class="nav-sidebar">
                 <div class="sidebar-heading">รายงานและวิเคราะห์</div>
                 <a class="sidebar-link menu-trigger active" data-type="ทั้งหมด"><i class="fas fa-chart-pie"></i><span class="sidebar-text">หน้าหลัก (ภาพรวม)</span></a>
-                <a class="sidebar-link menu-trigger" data-type="ประเมินความเสี่ยง" style="margin-top: 4px;"><i class="fas fa-brain"></i><span class="sidebar-text">ประเมินความเสี่ยง</span></a>
+                <!-- ซ่อนรายงานระบบประเมินความเสี่ยงชั่วคราว (รอการตรวจสอบความถูกต้อง) -->
+                <a class="sidebar-link menu-trigger" data-type="ประเมินความเสี่ยง" style="display: none !important;"><i class="fas fa-brain"></i><span class="sidebar-text">ประเมินความเสี่ยง</span></a>
                 
                 <div class="sidebar-heading">สิ่งแวดล้อม</div>
                 <a data-bs-toggle="collapse" href="#envSubmenu" class="sidebar-link has-submenu"><div><i class="fas fa-leaf"></i><span class="sidebar-text">รายงานแหล่งน้ำ</span></div><i class="fas fa-chevron-down sidebar-toggle-icon" style="font-size: 0.8rem; margin:0;"></i></a>
@@ -1076,7 +1077,7 @@
     </div>
 
     <script src="{{ BASE_URL }}/static/js/district_centers.js?v=3.13"></script>
-    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.16"></script>
+    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.17"></script>
 
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">

@@ -1906,15 +1906,12 @@ $(document).ready(function() {
         showLoading(); 
         let filters = { 'type': currentType, 'ปี': $('#filter-year').val(), 'ภาค': $('#filter-region').val(), 'เขตสุขภาพ': $('#filter-zone').val(), 'จังหวัด': $('#filter-province').val(), 'อำเภอ': $('#filter-district').val(), 'ตำบล': $('#filter-subdistrict').val() };
 
+        // ซ่อนระบบประเมินความเสี่ยงชั่วคราว (รอการตรวจสอบความถูกต้อง)
         if (currentType === 'ประเมินความเสี่ยง') {
-            $('#homeDashboardView').hide();
-            $('#spatialDashboardView').hide();
-            $('#investigationReportView').hide();
-            $('#aiPredictionView').show();
-            $('body').removeClass('theme-home theme-dental');
-            loadAIPredictions();
-            hideLoading();
-            return;
+            currentType = 'ทั้งหมด';
+            $('.menu-trigger').removeClass('active');
+            $('.menu-trigger[data-type="ทั้งหมด"]').addClass('active');
+            filters.type = 'ทั้งหมด';
         }
 
         if (currentType === 'รายงานสอบสวนโรคฟันตกกระ') {
