@@ -450,7 +450,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                         <div>
                             <h4 class="fw-bold m-0" style="color: #0f172a;"><i class="fas fa-file-medical text-theme me-2"></i>รายงานสอบสวนโรคฟันตกกระและประเมินผลกระทบฟลูออไรด์สูง</h4>
-                            <span class="text-muted">ดาวน์โหลดแบบฟอร์มมาตรฐาน (แบบฟอร์ม 1 / แบบฟอร์ม 2), คู่มือระเบียบปฏิบัติ และบันทึกรายงานพร้อมแนบไฟล์ออนไลน์</span>
+                            <span class="text-muted">ดาวน์โหลดแบบฟอร์มมาตรฐาน (แบบฟอร์ม 1 / แบบฟอร์ม 2 / แบบฟอร์ม 3 / Template ผลตรวจรายโรงเรียน), คู่มือระเบียบปฏิบัติ และบันทึกรายงานพร้อมแนบไฟล์ออนไลน์</span>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
                             <button class="btn btn-primary-modern shadow-sm" data-bs-toggle="modal" data-bs-target="#submitInvestigationModal">
@@ -462,10 +462,10 @@
                         </div>
                     </div>
                     
-                    <!-- 4 Download & Action Cards -->
+                    <!-- 6 Download & Action Cards -->
                     <div class="row g-4 mb-4">
                         <!-- Card 1: แบบฟอร์ม 1 -->
-                        <div class="col-xl-3 col-md-6">
+                        <div class="col-xl-4 col-md-6">
                             <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #0284c7 !important;">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -479,7 +479,7 @@
                                     <p class="text-muted small mb-0" style="line-height: 1.5;">ประเมินความเสี่ยงแหล่งน้ำต้นเหตุ (ฟลูออไรด์ &ge; 4 ppm), กลุ่มประชากรเสี่ยงในพื้นที่ (สพด., โรงเรียน, หญิงตั้งครรภ์) และแนวทางจัดการ</p>
                                 </div>
                                 <div class="mt-4">
-                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 1 การประเมินผลกระทบฟลูออไรด์สูง.docx" class="btn btn-primary-modern w-100 justify-content-center" download>
+                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 1 การประเมินผลกระทบฟลูออไรด์สูง.docx" class="btn btn-primary-modern w-100 justify-content-center" download="แบบฟอร์ม 1 การประเมินผลกระทบฟลูออไรด์สูง.docx">
                                         <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม 1 (.docx)
                                     </a>
                                 </div>
@@ -487,7 +487,7 @@
                         </div>
 
                         <!-- Card 2: แบบฟอร์ม 2 -->
-                        <div class="col-xl-3 col-md-6">
+                        <div class="col-xl-4 col-md-6">
                             <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #059669 !important;">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -501,15 +501,59 @@
                                     <p class="text-muted small mb-0" style="line-height: 1.5;">สอบสวนรายบุคคล, ประวัติการบริโภคน้ำดื่มย้อนหลัง, การตรวจประเมินผิวฟัน และจำแนกระดับความรุนแรงตาม Dean's Index (0-5)</p>
                                 </div>
                                 <div class="mt-4">
-                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 2 การสอบสวนสาเหตุฟันตกกระ.docx" class="btn w-100 justify-content-center text-white shadow-sm" style="background: #059669; border-radius: 8px; font-weight: 500;" download>
+                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 2 การสอบสวนสาเหตุฟันตกกระ.docx" class="btn w-100 justify-content-center text-white shadow-sm" style="background: #059669; border-radius: 8px; font-weight: 500;" download="แบบฟอร์ม 2 การสอบสวนสาเหตุฟันตกกระ.docx">
                                         <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม 2 (.docx)
                                     </a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Card 3: คู่มือแนวทางสอบสวนโรค -->
-                        <div class="col-xl-3 col-md-6">
+                        <!-- Card 3: แบบฟอร์ม 3 -->
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #d97706 !important;">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge border px-2 py-1" style="font-size: 0.75rem; background:#fef3c7; color:#b45309; border-color:#fde68a !important;">มาตรการ / จัดการปัญหา</span>
+                                        <span class="badge bg-light text-muted border"><i class="fas fa-file-word text-warning me-1"></i>.docx</span>
+                                    </div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fef3c7; color: #d97706; font-size: 1.5rem;">
+                                        <i class="fas fa-hand-holding-medical"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800" style="font-size: 1.05rem;">แบบฟอร์ม 3: แนวทางการจัดการฟันตกกระ</h5>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">มาตรการระดับบุคคล (ระดับ 4 ขึ้นไป) และครัวเรือน (เด็ก 0-8 ปี), เปลี่ยนแหล่งน้ำ, อุดหนุนน้ำบริโภคสะอาด และติดตามประเมินซ้ำ 12 เดือน</p>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="{{ BASE_URL }}/static/downloads/แบบฟอร์ม 3 แนวทางการจัดการฟันตกกระและน้ำบริโภคที่มีฟลูออไรด์สูง.docx" class="btn w-100 justify-content-center text-white shadow-sm" style="background: #d97706; border-radius: 8px; font-weight: 500;" download="แบบฟอร์ม 3 แนวทางการจัดการฟันตกกระและน้ำบริโภคที่มีฟลูออไรด์สูง.docx">
+                                        <i class="fas fa-download me-2"></i>ดาวน์โหลดแบบฟอร์ม 3 (.docx)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Template ผลตรวจฟันตกกระแยกรายโรงเรียน -->
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #16a34a !important;">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">คัดกรอง / รายโรงเรียน</span>
+                                        <span class="badge bg-light text-muted border"><i class="fas fa-file-excel text-success me-1"></i>.xlsx</span>
+                                    </div>
+                                    <div class="icon-circle mx-auto mb-3" style="width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #dcfce7; color: #16a34a; font-size: 1.5rem;">
+                                        <i class="fas fa-file-excel"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-slate-800" style="font-size: 1.05rem;">Template ผลตรวจฟันตกกระแยกรายโรงเรียน</h5>
+                                    <p class="text-muted small mb-0" style="line-height: 1.5;">ไฟล์แบบบันทึกผลการคัดกรองฟันตกกระนักเรียนรายโรงเรียน พร้อมตารางสรุปจำนวนตรวจและระดับ Dean's Index (ระดับ 1-5)</p>
+                                </div>
+                                <div class="mt-4">
+                                    <a href="{{ BASE_URL }}/static/downloads/Templateผลตรวจฟันตกกระแยกรายโรงเรียน.xlsx" class="btn w-100 justify-content-center text-white shadow-sm" style="background: #16a34a; border-radius: 8px; font-weight: 500;" download="Templateผลตรวจฟันตกกระแยกรายโรงเรียน.xlsx">
+                                        <i class="fas fa-file-excel me-2"></i>ดาวน์โหลด Template โรงเรียน (.xlsx)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 5: คู่มือแนวทางสอบสวนโรค -->
+                        <div class="col-xl-4 col-md-6">
                             <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #dc2626 !important;">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -523,15 +567,15 @@
                                     <p class="text-muted small mb-0" style="line-height: 1.5;">เอกสารคู่มือระเบียบปฏิบัติงานระบาดวิทยา ขั้นตอนการสืบสวนหาแหล่งน้ำต้นเหตุ และเกณฑ์มาตรฐานการจำแนก Dean's Index 6 ระดับ</p>
                                 </div>
                                 <div class="mt-4">
-                                    <a href="{{ BASE_URL }}/static/downloads/แนวทางการสอบสวนโรคฟันตกกระ.pdf" class="btn btn-outline-modern w-100 justify-content-center" target="_blank" download>
+                                    <a href="{{ BASE_URL }}/static/downloads/แนวทางการสอบสวนโรคฟันตกกระ.pdf" class="btn btn-outline-modern w-100 justify-content-center" target="_blank" download="แนวทางการสอบสวนโรคฟันตกกระ.pdf">
                                         <i class="fas fa-file-pdf me-2"></i>ดาวน์โหลดคู่มือแนวทาง (.pdf)
                                     </a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Card 4: ส่งรายงานออนไลน์ / ทางอีเมล -->
-                        <div class="col-xl-3 col-md-6">
+                        <!-- Card 6: ส่งรายงานออนไลน์ / ทางอีเมล -->
+                        <div class="col-xl-4 col-md-6">
                             <div class="card p-4 border-0 bg-glass shadow-sm h-100 text-center d-flex flex-column justify-content-between" style="border-radius: 16px; border-top: 4px solid #8b5cf6 !important;">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1032,7 +1076,7 @@
     </div>
 
     <script src="{{ BASE_URL }}/static/js/district_centers.js?v=3.13"></script>
-    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.15"></script>
+    <script src="{{ BASE_URL }}/static/js/dashboard.js?v=3.16"></script>
 
     <!-- Register Modal -->
     <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -1107,6 +1151,8 @@
                                 <select class="form-select" id="invFormType" name="form_type" required>
                                     <option value="แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ" selected>แบบฟอร์ม 2: การสอบสวนสาเหตุฟันตกกระ (รายบุคคล / Dean's Index)</option>
                                     <option value="แบบฟอร์ม 1: การประเมินผลกระทบฟลูออไรด์สูง">แบบฟอร์ม 1: การประเมินผลกระทบฟลูออไรด์สูง (แหล่งน้ำ / พื้นที่ / ชุมชน)</option>
+                                    <option value="แบบฟอร์ม 3: แนวทางการจัดการฟันตกกระและน้ำบริโภคที่มีฟลูออไรด์สูง">แบบฟอร์ม 3: แนวทางการจัดการฟันตกกระและน้ำบริโภคที่มีฟลูออไรด์สูง (มาตรการ / ติดตาม)</option>
+                                    <option value="Template ผลตรวจฟันตกกระแยกรายโรงเรียน">Template ผลตรวจฟันตกกระแยกรายโรงเรียน (คัดกรอง / รายโรงเรียน)</option>
                                 </select>
                             </div>
 
@@ -1289,6 +1335,14 @@
                         <button type="button" class="btn btn-outline-success text-start p-3 rounded-3" id="btnSelectEmailForm2">
                             <div class="fw-bold fs-6 mb-1"><i class="fas fa-tooth me-2 text-success"></i>ส่งรายงาน: แบบฟอร์ม 2 (การสอบสวนสาเหตุฟันตกกระ)</div>
                             <div class="small text-muted">สำหรับรายงานพบเคสโรคฟันตกกระ K00.3 รายบุคคล, ประวัติการบริโภคน้ำ และผล Dean's Index</div>
+                        </button>
+                        <button type="button" class="btn btn-outline-warning text-start p-3 rounded-3" id="btnSelectEmailForm3">
+                            <div class="fw-bold fs-6 mb-1" style="color: #b45309;"><i class="fas fa-hand-holding-medical me-2 text-warning"></i>ส่งรายงาน: แบบฟอร์ม 3 (แนวทางการจัดการฟันตกกระและน้ำบริโภค)</div>
+                            <div class="small text-muted">สำหรับสรุปผลการจัดการเปลี่ยนแหล่งน้ำ, อุดหนุนน้ำดื่มสะอาด และการติดตามประเมินซ้ำ 12 เดือน</div>
+                        </button>
+                        <button type="button" class="btn btn-outline-success text-start p-3 rounded-3" id="btnSelectEmailTemplate">
+                            <div class="fw-bold fs-6 mb-1 text-success"><i class="fas fa-file-excel me-2 text-success"></i>ส่งรายงาน: Template ผลตรวจฟันตกกระแยกรายโรงเรียน</div>
+                            <div class="small text-muted">สำหรับนำส่งไฟล์ผลการคัดกรองฟันตกกระของนักเรียนรายโรงเรียน พร้อมจำนวนจำแนก Dean's Index 1-5</div>
                         </button>
                     </div>
                 </div>

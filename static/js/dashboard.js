@@ -3020,14 +3020,23 @@ $(document).ready(function() {
                             statusBadge = '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>เสร็จสิ้น</span>';
                         }
 
-                        let isForm1 = (item.form_type && item.form_type.includes('แบบฟอร์ม 1'));
-                        let formBadge = isForm1
-                            ? '<span class="badge" style="background:#0284c7; font-weight:500;"><i class="fas fa-faucet-drip me-1"></i>แบบฟอร์ม 1 (แหล่งน้ำ)</span>'
-                            : '<span class="badge" style="background:#059669; font-weight:500;"><i class="fas fa-tooth me-1"></i>แบบฟอร์ม 2 (รายบุคคล)</span>';
+                        let fTypeStr = item.form_type || '';
+                        let formBadge = '';
+                        let personOrArea = '';
 
-                        let personOrArea = isForm1
-                            ? `<span class="small text-slate-700">จุดเก็บน้ำ: <b>${item.drinking_water_source || 'ไม่ระบุ'}</b></span>`
-                            : `<span class="small text-slate-700">เพศ ${item.patient_gender || '-'} / อายุ ${item.patient_age || '0'} ปี</span>`;
+                        if (fTypeStr.includes('แบบฟอร์ม 1')) {
+                            formBadge = '<span class="badge" style="background:#0284c7; font-weight:500;"><i class="fas fa-faucet-drip me-1"></i>แบบฟอร์ม 1 (แหล่งน้ำ)</span>';
+                            personOrArea = `<span class="small text-slate-700">จุดเก็บน้ำ: <b>${item.drinking_water_source || 'ไม่ระบุ'}</b></span>`;
+                        } else if (fTypeStr.includes('แบบฟอร์ม 3')) {
+                            formBadge = '<span class="badge" style="background:#d97706; font-weight:500;"><i class="fas fa-hand-holding-medical me-1"></i>แบบฟอร์ม 3 (จัดการ)</span>';
+                            personOrArea = `<span class="small text-slate-700">${item.drinking_water_source ? 'เป้าหมาย: <b>' + item.drinking_water_source + '</b>' : 'มาตรการจัดการ'}</span>`;
+                        } else if (fTypeStr.includes('Template') || fTypeStr.includes('โรงเรียน')) {
+                            formBadge = '<span class="badge" style="background:#16a34a; font-weight:500;"><i class="fas fa-file-excel me-1"></i>Template โรงเรียน</span>';
+                            personOrArea = `<span class="small text-slate-700">${item.drinking_water_source ? 'ร.ร.: <b>' + item.drinking_water_source + '</b>' : 'คัดกรองโรงเรียน'}</span>`;
+                        } else {
+                            formBadge = '<span class="badge" style="background:#059669; font-weight:500;"><i class="fas fa-tooth me-1"></i>แบบฟอร์ม 2 (รายบุคคล)</span>';
+                            personOrArea = `<span class="small text-slate-700">เพศ ${item.patient_gender || '-'} / อายุ ${item.patient_age || '0'} ปี</span>`;
+                        }
 
                         let fileLink = item.file_path
                             ? `<a href="${getAppBaseUrl() + item.file_path}" class="btn btn-xs btn-outline-primary py-0 px-2" download style="font-size:0.75rem;"><i class="fas fa-paperclip me-1"></i>${item.file_name ? item.file_name.substring(0, 15) + '...' : 'โหลดไฟล์'}</a>`
@@ -3067,7 +3076,7 @@ $(document).ready(function() {
         });
     }
 
-    // Toggle Form fields based on Form Type (Form 1 vs Form 2)
+    // Toggle Form fields based on Form Type (Form 1, 2, 3, Template)
     $(document).on('change', '#invFormType', function() {
         let fType = $(this).val();
         if (fType.includes('แบบฟอร์ม 1')) {
@@ -3081,6 +3090,28 @@ $(document).ready(function() {
                 <option value="ปลอดภัย (≤ 0.70 ppm)">ปลอดภัย (≤ 0.70 ppm)</option>
             `);
             $('#invWaterSource').attr('placeholder', 'เช่น น้ำประปาหมู่บ้าน หมู่ 4, น้ำบาดาลโรงเรียน');
+        } else if (fType.includes('แบบฟอร์ม 3')) {
+            $('.form-2-field').hide();
+            $('#lblInvSeverity').text('ระดับผลกระทบ / สถานะการจัดการ *');
+            $('#lblInvWaterSource').text('พื้นที่เป้าหมาย / แหล่งน้ำที่ดำเนินการจัดการ');
+            $('#invSeverity').html(`
+                <option value="ระดับบุคคล (ฟันตกกระระดับ 4 ขึ้นไป)" selected>ระดับบุคคล (ฟันตกกระระดับ 4 ขึ้นไป - เปลี่ยนแหล่งน้ำ/บูรณะฟัน)</option>
+                <option value="ระดับครัวเรือน (เด็ก 0-8 ปี เสี่ยง)">ระดับครัวเรือน (เด็ก 0-8 ปี - อุดหนุนน้ำบริโภคสะอาด)</option>
+                <option value="แก้ปัญหาเสร็จสิ้น">แก้ปัญหาเสร็จสิ้น (ยุติการติดตาม)</option>
+                <option value="ดำเนินการแล้ว ต้องประเมินซ้ำ 12 เดือน">ดำเนินการแล้ว ต้องประเมินซ้ำ 12 เดือน</option>
+                <option value="ยังไม่ได้รับการแก้ไข ต้องการการสนับสนุน">ยังไม่ได้รับการแก้ไข ต้องการการสนับสนุน และประเมินซ้ำ 12 เดือน</option>
+            `);
+            $('#invWaterSource').attr('placeholder', 'เช่น ครัวเรือน ม.3 ต.แม่ปืม, ชุมชนบ้านดง');
+        } else if (fType.includes('Template') || fType.includes('โรงเรียน')) {
+            $('.form-2-field').hide();
+            $('#lblInvSeverity').text('ผลการตรวจคัดกรองฟันตกกระภาพรวม *');
+            $('#lblInvWaterSource').text('ชื่อโรงเรียน / สถานศึกษา');
+            $('#invSeverity').html(`
+                <option value="คัดกรองเสร็จสิ้น (พบระดับ 4-5 ส่งต่อรักษา)" selected>คัดกรองเสร็จสิ้น (พบฟันตกกระระดับ 4-5 ส่งต่อรักษา)</option>
+                <option value="คัดกรองเสร็จสิ้น (พบระดับ 1-3 เฝ้าระวัง)">คัดกรองเสร็จสิ้น (พบฟันตกกระระดับ 1-3 เฝ้าระวัง)</option>
+                <option value="คัดกรองเสร็จสิ้น (ปกติ/ไม่พบฟันตกกระ)">คัดกรองเสร็จสิ้น (ปกติ/ไม่พบฟันตกกระ)</option>
+            `);
+            $('#invWaterSource').attr('placeholder', 'เช่น โรงเรียนบ้านหนองบัว, โรงเรียนวัดดอนเมือง');
         } else {
             $('.form-2-field').show();
             $('#lblInvSeverity').text('ระดับความรุนแรง / การวินิจฉัย (Dean\'s Index) *');
@@ -3198,6 +3229,56 @@ $(document).ready(function() {
             "6. รายละเอียดเพิ่มเติม: ........................................\n\n" +
             "(กรุณาแนบไฟล์ แบบฟอร์ม 2 ที่กรอกข้อมูลแล้วมาพร้อมอีเมลนี้)\n\n" +
             "จึงเรียนมาเพื่อทราบและดำเนินการในระบบต่อไป"
+        );
+        window.location.href = `mailto:efluoride.project@moph.go.th?subject=${subject}&body=${body}`;
+    });
+
+    // Form 3 Email Template Trigger
+    $(document).on('click', '#btnSelectEmailForm3', function() {
+        let modalEl = document.getElementById('emailSelectModal');
+        let modalObj = bootstrap.Modal.getInstance(modalEl);
+        if (modalObj) modalObj.hide();
+
+        let subject = encodeURIComponent("[รายงานสอบสวนโรค] แบบฟอร์ม 3 - แนวทางการจัดการฟันตกกระและน้ำบริโภคที่มีฟลูออไรด์สูง");
+        let body = encodeURIComponent(
+            "เรียน โครงการเฝ้าระวังฟันตกกระ (efluoride.project@moph.go.th)\n\n" +
+            "เรื่อง: นำส่งรายงานแบบฟอร์ม 3 (แนวทางการจัดการฟันตกกระและน้ำบริโภคที่มีฟลูออไรด์สูง)\n\n" +
+            "ข้าพเจ้า (ชื่อ-นามสกุล/ตำแหน่ง): ........................................\n" +
+            "หน่วยบริการ: ........................................\n" +
+            "เบอร์โทรศัพท์: ........................................\n\n" +
+            "ขอรายงานสรุปผลการดำเนินงานมาตรการจัดการ ดังนี้:\n" +
+            "1. วันที่สรุปรายงาน: ........................................\n" +
+            "2. ระดับผลกระทบ: [  ] ระดับบุคคล (ระดับสูง)  [  ] ระดับครัวเรือน\n" +
+            "3. ข้อเสนอและการจัดการ: [  ] เปลี่ยนแหล่งน้ำดื่ม  [  ] อุดหนุนน้ำบริโภคกลุ่มเสี่ยง  [  ] ฟันแท้บูรณะ\n" +
+            "4. การสื่อสารความเสี่ยง: [  ] ดำเนินการแล้ว\n" +
+            "5. การติดตามสรุปรายงาน: [  ] แก้ปัญหาเสร็จสิ้น  [  ] ดำเนินการแล้ว ประเมินซ้ำ 12 เดือน  [  ] ยังไม่ได้รับการแก้ไข ต้องการการสนับสนุน\n\n" +
+            "(กรุณาแนบไฟล์ แบบฟอร์ม 3 ที่กรอกข้อมูลแล้วมาพร้อมอีเมลนี้)\n\n" +
+            "จึงเรียนมาเพื่อทราบและดำเนินการต่อไป"
+        );
+        window.location.href = `mailto:efluoride.project@moph.go.th?subject=${subject}&body=${body}`;
+    });
+
+    // School Template Email Trigger
+    $(document).on('click', '#btnSelectEmailTemplate', function() {
+        let modalEl = document.getElementById('emailSelectModal');
+        let modalObj = bootstrap.Modal.getInstance(modalEl);
+        if (modalObj) modalObj.hide();
+
+        let subject = encodeURIComponent("[รายงานสอบสวนโรค] นำส่ง Template ผลตรวจฟันตกกระแยกรายโรงเรียน");
+        let body = encodeURIComponent(
+            "เรียน โครงการเฝ้าระวังฟันตกกระ (efluoride.project@moph.go.th)\n\n" +
+            "เรื่อง: นำส่งไฟล์ Template ผลตรวจฟันตกกระแยกรายโรงเรียน (.xlsx)\n\n" +
+            "ข้าพเจ้า (ชื่อ-นามสกุล/ตำแหน่ง): ........................................\n" +
+            "หน่วยบริการ: ........................................\n" +
+            "เบอร์โทรศัพท์: ........................................\n\n" +
+            "ขอส่งไฟล์รายงานสรุปผลการคัดกรองฟันตกกระนักเรียน ดังนี้:\n" +
+            "1. โรงเรียน: ........................................\n" +
+            "2. วันที่ตรวจคัดกรอง: ........................................\n" +
+            "3. จำนวนนักเรียนที่ได้รับการตรวจ: ............ คน\n" +
+            "4. จำนวนที่พบฟันตกกระ: ............ คน (Dean's Index 1-5)\n" +
+            "5. สรุปการส่งต่อเพื่อการรักษา / การเฝ้าระวัง: ........................................\n\n" +
+            "(กรุณาแนบไฟล์ Template ผลตรวจฟันตกกระแยกรายโรงเรียน (.xlsx) มาพร้อมอีเมลนี้)\n\n" +
+            "จึงเรียนมาเพื่อโปรดพิจารณาและนำเข้าสู่ระบบเฝ้าระวังต่อไป"
         );
         window.location.href = `mailto:efluoride.project@moph.go.th?subject=${subject}&body=${body}`;
     });
